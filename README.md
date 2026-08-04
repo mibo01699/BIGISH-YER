@@ -1,21 +1,21 @@
-# BIGISH-YER - Hybrid Financial Resilience Ecosystem 🇾🇪
+# BIGISH-YER: Macroeconomic Stabilization for Yemen via Pi Network Architecture
 
-An open-source Decentralized Financial (DeFi) architecture built strictly within the **Pi Network Layer 1 (Protocol 23)**. This ecosystem implements a dual-token split-payment framework engineered to resolve the catastrophic liquidity crisis and fragmented central banking system in conflict-affected regions, using the Republic of Yemen as a primary case study.
+This repository contains the software framework and economic simulation models implementing **Research Papers No. 11046 and No. 11129 (Published via EasyChair)**. The project designs a practical blockchain-based blueprint to resolve the liquidity crisis and stabilize the macroeconomic infrastructure of the Republic of Yemen utilizing the decentralized framework of the Pi Network.
 
-## 🎓 Academic Foundation
-This operational technology stack directly translates peer-reviewed academic research published on EasyChair into functional Web3 systems:
-- **Study No. 11046:** Case Study of the Republic of Yemen – Radical Crisis Resolution via Pi Network Infrastructure. (Link: https://easychair.org)
-- **Study No. 11129:** Macroeconomic and Institutional Framework for Stabilization and Recovery. (Link: https://easychair.org)
+## 🚀 Vision & Social Impact (UNICEF & Mercy Corps Alignment)
+In conflict-affected zones like Yemen, financial fragmentation and hyperinflation severely impact small businesses, youth, and families. This project bridges **Web3 Technology (Pi SDK)** with **Macroeconomic Policy** to foster institutional recovery, digital financial inclusion, and reliable liquidity distribution.
 
-## 🌟 Core Pillars of the Ecosystem
-1. **BIGISH-YER (The Financial Engine):** Governs hybrid liquidity generation, decentralized payroll processing, and cross-wallet settlement protocols.
-2. **GAV-The-Incense-Route (The Trade Protocol):** Implements immutable supply chain logs and fractional provenance tracking for local smallholder producers (Coffee, Honey, Incense).
-3. **AJYAL (The Capacity Builder):** Directs decentralized knowledge exchange, youth empowerment networks, and micro-incentives for on-the-ground ecosystem operations.
+## 🛠️ Repository Components & Tech Stack
+- **`simulation.py`**: A Python-based simulation engine mimicking how Pi token reserves and utility integration mitigate hyperinflation and improve stability indices.
+- **Pi Network SDK Blueprint**: Architectural mapping to bridge the Pi Wallet API with institutional ledger frameworks.
+- **License**: Fully Open Source under the MIT License (Digital Public Good standard).
 
-## 🔒 Pi Network Core Team Compliance
-- **Pi-Native Authentication:** System security is exclusively anchored via the native `Pi Authentication SDK`. No external OAuth, email, or plain-text phone registration methods are permitted, enforcing 100% Sybil-resistance through official Pi KYC.
-- **Enclosed Browser Environment:** The interface operates completely inside the secure **Pi Browser WebView** framework. External URLs or deep-linking redirects are strictly blocked to neutralize phishing and escrow vulnerabilities.
-- **Pi-First Liquidity Pools:** All financial routing utilizes Pi Coin as the primary economic asset. 
+## 📊 How to Run the Simulation
+Ensure you have Python installed, then execute:
+```bash
+python simulation.py
+```
 
-## 📄 License
-This project is licensed under the MIT License - making it a verified **Digital Public Good (DPG)** compliant with UN Sustainable Development Goals (SDGs 1, 8, 9, and 12).
+## 🔗 Academic References
+- **Paper 11046**: A Radical Solution to the Crisis via Pi Network Infrastructure ([EasyChair Presentation](https://easychair.org))
+- **Paper 11129**: Macroeconomic and Institutional Framework for Stabilization ([EasyChair Presentation](https://easychair.org))

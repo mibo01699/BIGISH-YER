@@ -18,3 +18,8 @@ To protect localized purchasing power against extreme currency inflation, the pl
 In absolute compliance with the Pi Network Core Team's mandate for building genuine utility:
 - **Utility-First Lock:** The YER token smart contract prohibits any token minting or public distribution until the core payroll and tracking modules are fully operational on the Pi Testnet.
 - **Immutable Escrow Pools:** 100% of the Pi Coins committed during the initial initialization phase are programmatically routed to locked liquidity reserves on the Pi DEX. Developers hold zero extraction privileges, ensuring total systemic integrity for international institutional donors.
+
+
+## 🛡️ Anti-Double Dipping & Multi-Platform Integrity
+The ecosystem implements `AntiDoubleDippingEngine.js` to dynamically cross-reference verified Pi KYC data across BIGISH, AJYAL, and GAV, preventing dual-payouts and job role duplication.
+

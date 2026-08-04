@@ -1,24 +1,20 @@
-# BIGISH-YER Hybrid Tokenomics (PiRC1 Compliant)
+# BIGISH-YER Hybrid Tokenomics (PiRC1 & Protocol 23 Compliant)
 
-This document outlines the economic framework for the YER token, issued as an ecosystem service token on the Pi Network Layer 1 under Protocol 23 smart contracts.
+This document outlines the macroeconomic and technical specifications governing the issuance of the **Yemen Economic Recovery Token (YER)** as a native utility asset deployed via Pi Network Protocol 23 smart contracts.
 
 ## 🪙 Token Specifications
 - **Token Name:** Yemen Economic Recovery Token
 - **Ticker:** YER
-- **Network:** Pi Network (Mainnet Post-Audit)
-- **Token Type:** PiRC1 Utility Token (Service & Utility Focus)
-- **Primary Pair:** YER / PI (Exclusively on Pi DEX)
+- **Blockchain Layer:** Pi Network Layer 1 (Post-Mainnet Migration)
+- **Standard Framework:** PiRC1 Utility Asset Model
+- **Primary Market Pair:** YER / PI (Exclusively trading inside Pi DEX)
 
-## 🔒 PiRC1 Liquidity & Launch Architecture
-To prevent speculation and align with the Pi Core Team's framework:
-1. **Utility-First Guardrail:** YER cannot be minted or traded until the BIGISH decentralized payroll and aid platform is fully live and audited on Testnet.
-2. **Immutable Liquidity Pool:** 100% of the Pi coins committed during the Pi Launchpad initial phase will be routed directly to the permanent YER/PI Liquidity Pool on Pi DEX. The ecosystem smart contract locks the escrow permanently.
-3. **No Team Extraction:** The development team cannot withdraw initial Pi proceeds, ensuring zero rug-pull risk for Pioneers and international donors.
+## 🔄 Dual-Token Atomic Payment Architecture
+To protect localized purchasing power against extreme currency inflation, the platform utilizes a unique split-payment matrix inside the Pi Browser environment:
+1. **Pi Coin (The Macro-Reserve Anchor):** Prices real-world goods and international donor aid disbursements using the **Global Consensus Value (GCV)** standard ($314,159 benchmark). This serves as an unalterable value-anchor to prevent merchant wealth depletion.
+2. **YER Token (The Micro-Velocity Buffer):** Processes local high-frequency retail transactions, agricultural supply-chain expenses, and localized daily worker wages. YER pricing adjusts dynamically based on the automated market maker (AMM) pools on the Pi DEX.
 
-## 🔄 Hybrid Payment Mechanism
-BIGISH operates a hybrid payment gateway within the enclosed Pi Browser:
-- **Pi Coin:** Used for cross-border/macro-liquidity settlements, aid funding validation, and high-value collateral.
-- **YER Token:** Used for local micro-transactions, automated employment records, domestic payroll processing, and point-of-sale retail payments inside Yemen.
-
-## 🆔 Compliance & KYC Integration
-Every wallet holding or transacting YER must be authenticated via the native `Pi Authentication SDK`. This ensures all aid delivery and payroll distributions are mapped to real, KYC-verified citizens, completely eliminating ghost accounts.
+## 🔒 Anti-Speculation & Rug-Pull Protection
+In absolute compliance with the Pi Network Core Team's mandate for building genuine utility:
+- **Utility-First Lock:** The YER token smart contract prohibits any token minting or public distribution until the core payroll and tracking modules are fully operational on the Pi Testnet.
+- **Immutable Escrow Pools:** 100% of the Pi Coins committed during the initial initialization phase are programmatically routed to locked liquidity reserves on the Pi DEX. Developers hold zero extraction privileges, ensuring total systemic integrity for international institutional donors.

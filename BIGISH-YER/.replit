@@ -1,0 +1,8 @@
+language = "nodejs"
+run = "npm start"
+
+[env]
+PORT = "5001"
+
+[web]
+ports = ["5001"]

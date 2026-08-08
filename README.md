@@ -19,3 +19,16 @@ python simulation.py
 ## 🔗 Academic References
 - **Paper 11046**: A Radical Solution to the Crisis via Pi Network Infrastructure ([EasyChair Presentation](https://easychair.org))
 - **Paper 11129**: Macroeconomic and Institutional Framework for Stabilization ([EasyChair Presentation](https://easychair.org))
+
+## 💰 نظام المقاصة والدفع (Clearing & Settlement)
+
+BIGISH-YER هو العمود الفقري المالي الذي يدير جميع عمليات الدفع، بما في ذلك تسوية مستحقات نقاط البيع التي تصرف المساعدات العينية.
+
+### الميزات الرئيسية:
+- **تحويلات مالية:** دعم التحويلات الفردية والجماعية (`/api/yer/transfer` و `/api/yer/batch-transfer`).
+- **إدارة المحافظ:** إنشاء وإدارة محافظ YER للمستفيدين ونقاط البيع.
+- **التكامل مع نظام المقاصة:** استقبال طلبات الدفع من نظام المقاصة في AJYAL.
+
+### الربط مع التطبيقات الأخرى:
+- **AJYAL:** يرسل طلبات الدفع لتسوية مستحقات نقاط البيع عبر نظام المقاصة.
+- **GAV:** يتلقى المدفوعات في محافظ نقاط البيع.

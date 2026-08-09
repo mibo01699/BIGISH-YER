@@ -1,17 +1,40 @@
-# 💰 SEED FUNDING ALLOCATION BUDGET (BY-GAV-YEM-2026-STABLE)
+# BIGISH-YER: Macroeconomic Framework Operations & Operational Budget
 
-## 📌 Funding Target Overview
-- **Total Requested Amount:** $700 USD (~420,000 YER Parallel Rate equivalent)
-- **Primary Objective:** Provisioning the core hardware and hosting architecture required to stabilize the GAV-YEM system inside Sana'a, Yemen, ensuring compliance with Pi SDK authentication latency standards.
+This document outlines the allocation of funds and infrastructure costs required to sustain the BIGISH-YER ecosystem, ensuring financial inclusion, automated clearing between AJYAL and GAV, and continuous deployment within the Pi Network ecosystem.
 
-## 🛠️ Itemized Financial Breakdown
+---
 
-| Category | Description | Cost (USD) |
+## 1. Core Financial Allocations Breakdown
+
+The total operational budget is partitioned across infrastructure node maintenance, smart support API quotas, and cross-application liquidity pools setup.
+
+### 🏢 Development & Core Infrastructure Costs
+* **High-Availability Cloud Hosting**: $1,200 / Year (Mandatory SSL/TLS and redundant servers for Pi Browser app sandbox availability).
+* **Secure Database Infrastructure**: $600 / Year (Encrypted PostgreSQL node running `cryptoEngine.js` computations).
+* **API Routing & Network Bandwidth**: $400 / Year (Maintaining high-throughput channels for `/api/yer/transfer` execution).
+
+### 🤖 AI Smart Support Operations
+* **LLM Engine & Embedding Vector DB**: $800 / Year (Powering the RAG execution loop defined in `SMART_SUPPORT.md`).
+* **Technical Maintenance Matrix**: $1,500 / Year (Handling the automated-to-human escalation logic for unresolved settlement ticket protocols).
+
+---
+
+## 2. Token Allocation Framework (YER Supply Balance)
+
+As per the project academic references published via EasyChair, the capitalization of the YER digital architecture adheres to strict distribution rules:
+
+| Allocation Category | Percentage | Purpose / Deployment Status |
 | :--- | :--- | :--- |
-| **Local Workstation Layer** | Hardware component optimization for running compiled smart contract automated safety audits locally (`security_test.js`). | **$350.00** |
-| **Cloud Hosting Layers** | 12-month enterprise hosting architecture for serving internal payment gateways, API sync layers, and webhook verification. | **$250.00** |
-| **Sana'a Operational Modem** | High-reliability, low-latency communication interface to maintain connection uptime for developer node operations. | **$100.00** |
-| **Total Budget** | **Complete Infrastructure Deployment** | **$700.00** |
+| **In-App Cloud Mining Hub** | **10%** | Distributed natively to users via `mining.js` to prompt macro-financial inclusion. |
+| **Pi DEX Liquidity Pools** | **30%** | Paired into decentralized market reserve indices to absorb inflationary spikes. |
+| **Humanitarian Aid & Clearing** | **40%** | Allocated for batch transfers (`/api/yer/batch-transfer`) via AJYAL/GAV nodes. |
+| **Core Ecosystem Development** | **20%** | Reserved for protocol upgrades, node compliance, and developer security updates. |
 
-## ⚖️ Audit and Compliance
-All expenditures are licensed open-source under the MIT guidelines. No funding will be diverted to external standard liquidity nodes or unverified financial networks.
+---
+
+## 3. Financial Audit & Security Compliance
+
+To maintain a zero-leakage threshold on humanitarian aid distribution:
+1. Every fiscal line item is bound to automated sanity checks inside `.github/workflows/node-ci.yml`.
+2. Any manual intervention or budget allocation modification requires validation tests via the core ledger audit hooks.
+3. Anti-double dipping logs are scanned daily to prevent balance inflation or cross-network duplication attempts.

@@ -1,31 +1,23 @@
-# Support Systems Master Overview
+# Master Architecture Overview: BIGISH-YER Ecosystem Support
 
-This master document links the Smart AI Support, Human Support Tickets, Internal Notifications, and Translation engines together to build a robust, production-ready ecosystem tailored for the Pi Network Platform.
+This document details the multi-layered support matrix driving financial inclusion, digital transfers, and tokenomics stability operations across Pi Network SDK, AJYAL, and GAV parameters.
 
-## 1. Operational Flowchart Concept
+## 1. Cross-Application Functional Workflow
+
 ```text
-  [ User enters Pi App Sandbox ]
-                │
-                ▼
-     [ Asks Support Question ]
-                │
-                ▼
-      ( Smart AI RAG Engine )
-         /            \
-  (High Confidence)  (Low Confidence/Complex Issue)
-       /                \
- [Instant Answer]    [Escalate & Create Human Ticket]
-                          │
-                          ▼
-            [Notify Admin & In-App Alerts]
+    [AJYAL Application] ──────> Sends Clearing Request ─────┐
+                                                           ▼
+    [GAV Point of Sale] <────── Receives Wallet Balance <─── [BIGISH-YER Backend Engine]
+                                                           │
+             ┌─────────────────────────────────────────────┘
+             ▼
+    {SUPPORT SYSTEM LOOP}
+     ├── SMART_SUPPORT.md : Direct AI responses on YER Launchpad allocations & DEX Pools.
+     ├── HUMAN_SUPPORT.md : Manual resolution desk for failed block settlement or batch transfers.
+     ├── NOTIFICATIONS.md : Multi-channel push events for real-time ledger auditing.
+     └── TRANSLATION_GUIDE.md : Dual translation profiles (AR/EN) tailored for Yemeni economic inclusion.
 ```
 
-## 2. Core Operational Requirements
-1. **Pi SDK Protocol**: All communications and users must be authenticated via `window.Pi.authenticate()` before utilizing the ticketing APIs to prevent sybil attacks or spamming.
-2. **Dynamic i18n Interface**: All responses from both automated messages and human replies should support localized structural frameworks outlined in `TRANSLATION_GUIDE.md`.
-3. **Internal Notifications**: Whenever a human agent replies to an open ticket, an instant internal update is pushed via the endpoints detailed inside `NOTIFICATIONS.md`.
-
-## 3. Project Key Performance Indicators (KPIs)
-* **Automated Resolution Rate**: Target > 70% of tickets handled entirely by `SMART_SUPPORT.md`.
-* **SLA Target Response**: Human agents should pick up escalated tickets in less than 15 minutes.
-* **Localization Compliance**: 100% of UI fields covered via JSON dictionaries.
+## 2. Compliance Protocols (Pi Core Team 2026 Guidelines)
+1. **Identity Integrity**: No financial query or ticketing event is authorized without parsing verified claims from `window.Pi.authenticate()`.
+2. **Double-Commit Settlement Guardrails**: Clearing operations linked between AJYAL and GAV must be finalized on the backend ledger only after transactional state checks confirmation.

@@ -1,42 +1,74 @@
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GAV-YEM Ecosystem Terminal</title>
-    <!-- استدعاء مكتبة Pi SDK الرسمية - إلزامي للمنصة -->
-    <script src="https://minepi.com"></script>
-    <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #0f172a; color: #f8fafc; padding: 20px; }
-        .container { max-width: 800px; margin: 0 auto; background: #1e293b; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
-        .btn { background: #eab308; color: #1e293b; border: none; padding: 12px 24px; border-radius: 6px; cursor: pointer; font-weight: bold; width: 100%; margin-top: 10px; }
-        .btn:disabled { background: #64748b; cursor: not-allowed; }
-        .status-box { background: #334155; padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 5px solid #eab308; }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h2>منصة إطلاق النظام البيئي GAV-YEM (تحديث 2026)</h2>
-        
-        <div class="status-box" id="authStatus">
-            <p>🔴 حالة الاتصال: يرجى تسجيل الدخول باستخدام حساب Pi Network الخاص بك عبر متصفح Pi Browser.</p>
-        </div>
+// client/components/MiningDashboard.js
+import React, { useState, useEffect } from 'react';
 
-        <button class="btn" id="loginBtn" onclick="authenticatePiUser()">تسجيل الدخول عبر Pi SDK</button>
+export default function MiningDashboard() {
+    const [miningData, setMiningData] = useState({
+        isMiningActive: false,
+        currentRatePerHour: 0.00,
+        hoursRemaining: 0,
+        unclaimedBalance: 0.00
+    });
+    const [loading, setLoading] = useState(false);
 
-        <div id="mainDashboard" style="display: none; margin-top: 20px;">
-            <h3>بوابة الخدمات اللوجستية وسلسلة التوريد (YER Utility)</h3>
-            <p>مرحباً، <span id="piUsername" style="color: #eab308; font-weight: bold;"></span></p>
+    const fetchMiningStatus = (piUserId) => {
+        fetch('/api/yer/mining/status', {
+            headers: { 'x-pi-user-id': piUserId }
+        })
+        .then(res => res.json())
+        .then(data => { if (data.success) setMiningData(data); });
+    };
+
+    const handleStartMining = () => {
+        setLoading(true);
+        if (window.Pi) {
+            window.Pi.authenticate(['username'], (auth) => {
+                fetch('/api/yer/mining/start', {
+                    method: 'POST',
+                    headers: { 'x-pi-user-id': auth.user.uid }
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) fetchMiningStatus(auth.user.uid);
+                    setLoading(false);
+                });
+            });
+        }
+    };
+
+    return (
+        <div className="mining-dashboard-container" style={{ padding: '20px', background: '#1a0933', color: '#fff', borderRadius: '12px', textAlign: 'center' }}>
+            <h2 style={{ color: '#e5a93c' }}>⛏️ YER Token Mining Hub (10% Allocation)</h2>
+            <p style={{ fontSize: '14px', color: '#bbb' }}>Empowering economic inclusion via Pi Network cloud framework</p>
             
-            <div class="status-box">
-                <p>رصيد الـ YER المتاح للخدمات: <span id="yerBalance">0.000000</span> YER</p>
+            <div className="balance-display" style={{ margin: '30px 0' }}>
+                <h3 style={{ fontSize: '16px', textTransform: 'uppercase' }}>Unclaimed YER Balance</h3>
+                <span style={{ fontSize: '42px', fontWeight: 'bold', color: '#4caf50' }}>
+                    {miningData.unclaimedBalance.toFixed(4)} YER
+                </span>
             </div>
 
-            <button class="btn" onclick="triggerGAVPayment(10)">دفع رسوم خدمة التوريد (10 Pi)</button>
-        </div>
-    </div>
+            <div className="status-box" style={{ background: '#251245', padding: '15px', borderRadius: '8px', marginBottom: '20px' }}>
+                <p>⚡ Current Mining Rate: <strong>{miningData.currentRatePerHour} YER/hr</strong></p>
+                <p>⏳ Session Status: {miningData.isMiningActive ? `Active (${miningData.hoursRemaining.toFixed(1)}h left)` : 'Inactive'}</p>
+            </div>
 
-    <script src="wallet-core.js"></script>
-    <script src="gav-core.js"></script>
-</body>
-</html>
+            <button 
+                onClick={handleStartMining} 
+                disabled={miningData.isMiningActive || loading}
+                style={{
+                    background: miningData.isMiningActive ? '#555' : '#e5a93c',
+                    color: '#000',
+                    border: 'none',
+                    padding: '12px 30px',
+                    fontSize: '18px',
+                    fontWeight: 'bold',
+                    borderRadius: '25px',
+                    cursor: miningData.isMiningActive ? 'not-allowed' : 'pointer',
+                    transition: '0.3s'
+                }}
+            >
+                {miningData.isMiningActive ? "⚡ MINING IN PROGRESS" : "⛏️ START 24H MINING SESSION"}
+            </button>
+        </div>
+    );
+}

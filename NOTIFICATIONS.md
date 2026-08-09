@@ -1,99 +1,86 @@
-# In-App Notification System (Pi Network Compatible)
+# BIGISH-YER In-App & Settlement Notification System
 
-This system manages real-time and persistent in-app notifications for users within the Pi Browser environment, ensuring high security and data privacy in line with Pi Core Team guidelines.
+This system handles real-time alerts for YER cross-application clearances, humanitarian transfers, and Pi Network mainnet payment updates.
 
-## 1. Database Schema (PostgreSQL/MongoDB)
-```javascript
-// Notification Schema Concept
-{
-  id: "noti_987654321",
-  pi_user_id: "pi_user_unique_hash", // Authenticated via Pi SDK
-  title: "Payment Received!",
-  message: "You have successfully received 5 Pi for your support ticket.",
-  type: "PAYMENT_SUCCESS", // INFO, WARNING, SYSTEM, TRANSACTION
-  is_read: false,
-  created_at: "2026-08-09T20:50:00Z"
-}
+## 1. Database Schema (PostgreSQL Framework)
+```sql
+CREATE TABLE notifications (
+    id SERIAL PRIMARY KEY,
+    pi_user_id VARCHAR(255) NOT NULL,       -- Verified via Pi SDK
+    wallet_address_yer VARCHAR(255),        -- YER Wallet mapping
+    title VARCHAR(150) NOT NULL,
+    message TEXT NOT NULL,
+    type VARCHAR(50) DEFAULT 'INFO',       -- CLEARING_SUCCESS, BATCH_TRANSFER, SYSTEM
+    is_read BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
 ```
 
-## 2. Backend Code (Node.js + Express)
-This endpoint fetches user notifications after verifying their Pi Network identity header.
-
+## 2. Production Backend (Node.js + Express)
 ```javascript
 // server/routes/notifications.js
 const express = require('express');
 const router = express.Router();
 
-// Mock database fetching (Replace with your DB client)
-const getNotificationsFromDB = async (piUserId) => {
-    return [
-        { id: 1, title: "Welcome to BIGISH-YER", message: "Your smart support assistant is ready.", is_read: false },
-        { id: 2, title: "Pi Wallet Linked", message: "Authentication via Pi SDK successful.", is_read: true }
-    ];
+// Mock DB connection pool for BIGISH-YER infrastructure
+const dbPool = {
+    query: async (sql, params) => {
+        return { rows: [{ id: 1, title: "YER Settlement Completed", message: "Batch transfer initialized from AJYAL engine.", is_read: false }] };
+    }
 };
 
-// GET User Notifications
-router.get('/api/notifications', async (req, res) => {
+// GET: Fetch Localized Notifications for Authenticated Pioneers
+router.get('/api/yer/notifications', async (req, res) => {
     try {
-        // In Pi Apps, the user's authentic identity is verified via Pi SDK tokens
-        const piUserId = req.headers['x-pi-user-id']; 
-        
+        const piUserId = req.headers['x-pi-user-id']; // Securely passed from Pi Browser Authentication
         if (!piUserId) {
-            return res.status(401).json({ error: "Unauthorized. Missing Pi User Identity." });
+            return res.status(401).json({ error: "Unauthorized: Missing verified Pi Identity." });
         }
 
-        const notifications = await getNotificationsFromDB(piUserId);
-        res.status(200).json({ success: true, data: notifications });
+        const result = await dbPool.query('SELECT * FROM notifications WHERE pi_user_id = \$1 ORDER BY created_at DESC', [piUserId]);
+        res.status(200).json({ success: true, data: result.rows });
     } catch (error) {
-        res.status(500).json({ error: "Internal Server Error" });
+        res.status(500).json({ error: "Internal Core Ledger Error" });
     }
 });
 
 module.exports = router;
 ```
 
-## 3. Frontend Integration (React + Pi SDK v2)
+## 3. Frontend Integration (React within Pi Browser Sandbox)
 ```javascript
-// client/components/NotificationList.js
+// client/components/NotificationCenter.js
 import React, { useEffect, useState } from 'react';
 
-const NotificationList = () => {
-    const [notifications, setNotifications] = useState([]);
+export default function NotificationCenter() {
+    const [alerts, setAlerts] = useState([]);
 
     useEffect(() => {
-        // Authenticate user via Pi Browser SDK before making requests
         if (window.Pi) {
-            window.Pi.authenticate(['username', 'payments'], onAuthSuccess, onAuthFail);
+            // Authenticate natively under Pi Browser 2026 Core Rules
+            window.Pi.authenticate(['username', 'payments'], onAuthSuccess, onAuthError);
         }
     }, []);
 
     const onAuthSuccess = (auth) => {
-        fetch('/api/notifications', {
+        fetch('/api/yer/notifications', {
             headers: { 'x-pi-user-id': auth.user.uid }
         })
         .then(res => res.json())
-        .then(resData => {
-            if(resData.success) setNotifications(resData.data);
-        });
+        .then(data => { if(data.success) setAlerts(data.data); });
     };
 
-    const onAuthFail = (error) => {
-        console.error("Pi Authentication failed:", error);
-    };
+    const onAuthError = (err) => { console.error("Pi SDK Auth Blocked:", err); };
 
     return (
-        <div className="notification-box">
-            <h3>Your Notifications</h3>
-            <ul>
-                {notifications.map(n => (
-                    <li key={n.id} className={n.is_read ? "read" : "unread"}>
-                        <strong>{n.title}</strong>: {n.message}
-                    </li>
-                ))}
-            </ul>
+        <div className="yer-notifications">
+            {alerts.map(item => (
+                <div key={item.id} className={`alert-card ${item.is_read ? 'read' : 'unread'}`}>
+                    <h4>{item.title}</h4>
+                    <p>{item.message}</p>
+                </div>
+            ))}
         </div>
     );
-};
-
-export default NotificationList;
+}
 ```

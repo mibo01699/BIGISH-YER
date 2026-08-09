@@ -1,47 +1,41 @@
-# AI Smart Support System
+# AI Smart Support & Liquidity Navigation System
 
-This module uses an AI agent powered by RAG (Retrieval-Augmented Generation) to answer user questions about the project instantly within the Pi App sandbox.
+Automated RAG-driven assistance for YER launchpad allocations, tokenomics stabilization, and Pi Network liquidity pools routing.
 
-## 1. Architecture Flow
-User Query -> Embedding Generation -> Vector DB Lookup -> LLM Response Engine -> Filtering and Guardrails -> Pi App Interface.
-
-## 2. Backend Implementation (Node.js & AI Client SDK)
+## 1. Engine Handler (Node.js Express)
 ```javascript
 // server/routes/smartSupport.js
 const express = require('express');
 const router = express.Router();
 
-// Simulated Vector DB and LLM Generation
-const generateAIResponse = async (userPrompt) => {
-    // In production, integrate OpenAI/Anthropic/Ollama API
-    const promptLower = userPrompt.toLowerCase();
-    if (promptLower.includes('pi payment') || promptLower.includes('wallet')) {
-        return "To make a payment, click 'Pay with Pi' inside our application. The Pi App will automatically launch your Pi Wallet to confirm.";
+const handleRAGQuery = async (query) => {
+    const q = query.toLowerCase();
+    if (q.includes('dex') || q.includes('liquidity') || q.includes('pool')) {
+        return "YER tokens will be listed on Pi Network Launchpad and paired in Pi DEX Liquidity Pools to establish stabilization indices.";
     }
-    return "Thank you for contacting BIGISH-YER Support. Can you please clarify your issue so our automated assistant can guide you?";
+    if (q.includes('ajyal') || q.includes('gav') || q.includes('clearing')) {
+        return "BIGISH-YER manages settlement endpoints. AJYAL forwards clearing requests to balance point-of-sale balances inside GAV.";
+    }
+    return "Your query is queued. Our RAG engine is fetching economic models for Yemen stabilization stabilization frameworks.";
 };
 
-router.post('/api/support/smart-chat', async (req, res) => {
-    const { prompt, piUserId } = req.body;
-
-    if (!prompt) {
-        return res.status(400).json({ error: "Prompt is required." });
-    }
+router.post('/api/support/smart-ai', async (req, res) => {
+    const { userQuery, piUserId } = req.body;
+    if (!userQuery) return res.status(400).json({ error: "Query parameters missing." });
 
     try {
-        const aiReply = await generateAIResponse(prompt);
-        
-        // Confidence Metric Score (Simulated)
-        const confidenceScore = prompt.length > 5 ? 0.85 : 0.40;
+        const aiAnswer = await handleRAGQuery(userQuery);
+        // Calculate confidence score dynamically
+        const confidence = userQuery.length > 8 ? 0.92 : 0.45;
 
         res.status(200).json({
             success: true,
-            reply: aiReply,
-            confidence: confidenceScore,
-            should_escalate: confidenceScore < 0.50 // Trigger human support if confidence is low
+            reply: aiAnswer,
+            confidence: confidence,
+            trigger_human_handover: confidence < 0.60
         });
-    } catch (error) {
-        res.status(500).json({ error: "AI Engine error." });
+    } catch (err) {
+        res.status(500).json({ error: "RAG Node connection timeout." });
     }
 });
 

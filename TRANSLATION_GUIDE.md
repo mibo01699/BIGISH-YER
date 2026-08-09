@@ -1,54 +1,27 @@
-# In-App Translation & Internationalization (i18n) Guide
+# i18n Localization Architecture for BIGISH-YER Hybrid Sandbox
 
-Pi Network is a global community. This project uses structured JSON translation keys to serve users in English, Arabic, and other standard languages natively inside the Pi Browser.
+Ensuring absolute semantic matching for financial, tokenomics, and aid terms inside the Pi Browser runtime layout.
 
-## 1. Directory Structure
-```text
-client/
-└── src/
-    └── locales/
-        ├── en.json (English)
-        └── ar.json (Arabic)
-```
+## 1. Translation Dictionaries
 
-## 2. Translation Dictionaries
-
-### `en.json`
+### `client/src/locales/en.json`
 ```json
 {
-  "welcome_msg": "Welcome to BIGISH-YER Platform",
-  "pay_button": "Pay with Pi",
-  "support_smart": "AI Smart Assistant",
-  "support_human": "Talk to an Agent"
+  "header_title": "Economic Stabilization Core",
+  "yer_balance": "YER Token Balance",
+  "clearing_btn": "Execute Settlement Request",
+  "dex_pool": "Pi Network DEX Liquidity Groups",
+  "batch_transfer": "System Salary/Aid Batch Transfer"
 }
 ```
 
-### `ar.json`
+### `client/src/locales/ar.json`
 ```json
 {
-  "welcome_msg": "مرحباً بك في منصة BIGISH-YER",
-  "pay_button": "ادفع بواسطة عملة Pi",
-  "support_smart": "المساعد الذكي الآلي",
-  "support_human": "التحدث مع موظف دعم"
-}
-```
-
-## 3. Implementation Utility Code (React Translation Hook Example)
-```javascript
-// client/src/hooks/useTranslation.js
-import { useState } from 'react';
-import en from '../locales/en.json';
-import ar from '../locales/ar.json';
-
-const translations = { en, ar };
-
-export function useTranslation() {
-    const [locale, setLocale] = useState('en'); // default language
-
-    const t = (key) => {
-        return translations[locale][key] || key;
-    };
-
-    return { t, locale, changeLanguage: setLocale };
+  "header_title": "نظام الاستقرار الاقتصادي الكلي",
+  "yer_balance": "رصيد رمز YER الرقمي",
+  "clearing_btn": "تنفيذ طلب تسوية المقاصة",
+  "dex_pool": "مجموعات سيولة منصة DEX على شبكة Pi",
+  "batch_transfer": "تحويل جماعي للمرتبات والمساعدات"
 }
 ```

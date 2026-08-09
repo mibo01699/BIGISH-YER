@@ -1,7 +1,6 @@
 # .github/workflows/node-ci.yml
-name: 🛡️ BIGISH-YER Ecosystem CI Suite
+name: 🛡️ BIGISH-YER & Hybrid Auction Ecosystem CI Suite
 
-# تحديد الأحداث التي تطلق الفحص الآلي للمستودع
 on:
   push:
     branches: [ "main" ] # يعمل عند الرفع مباشرة لفرع المشروع الرئيسي
@@ -9,37 +8,59 @@ on:
     branches: [ "main" ] # يعمل عند فتح طلب دمج برمي للمراجعة
 
 jobs:
-  build-and-test:
+  # 1. المرحلة الأولى: فحص واختبار ليدجر المقاصة والأنظمة الأساسية لمستودع BIGISH-YER
+  build-and-test-core:
     runs-on: ubuntu-latest
-
-    strategy:
-      matrix:
-        node-version: [20.x] # الفحص على بيئة نود المستقرة المعتمدة للمشروع
-
     steps:
     - name: 📥 Checkout Repository Code
       uses: actions/checkout@v4
 
-    - name: ⚙️ Setup Node.js Environment (${{ matrix.node-version }})
+    - name: ⚙️ Setup Node.js Environment (v20.x)
       uses: actions/setup-node@v4
       with:
-        node-version: ${{ matrix.node-version }}
-        cache: 'npm' # تفعيل الكاش لتسريع عمليات الفحص البرمجي
+        node-version: 20.x
+        cache: 'npm'
 
     - name: 📦 Install Application Dependencies
-      run: npm ci # تثبيت نظيف ومطابق تماماً لملف package-lock.json
+      run: npm ci
 
     - name: 🔬 Setup Python Environment
       uses: actions/setup-python@v5
       with:
-        python-version: '3.10' # تجهيز البيئة اللازمة لتشغيل محاكي الاستقرار الاقتصادي
+        python-version: '3.10'
 
     - name: 📊 Validate Python Macroeconomic Simulation Script
-      run: python simulation.py # التحقق من خلو ملف محاكاة ليدجر السيولة من الأخطاء
+      run: python simulation.py
 
     - name: 🛡️ Execute Core Ledger & Security Test Cases
-      run: npm test # تشغيل فحص المقاصة ومحرك حماية التشفير AES-256-GCM تلقائياً
+      run: npm test
       env:
-        # حقن مفتاح تشفير وهمي وآمن مخصص فقط لبيئة فحص السيرفر المؤتمت
         DATABASE_ENCRYPTION_KEY: "cc77ffaa99887766554433221100ffeecc77ffaa99887766554433221100ffee"
+        NODE_ENV: test
+
+  # 2. المرحلة الثانية: فحص واختبار بوابة دفع المزادات الهجينة المضافة حديثاً تلقائياً
+  build-and-test-auction:
+    runs-on: ubuntu-latest
+    steps:
+    - name: 📥 Checkout Repository Code
+      uses: actions/checkout@v4
+
+    - name: ⚙️ Setup Node.js Environment for Auction (v20.x)
+      uses: actions/setup-node@v4
+      with:
+        node-version: 20.x
+
+    - name: 📦 Install Auction Sub-module Dependencies
+      # الانتقال البرمجي التلقائي لمجلد المزاد لتثبيت الحزم النظيفة لـ axios و mocha
+      run: |
+        cd suppliers-auction/backend
+        npm ci || npm install
+
+    - name: 🔨 Execute Secure Auction Settlement Test Cases
+      # تشغيل اختبارات الأمان لمنع التكرار المالي والتحقق من التوقيع الثنائي للبلوكشين
+      run: |
+        cd suppliers-auction/backend
+        npm test
+      env:
+        PI_API_KEY: "pbk_stress_ci_cd_immutable_key_2026"
         NODE_ENV: test

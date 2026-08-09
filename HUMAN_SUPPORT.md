@@ -1,48 +1,31 @@
-# Human Support & Ticketing System
+# Human Agent Support Desk & Multi-Token Escrow Claims
 
-When the Smart AI Support confidence score is low, tickets are seamlessly escalated to human agents without breaking the secure Pi Browser sandbox loop.
+Handles manual overrides and technical escalations for YER batch transfers, financial inclusion logs, and clearing discrepancies.
 
-## 1. Ticket Data Schema
-```javascript
-{
-  ticket_id: "TKT_123456",
-  pi_username: "pi_pioneer_user", // Fetched via Pi.authenticate()
-  subject: "Pi Payment unresolved timeout",
-  status: "OPEN", // OPEN, IN_PROGRESS, RESOLVED
-  priority: "HIGH",
-  assigned_agent_id: "agent_007"
-}
-```
-
-## 2. API Routes for Human Intervention
+## 1. Ticket API Management
 ```javascript
 // server/routes/humanSupport.js
 const express = require('express');
 const router = express.Router();
 
-let activeTickets = [];
+let financialTickets = [];
 
-// Create Ticket (Escalation)
-router.post('/api/support/tickets', (req, res) => {
-    const { piUsername, subject, initialMessage } = req.body;
+router.post('/api/support/escalate-ticket', (req, res) => {
+    const { piUsername, yerWallet, issueType, description } = req.body;
 
-    const newTicket = {
-        ticket_id: "TKT_" + Date.now(),
+    const ticket = {
+        id: "YER-TKT-" + Math.floor(Math.random() * 90000),
         pi_username: piUsername,
-        subject: subject,
-        messages: [{ sender: "user", text: initialMessage, time: new Date() }],
+        yer_wallet: yerWallet,
+        issue_type: issueType, // e.g., 'BATCH_TRANSFER_FAILED', 'CLEARING_DISCREPANCY'
+        description: description,
         status: "OPEN",
-        priority: "HIGH"
+        assigned_desk: "Macro-Operations-Yemen",
+        timestamp: new Date()
     };
 
-    activeTickets.push(newTicket);
-    res.status(201).json({ success: true, message: "Ticket escalated to human agents successfully.", ticket: newTicket });
-});
-
-// Fetch Tickets for Admin/Agent View
-router.get('/api/support/admin/tickets', (req, res) => {
-    // secure this route behind admin authorization checks
-    res.status(200).json({ success: true, data: activeTickets });
+    financialTickets.push(ticket);
+    res.status(201).json({ success: true, message: "Escalated securely to macroeconomic stabilization desk.", ticket });
 });
 
 module.exports = router;

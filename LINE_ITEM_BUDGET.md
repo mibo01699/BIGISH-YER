@@ -1,25 +1,41 @@
-# Institutional Grant Line-Item Budget: BIGISH-YER Ecosystem Deployment
+# BIGISH-YER: Detailed Line-Item Operational Budget
 
-- **Target Funding Mechanism:** Institutional Innovation Grant (e.g., UNICEF Innovation Fund / UNDP Yemen)
-- **Requested Capital Buffer:** $100,000 USD
-- **Execution Lifecycle:** 12 Months
-- **Target Implementation Area:** Fragile and Conflict-Affected Communities (Yemen)
+This document presents the detailed line-item expenditures required for the deployment, maintenance, and multi-app integration (AJYAL & GAV) of the BIGISH-YER Macroeconomic Stabilization platform within the Pi Network framework.
 
 ---
 
-## 📊 Summary of Resource Allocation
+## 1. Personnel & Engineering Costs (Annual)
 
-| Budget Category | Operational Description | Allocated Capital ($) | Percentage (%) |
-| :--- | :--- | :--- | :--- |
-| **1. Web3 Engineering & Audits** | Protocol 23 smart contract tuning, dual-wallet split optimization, script hardening. | $35,000 | 35% |
-| **2. Low-Bandwidth UI Engineering** | Optimizing Pi Browser WebView components for degraded telecom networks in Yemen. | $20,000 | 20% |
-| **3. Ground Operations & Training** | Onboarding agricultural cooperatives, rural merchants, and local micro-businesses. | $25,000 | 25% |
-| **4. Institutional Compliance Audits** | Verification of data privacy vectors and international cross-border aid compliance. | $12,000 | 12% |
-| **5. Strategic Contingency Reserve** | Buffer for infrastructure disruptions and extreme macroeconomic shifting. | $8,000 | 8% |
-| **Total Grant Value** | **Turnkey Pilot Deployment Operational Capital** | **$100,000** | **100%** |
+| Line Item ID | Description | Unit Cost | Quantity | Total Allocation |
+| :--- | :--- | :--- | :--- | :--- |
+| **PERS-01** | Lead Blockchain Architect (Pi SDK v2.0 Compliance) | $1,200 / mo | 1 | $14,400 |
+| **PERS-02** | Full-Stack Engineer (Clearing Node & Express API Maintenance) | $800 / mo | 1 | $9,600 |
+| **PERS-03** | AI/RAG Data Engineer (Maintaining `SMART_SUPPORT.md` Vectors) | $600 / mo | 1 | $7,200 |
 
 ---
 
-## 🚫 Financial Integrity Guarantees for International Donors
-- **Zero Liquidity Injection:** 100% of all institutional funds are spent on software engineering, field training, and physical operational overhead. **No grant funds** will ever be utilized to manipulate, purchase, or artificialize the cryptographic value of Pi Coins or YER Tokens.
-- **Digital Public Good Framework:** All source components generated via this grant are permanently bound under the **MIT Open Source License**, guaranteeing verifiable transparency and zero corporate extraction risks.
+## 2. Infrastructure, Cloud & Node Hardware (Annual)
+
+| Line Item ID | Description | Unit Cost | Quantity | Total Allocation |
+| :--- | :--- | :--- | :--- | :--- |
+| **INFRA-01** | Secure Cloud Server Hosting (Redundant HTTPS Web Sandbox) | $100 / mo | 12 mo | $1,200 |
+| **INFRA-02** | Encrypted Database Node Instance (`cryptoEngine.js` Backing) | $50 / mo | 12 mo | $600 |
+| **INFRA-03** | SSL/TLS Certificate & Dedicated IP Router Address | $150 / yr | 1 | $150 |
+| **INFRA-04** | API Traffic Bandwidth (Handling high-volume `/api/yer/transfer`) | $250 / yr | 1 | $250 |
+
+---
+
+## 3. Operational & Security Compliance Software (Annual)
+
+| Line Item ID | Description | Unit Cost | Quantity | Total Allocation |
+| :--- | :--- | :--- | :--- | :--- |
+| **SOFT-01** | AI Model Tokens API Quota (Providing instantaneous smart responses) | $0.02 / req | 40,000 req | $800 |
+| **SOFT-02** | Vector DB Cluster Storage subscription (Knowledge base vectors) | $30 / mo | 12 mo | $360 |
+| **SOFT-03** | CI/CD Automated Test Pipeline Extension Runner (GitHub Actions) | $120 / yr | 1 | $120 |
+
+---
+
+## 4. Ledger Auditing & Verification Parameters
+
+1. All monetary expenses logged inside this line-item index must align strictly with the tokenomics percentages defined in `BUDGET.md`.
+2. Financial audit hooks verify that code deployments under `.github/workflows/node-ci.yml` do not alter the macro-liquidity index baseline calculated by `simulation.py`.

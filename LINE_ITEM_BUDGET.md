@@ -39,3 +39,15 @@ This document presents the detailed line-item expenditures required for the depl
 
 1. All monetary expenses logged inside this line-item index must align strictly with the tokenomics percentages defined in `BUDGET.md`.
 2. Financial audit hooks verify that code deployments under `.github/workflows/node-ci.yml` do not alter the macro-liquidity index baseline calculated by `simulation.py`.
+
+
+### Phase 1: Legal Incorporation & Compliance
+- **International Business Incorporation (UK LTD)**: $150
+  - *Description*: Official registration of the entity to ensure compliance, formalize the operation, and secure international corporate status under the sole ownership of the founder.
+- **Corporate Virtual Address & Mail Forwarding (1 Year)**: $50
+  - *Description*: Dedicated legal address in the UK for official regulatory communications and compliance.
+- **International Banking Setup & Regulatory Compliance Fees**: $300
+  - *Description*: Setup fees for digital business banking, legal notarization of documents, and anti-money laundering (AML/KYC) compliance clearance.
+
+**Total Legal Budget Asked**: $500
+

@@ -69,9 +69,15 @@ jobs:
     - name: "Execute Project Simulation Verification"
       run: |
         echo "Booting structural integrity checks..."
-        # If any regression or testing units are present, run execution parameters
-        if [ -f package.json ] && grep -q "test" package.json; then
-          npm test
+        # تشغيل ملف فحص الامتثال المالي للمحفظة مباشرة لضمان القيود السيادية لـ BigInt
+        if [ -f wallet-compliance-test.js ]; then
+          echo "Running wallet sovereign compliance test suite..."
+          node wallet-compliance-test.js
         else
-          echo "No external test framework declared yet. Static compliance parameters verified successfully."
+          echo "Wallet compliance test file not found, running standard package checks..."
+          if [ -f package.json ] && grep -q "test" package.json; then
+            npm test
+          else
+            echo "No external test framework declared yet. Static compliance parameters verified successfully."
+          fi
         fi

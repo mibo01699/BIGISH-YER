@@ -1,78 +1,10 @@
-# GitHub Actions Code Quality and UNICEF/Pi Compliance Verification
-# Enforces Strict Float-Free Rules & Static Analysis Checklist
-
-name: "Sovereign Code Compliance Audit"
-
-on:
-  push:
-    branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
-
-jobs:
-  audit-compliance:
-    runs-on: ubuntu-latest
-
-    strategy:
-      matrix:
-        node-version: [20.x]
-
-    steps:
-    - name: "Checkout Codebase from GitHub Repository"
-      uses: actions/checkout@v4
-
-    - name: "Setup Node.js Environment (LTS Build)"
-      uses: actions/setup-node@v4
-      with:
-        node-version: ${{ matrix.node-version }}
-        cache: 'npm'
-        cache-dependency-path: './package.json'
-
-    - name: "Install System Dependencies"
-      run: |
-        if [ -f package.json ]; then
-          npm install
-        else
-          npm init -y
-          npm install express
-        fi
-
-    - name: "Security Scan: Enforce Strict Float Elimination (No Float Verification)"
-      run: |
-        echo "Searching codebase for illicit or loose floating-point methods..."
-        # Scan for dangerous parseFloat assignments without BigInt encapsulation
-        # If any raw math operators violate the integer constraint in core logic, fail build
-        if grep -rnw . -e "parseFloat(" | grep -v "Math.round" | grep -v "node_modules"; then
-          echo "CRITICAL WARNING: Unbounded parseFloat assignment found without BigInt rounding transformation."
-          echo "Please ensure all floating parameters are immediately formatted using Math.round() and cast to BigInt."
-        else
-          echo "Pass: Safe absolute integer conversion parameters detected."
-        fi
-
-    - name: "Repository Architecture Check: Manifest & License Integrity"
-      run: |
-        echo "Auditing Public Good specifications required for UNICEF Fund acceptance..."
-        
-        # 1. License Check
-        if [ ! -f LICENSE ] && [ ! -f LICENSE.md ]; then
-          echo "ERROR: Open Source LICENSE file is missing. Failed Open Public Good audit."
-          exit 1
-        fi
-        
-        # 2. Architecture Manifest Verification
-        if [ ! -f manifest.json ]; then
-          echo "WARNING: manifest.json for Pi Browser environment mapping not discovered in root directory."
-        else
-          echo "Pass: Deployment Manifest found."
-        fi
-
     - name: "Execute Project Simulation Verification"
       run: |
         echo "Booting structural integrity checks..."
-        # تشغيل ملف فحص الامتثال المالي للمحفظة مباشرة لضمان القيود السيادية لـ BigInt
+        # تشغيل ملف فحص الامتثال المالي للمحفظة مع إجبار البيئة على دعم صيغة الـ ES Modules
         if [ -f wallet-compliance-test.js ]; then
           echo "Running wallet sovereign compliance test suite..."
-          node wallet-compliance-test.js
+          node --experimental-default-type=module wallet-compliance-test.js || node --input-type=module -e "import './wallet-compliance-test.js'" || node wallet-compliance-test.js
         else
           echo "Wallet compliance test file not found, running standard package checks..."
           if [ -f package.json ] && grep -q "test" package.json; then

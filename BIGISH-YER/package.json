@@ -3,9 +3,11 @@
   "version": "1.0.0",
   "description": "Backend server for BIGISH-YER: YER token management and wallet API",
   "main": "backend/server.js",
+  "type": "module",
   "scripts": {
     "start": "node backend/server.js",
-    "dev": "nodemon backend/server.js"
+    "dev": "nodemon backend/server.js",
+    "test": "node wallet-compliance-test.js"
   },
   "dependencies": {
     "express": "^4.18.2",

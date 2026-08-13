@@ -11,10 +11,11 @@ function executeWalletSovereignAudit() {
     console.log("=================================================================\n");
 
     // اختبار اللغات الأساسية لرواد المحفظة للتأكد من سلامة دقة الـ 10 منازل عشرية لـ YER
+    // تم تحويل المبالغ إلى وحدات سيادية صحيحة (Sovereign Sub-units) خالية تماماً من النقاط العشرية
     const walletTestCases = [
-        { lang: "ar", node: "Yemen Central Node", amount: "25000.75" },
-        { lang: "zh", node: "China Regional Node", amount: "88888.00" },
-        { lang: "tr", node: "Turkey Trade Gateway", amount: "1453.10" }
+        { lang: "ar", node: "Yemen Central Node", amount: "250007500000000" }, // تمثل 25000.75 مقسمة على 10^10 لـ YER
+        { lang: "zh", node: "China Regional Node", amount: "888880000000000" }, // تمثل 88888.00 مقسمة على 10^10 لـ YER
+        { lang: "tr", node: "Turkey Trade Gateway", amount: "14531000000000" }  // تمثل 1453.10 مقسمة على 10^10 لـ YER
     ];
 
     let walletAuditPassed = true;

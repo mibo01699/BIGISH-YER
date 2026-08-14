@@ -1,47 +1,23 @@
-// UnifiedIdentityRegistry.js - السجل السيادي للهوية الرقمية الموحدة لشبكة Pi
+// UnifiedIdentityRegistry.js - السجل السيادي الموحد لمنع تكرار البيانات والازدواجية الإدارية
 class UnifiedIdentityRegistry {
     constructor() {
-        this.profiles = new Map(); // مفتاح الخريطة هو عنوان محفظة Pi للمستخدم
+        this.profiles = new Map(); // مفتاح الخريطة: عنوان محفظة Pi
     }
 
     /**
-     * تسجيل أو تحديث الملف الشخصي الثلاثي الموحد لمنع تكرار البنود
+     * تخصيص نوعي موحد يجمع البيانات على 3 مستويات في ملف شخصي واحد
      */
     registerOrUpdateProfile(piWalletAddress, kycData, kybData = null, kygData = null) {
         const existingProfile = this.profiles.get(piWalletAddress) || {
             piWallet: piWalletAddress,
-            individualKYC: { status: "PENDING", verifiedAt: null, baseData: {} },
+            individualKYC: { status: "PENDING", baseData: {} },
             commercialKYB: { status: "NOT_APPLICABLE", taxId: null, enterpriseData: {} },
-            governmentalKYG: { status: "NOT_APPLICABLE", employeeId: null, gradeData: {} },
-            linkedYerWallet: null
+            governmentalKYG: { status: "NOT_APPLICABLE", employeeId: null, gradeData: {} }
         };
 
-        // 1. المستوى الفردي المعتمد على Pi Network KYC الرسمي
-        if (kycData) {
-            existingProfile.individualKYC = {
-                status: "VERIFIED",
-                verifiedAt: Date.now(),
-                baseData: { ...existingProfile.individualKYC.baseData, ...kycData }
-            };
-        }
-
-        // 2. المستوى التجاري (KYB) لتطبيقات GAV، المزاد، و esIM
-        if (kybData) {
-            existingProfile.commercialKYB = {
-                status: "VERIFIED_MERCHANT",
-                taxId: kybData.taxId,
-                enterpriseData: { ...existingProfile.commercialKYB.enterpriseData, ...kybData }
-            };
-        }
-
-        // 3. المستوى الوظيفي والسيادي (KYG) لإدارة الرتب الوظيفية والمرتبات
-        if (kygData) {
-            existingProfile.governmentalKYG = {
-                status: "ACTIVE_OFFICIAL",
-                employeeId: kygData.employeeId,
-                gradeData: { ...existingProfile.governmentalKYG.gradeData, ...kygData }
-            };
-        }
+        if (kycData) existingProfile.individualKYC = { status: "VERIFIED", baseData: kycData };
+        if (kybData) existingProfile.commercialKYB = { status: "VERIFIED_MERCHANT", taxId: kybData.taxId, enterpriseData: kybData };
+        if (kygData) existingProfile.governmentalKYG = { status: "ACTIVE_OFFICIAL", employeeId: kygData.employeeId, gradeData: kygData };
 
         this.profiles.set(piWalletAddress, existingProfile);
         return existingProfile;

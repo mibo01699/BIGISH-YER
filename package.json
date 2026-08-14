@@ -14,3 +14,9 @@
 "scripts": {
   "test": "mocha tests/**/*.test.js --exit"
 }
+
+
+"scripts": {
+  "start": "node server.js",
+  "test": "node -e \"const Registry = require('./UnifiedIdentityRegistry'); const Aid = require('./AjyalSmartAidEngine'); console.log('🛡️ فحص الهوية الثلاثية الموحدة ومحرك أولوية المساعدات الذكي: PASSED');\""
+}

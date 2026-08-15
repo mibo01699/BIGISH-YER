@@ -4,6 +4,8 @@
   "test": "node -e \"const Fee = require('./FeeManagementProcessor'); const Wallet = require('./SovereignVestingWallet'); console.log('🛡️ [فحص الأمان لعام 2026] جاري اختبار نظام الرسوم السيادية والتنافسية...'); const p2p = Fee.calculatePlatformFee(100000n, 'P2P_TRANSFER'); const gov = Fee.calculatePlatformFee(100000n, 'SOVEREIGN_GOV'); const gav = Fee.calculatePlatformFee(100000n, 'GAV'); if(p2p === 0n && gov === 100n && gav === 500n) { console.log('✅ نجاح الفحص الحسابي: التحويلات العادية مجانية، والرسوم السيادية والتنافسية مطابقة للسياسة الحرة بنسبة 100%'); } else { throw new Error('فشل الفحص الرسومي'); }\""
 }
 
+
+
 // FeeManagementProcessor.js - محرك إدارة الرسوم السيادية والتنافسية للمنظومة الخماسية لعام 2026
 
 class FeeManagementProcessor {
@@ -52,3 +54,6 @@ class FeeManagementProcessor {
 }
 
 module.exports = FeeManagementProcessor;
+
+
+

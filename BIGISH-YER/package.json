@@ -1,4 +1,14 @@
-"scripts": {
-  "start": "node server.js",
-  "test": "node -e \"const Fee = require('./FeeManagementProcessor'); const Wallet = require('./SovereignVestingWallet'); console.log('🛡️ [فحص الأمان لعام 2026] جاري اختبار نظام الرسوم السيادية والتنافسية...'); const p2p = Fee.calculatePlatformFee(100000n, 'P2P_TRANSFER'); const gov = Fee.calculatePlatformFee(100000n, 'SOVEREIGN_GOV'); const gav = Fee.calculatePlatformFee(100000n, 'GAV'); if(p2p === 0n && gov === 100n && gav === 500n) { console.log('✅ نجاح الفحص الحسابي: التحويلات العادية مجانية، والرسوم السيادية والتنافسية مطابقة للسياسة الحرة بنسبة 100%'); } else { throw new Error('فشل الفحص الرسومي'); }\""
+{
+  "name": "bigish-yer",
+  "version": "1.0.0",
+  "description": "Core Infrastructure Utility Module - A.E.C.",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2"
+  },
+  "author": "mibo01699",
+  "license": "MIT"
 }

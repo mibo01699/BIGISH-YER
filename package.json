@@ -1,22 +1,14 @@
 {
-  "name": "bigish-yer-settlement-core",
-  "version": "2.0.0",
-  "description": "Central Financial Clearing & Aid Management Ledger",
-  "main": "app.js",
+  "name": "bigish-yer-pi",
+  "version": "1.0.0",
+  "description": "Pi Network App for Yemen",
+  "main": "server.js",
   "scripts": {
-    "start": "node app.js"
+    "start": "node server.js"
   },
   "dependencies": {
-    "express": "^4.19.2",
-    "cors": "^2.8.5"
+    "express": "^4.18.2",
+    "axios": "^1.6.0",
+    "path": "^0.12.7"
   }
-}
-"scripts": {
-  "test": "mocha tests/**/*.test.js --exit"
-}
-
-
-"scripts": {
-  "start": "node server.js",
-  "test": "node -e \"const Registry = require('./UnifiedIdentityRegistry'); const Aid = require('./AjyalSmartAidEngine'); console.log('🛡️ فحص الهوية الثلاثية الموحدة ومحرك أولوية المساعدات الذكي: PASSED');\""
 }

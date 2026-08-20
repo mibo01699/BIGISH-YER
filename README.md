@@ -1,91 +1,76 @@
-# BIGISH-YER: Macroeconomic Stabilization for Yemen via Pi Network Architecture
+# BIGISH-YER: Macroeconomic Stabilization & Sovereign Clearing Infrastructure for Yemen
 
-This repository contains the software framework and economic simulation models implementing **Research Papers No. 11046 and No. 11129 (Published via EasyChair)**. The project designs a practical blockchain-based blueprint to resolve the liquidity crisis and stabilize the macroeconomic infrastructure of the Republic of Yemen utilizing the decentralized framework of the Pi Network.
+This repository contains the production-grade decentralized software framework and economic clearing engines implementing **Research Papers No. 11046 and No. 11129 (Published via EasyChair)**. The project constructs a practical, sovereign Web3 infrastructure designed to resolve the catastrophic liquidity crisis, mitigate hyperinflation, and heal the financial fragmentation of the Republic of Yemen by leveraging the decentralized ledger of the Pi Network.
 
-## 🚀 Vision & Social Impact (UNICEF & Mercy Corps Alignment)
-In conflict-affected zones like Yemen, financial fragmentation and hyperinflation severely impact small businesses, youth, and families. This project bridges **Web3 Technology (Pi SDK)** with **Macroeconomic Policy** to foster institutional recovery, digital financial inclusion, and reliable liquidity distribution.
+---
 
-## 🛠️ Repository Components & Tech Stack
-- **`simulation.py`**: A Python-based simulation engine mimicking how Pi token reserves and utility integration mitigate hyperinflation and improve stability indices.
-- **Pi Network SDK Blueprint**: Architectural mapping to bridge the Pi Wallet API with institutional ledger frameworks.
-- **License**: Fully Open Source under the MIT License (Digital Public Good standard).
+## 🚀 Vision, Social Impact & International Institutional Alignment
 
-## 📊 How to Run the Simulation
-Ensure you have Python installed, then execute:
-```bash
-python simulation.py
-```
+In conflict-affected and hyperinflationary environments like Yemen, financial partitioning severely degrades local market health, affecting small businesses, youth, and vulnerable supply lines. 
 
-## 🔗 Academic References
-- **Paper 11046**: A Radical Solution to the Crisis via Pi Network Infrastructure ([EasyChair Presentation](https://easychair.org))
-- **Paper 11129**: Macroeconomic and Institutional Framework for Stabilization ([EasyChair Presentation](https://easychair.org))
+Aligned with the digital public utility benchmarks of **UNICEF Innovation** and the resource allocation standards of **Mercy Corps**, this platform bridges macro-financial policies with strict tokenomic validation. It provides a reliable distribution vehicle for humanitarian aid, civil payrolls, and multi-tier institutional clearing while ensuring continuous financial inclusion.
 
-## 💰 Clearing & Settlement System
+---
 
-BIGISH-YER is the financial backbone that manages all payment processes, including the settlement of POS receivables disbursed for in-kind assistance.
+## 🌐 Ecosystem Integration Matrix (The Seven Interconnected Protocols)
 
-### Key Features:
-- **Financial Transfers:** Supports individual and batch transfers (`/api/yer/transfer` and `/api/yer/batch-transfer`).
+`BIGISH-YER` functions as the central micro-financial clearinghouse, liquidity anchor, and settlement hub ($X \times Y = K$ AMM/DEX) for the entire **Arabian Eagle Ecosystem (A.E.C.)** led by **Mayass Ali**. It dynamically coordinates real-time token shifts and clearing manifests across seven specialized nodes:
 
-- **Wallet Management:** Create and manage YER wallets for beneficiaries and POS.
-
-- **Clearing System Integration:** Receive payment requests from the AJYAL clearing system.
-
-### Integration with Other Applications:
-- **AJYAL:** Sends payment requests to settle POS receivables via the clearing system.
-
-- **GAV:** Receives payments in POS wallets.
-# BIGISH-YER: Macroeconomic Stabilization & Sovereign Clearing Infrastructure
-
-The decentralized blockchain backbone engineered to mitigate liquidity crises, resolve financial fragmentation, and promote structured financial inclusion in the Republic of Yemen using the Pi Network infrastructure. This repository implements academic blueprints (Research Papers No. 11046 and No. 11129 via EasyChair) aligned with the United Nations Innovation standards.
+1.  **BIGISH-YER (The Core Ledger)**: Manages sovereign individual/batch digital wallets, liquidity pools, and zero floating-point fractionless clearing macros.
+2.  **COBRA-Protocol**: Secures emergency, disaster-resilient open broadband channels and handles telemetry reporting to trigger predictive network routing.
+3.  **Be-well Platform**: Settles cross-border healthcare utility accounts and automates critical bio-medical vital alert notifications.
+4.  **suppliers-auction Node**: Regulates industrial procurement auctions and split-bidding states divided evenly between core crypto-assets and stable local tenders.
+5.  **AJYAL Framework**: Distributes instant, real-time localized transactions, digital payroll lines, and point-of-sale (POS) merchant clearing cycles.
+6.  **GAV-The-Incense-Route**: Traces secure asset routing across historic geopolitical supply lines and releases escrowed multi-party logistics balances.
+7.  **AMAN-Protocol**: Governs decentralized smart insurance contracts, calculates dynamic premiums based on satellite metadata, and routes programmatic claim payouts under cross-repo clearings.
 
 ---
 
 ## 🛠 Architectural Overview & Component Mapping
 
-This project serves as an institutional clearing house and digital public wallet interface, integrating procurement auctions with immediate peer-to-peer distribution networks.
+To secure institutional banking precision and defeat transaction-rounding vulnerabilities, all currency transformations across this cross-repo pipeline enforce a **Zero Floating-Point Constraint**. All state-machine engines leverage fixed-point **Strict BigInt Arithmetic**:
 
-### 1. Core Financial Architecture (Zero Floating-Point Constraint)
-To maintain bank-grade precision and prevent cumulative truncation or rounding exploits, all monetary calculations across this infrastructure strictly forbid floating-point mathematics. Financial state machines utilize **Strict BigInt Fixed-Point Arithmetic**:
-*   **Pi Network Token Precision**: 7 Decimal Places ($1 \text{ Pi} = 10^7 \text{ Stroops/Units}$)
-*   **Yemen Stabilized Currency (YER) Precision**: 10 Decimal Places ($1 \text{ YER} = 10^{10} \text{ Sovereign Sub-units}$)
+*   **Pi Network Token Scale**: 7 Decimal Places ($1 \text{ Pi} = 10^7 \text{ Stroops/Units}$)
+*   **Yemen Stabilized Currency (YER) Scale**: 10 Decimal Places ($1 \text{ YER} = 10^{10} \text{ Sovereign Sub-units}$)
 
-### 2. File Repository Directory Mapping
-*   `AntiDoubleDippingEngine.js`: Enforces an atomic concurrency lock preventing beneficiaries or vendors from receiving double allocations or overlapping concurrent payouts during bulk clearing cycles.
-*   `wallet-core.js` & `gav-core.js`: Manages individual/batch monetary transfers (`/api/yer/transfer` and `/api/yer/batch-transfer`) and receives automated POS settlement inputs from the GAV node application layer.
-*   `HybridClearingProcessor.js`: The algorithmic bridge separating joint marketplace auction bids into 50% GCV (Global Consensus Value) Pi Token ledger requirements and 50% YER Local Liquidity Pool adjustments.
-*   `SovereignClearingGuard.js`: Implements the simplified KYB (Know Your Business) verification engine, chaining the core Pi Network KYC identity status to official institutional vendor profiles while managing concurrent transactional locks.
-*   `app-replit-ext.js`: Extends the main express lifecycle (`app.js`) with secure REST endpoints and maps the simulated Constant Product ($X \times Y = K$) Pi/YER Decentralized Exchange (DEX) liquidity pool.
+### 1. Core Directory & File Mapping
+*   `AntiDoubleDippingEngine.js`: Enforces an atomic concurrency lock preventing overlapping concurrent payouts during bulk clearing cycles.
+*   `wallet-core.js` & `gav-core.js`: Processes secure transfer loops (`/api/yer/transfer`) and registers points-of-sale settlement inputs.
+*   `HybridClearingProcessor.js`: Splits incoming marketplace auction bids into 50% Global Consensus Value (GCV) Pi Tokens and 50% YER Local Liquidity balances.
+*   `SovereignClearingGuard.js`: Implements the simplified Know-Your-Business (KYB) and Know-Your-Customer (KYC) checking layers chained to the Pi Network secure sandbox.
+*   `app-replit-ext.js`: Extends the main express app lifecycle with active REST API configurations and maps the underlying decentralized exchange asset matrix.
+*   `simulation.py`: A comprehensive python-driven telemetry simulation verifying hyperinflation containment curves.
 
 ---
 
 ## 💳 Hybrid Payment & Automated Clearing Specification
 
-When a supplier auction inside the `suppliers-auction` subsystem triggers a settlement, the clearing cycle is processed through strict integer transformations:
+Whenever an operational application node (such as `suppliers-auction` or `AMAN-Protocol`) submits a settlement invoice, the clearing workflow triggers integer conversions:
 
-1.  **DEX Rate Pull**: The system queries the native `BIGISH-YER` liquidity pool state to fetch the absolute BigInt price relation (expressed as YER sub-units per 1 whole Pi).
-2.  **Fractionless Splitting**: The nominal bid is instantly cast into 10-decimal integer space. Half is routed natively to the YER core balance ledgers, and the remaining half is programmatically converted to Pi Token base units utilizing pure multiplication and division isolating zero decimal remainders.
-3.  **SDK Manifest Injection**: The generated structural output feeds data payloads directly ready for compliance execution within the Pi Browser (`manifest.json`) using secure sandbox paradigms.
-
----
-
-## 🌍 Open Source & UNICEF Innovation Fund Alignment
-
-This infrastructure meets the stringent compliance guidelines for deployment as a public utility in crisis-affected environments:
-*   **Digital Public Good Standard**: Fully open-source under the permissive MIT License, ensuring transparent utility for humanitarian organizations and government systems.
-*   **Sovereign KYB Model**: Leverages Pi Network's decentralized identity KYC to securely validate local merchants without introducing prohibitive administrative friction or data privacy vulnerabilities.
-*   **Anti-Exploit Concurrency**: Mitigates regional systemic vulnerabilities through decentralized cryptographic transaction locking profiles, defending resource allocation lines against transactional manipulation.
+1.  **DEX Conversion Rate Fetch**: The system queries the native `BIGISH-YER` AMM matrix to extract the absolute integer-space asset weight relations.
+2.  **Fractionless Splitting Execution**: The baseline contract value is immediately cast into 10-decimal integer space. 50% of the asset volume routes directly to local stable ledger reserves, while the remaining 50% converts into sub-unit Pi Stroops using absolute multiplication isolating zero decimal remainders.
+3.  **SDK Manifest Injection**: The compiled payload output constructs compliant data packages ready for direct execution within the Pi Browser (`manifest.json`) using secure sandbox paradigms.
 
 ---
 
-## 🚀 Future Deployment Guide (Target: Replit Sandbox)
+## 📊 How to Run the Simulation
 
-To transition this repository from GitHub into an active local runtime environment:
-1. Clone this repository directly into your workspace.
-2. Install dependencies via `npm install`.
-3. Boot the environment utilizing `node app.js` to expose local verification nodes.
+Ensure you have Python 3.10+ installed within your active execution context, then trigger the localized macroeconomic simulation script:
+```bash
+python simulation.py
+```
 
+---
 
+## 🔗 Academic References & Groundwork
+*   **Paper 11046**: *A Radical Solution to the Liquidity Crisis via Pi Network Decentralized Infrastructures* ([EasyChair Institutional Presentation](https://easychair.org)).
+*   **Paper 11129**: *Macroeconomic and Institutional Framework for Stabilization and Financial Inclusion* ([EasyChair Institutional Presentation](https://easychair.org)).
 
+---
 
-✅ The BIGISH-YER repository incorporates a decentralized blockchain infrastructure designed to alleviate liquidity crises, address financial fragmentation, and promote financial inclusion in Yemen using the Pi Network. The repository functions as a hybrid central clearinghouse (DEX/AMM) connecting seven interconnected projects, including: COBRA-Protocol: for securing emergency communication channels and transmitting biometric data; Be-well: for settling cross-border healthcare bills; suppliers-auction: for managing industrial supply auctions split between Pi tokens and local currency; AJYAL: for distributing instant payments and point-of-sale terminals; GAV-The-Incense-Route: for verifying supply chains and releasing temporary balances; and AMAN-Protocol: for calculating dynamic premiums and clearing claims.
+## 🚀 Sandbox Deployment Guide (Target: Replit Environment)
+
+To deploy and build this sovereign institutional clearing node inside your localized runtime container:
+1. Clone this repository directly into your active workspace.
+2. Install production dependencies via: `npm install`.
+3. Boot the unified ecosystem gateway utilizing: `node app.js`.

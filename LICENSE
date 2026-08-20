@@ -1,21 +1,21 @@
-MIT License
+PiOS License (Bigish-YER Project Version)
+Copyright © 2024 Bigish-YER (mibo01699)
+This license grants the application developer (Bigish-YER), referred to as the "Software Developer," the opportunity to obtain a copy of this application and the software documented therein ("Software"), which was developed for exclusive use within the Pi Network.
 
-Copyright (c) 2026 mibo01699
+This grants the right to use, copy, modify, integrate, license, and/or sell derivative works and their embedded software components, exclusively to those who provide such derivative works, in each case, including exclusively developing and marketing applications for the official Pi Network.
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+For this purpose, "Pi Network" means any current or future application, software, or platform developed, owned, or operated for Pi Community Corporation, Inc., its parent company, affiliates, or structural assets.  Commerce:
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+It is prohibited to use any part of the software or any related works in any way that:
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+(a) infringes any of the Pi Network's intellectual property rights.
+
+(b) compromises any of the Pi Network's systems or processes.
+
+(c) selects any product or service that competes with the Pi Network or graduates from its ecosystem.
+
+Liability:
+
+The software is provided "as is," without warranty of any kind, express or implied, including but not limited to warranties of merchantability, fitness for a particular purpose, and non-infringement. The authors of this software (Bigish-YER), its publishers, and its franchisees shall not be liable under any circumstances for any direct, indirect, incidental, special, or consequential damages (including power outages, data breaches, or related damages) arising out of or relating to the software or its use, even if they disregard the possibility of such damages.
+
+Pi, the Pi Network, and the Pi logo are registered trademarks of the Pi Community Company.

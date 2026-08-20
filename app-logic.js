@@ -1,35 +1,20 @@
-// إدارة حالة التطبيق
-const AppState = {
-    user: null,
-    cart: [],
-    isPiBrowser: !!window.Pi,
-};
-
-// وظيفة الدخول التلقائي عند فتح التطبيق في متصفح Pi
-async function initApp() {
-    if (AppState.isPiBrowser) {
-        try {
-            const auth = await Pi.authenticate(['username', 'payments'], onIncompletePaymentFound);
-            AppState.user = auth.user;
-            document.getElementById('user-name').innerText = `مرحباً، ${auth.user.username}`;
-            console.log("تم تسجيل الدخول بنجاح");
-        } catch (error) {
-            console.error("فشل تسجيل الدخول:", error);
+// وظيفة معالجة الشراء
+async function handlePurchase(productId, amount, memo) {
+    try {
+        console.log(`بدء عملية شراء: ${productId}`);
+        // استدعاء دالة الدفع من paymentService.js
+        const payment = await createPayment(amount, memo, { productId: productId });
+        
+        if (payment) {
+            alert("تمت العملية بنجاح! شكراً لاستخدامك Bigish-YER");
         }
-    } else {
-        alert("يرجى فتح التطبيق من داخل متصفح Pi للاستفادة من كامل الميزات.");
+    } catch (error) {
+        alert("حدث خطأ أثناء الدفع، يرجى المحاولة لاحقاً.");
     }
 }
 
-// إضافة منتج للسلة (مثال وظيفي)
-function addToCart(productId, price) {
-    AppState.cart.push({ id: productId, price: price });
-    updateCartUI();
-}
-
-function updateCartUI() {
-    const cartCount = AppState.cart.length;
-    document.getElementById('cart-badge').innerText = cartCount;
-}
-
-window.onload = initApp;
+// تحديث واجهة المستخدم بعد تسجيل الدخول
+window.addEventListener('authSuccess', (e) => {
+    const user = e.detail;
+    document.getElementById('user-info').innerText = `مرحباً، ${user.username}`;
+});

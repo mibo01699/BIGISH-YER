@@ -1,0 +1,25 @@
+/* تحسينات الواجهة لمتصفح Pi */
+body {
+    -webkit-tap-highlight-color: transparent;
+    user-select: none; /* منع تحديد النصوص لإعطاء إحساس التطبيق */
+    background-color: #f8f9fa;
+}
+
+.pi-button {
+    background-color: #673ab7;
+    color: white;
+    border-radius: 25px;
+    padding: 12px 25px;
+    font-weight: bold;
+    border: none;
+    width: 100%;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.pi-card {
+    border: 1px solid #eee;
+    border-radius: 15px;
+    margin-bottom: 15px;
+    background: #fff;
+    overflow: hidden;
+}

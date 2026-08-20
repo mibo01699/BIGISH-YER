@@ -86,4 +86,6 @@ To transition this repository from GitHub into an active local runtime environme
 3. Boot the environment utilizing `node app.js` to expose local verification nodes.
 
 
+
+
 ✅ The BIGISH-YER repository incorporates a decentralized blockchain infrastructure designed to alleviate liquidity crises, address financial fragmentation, and promote financial inclusion in Yemen using the Pi Network. The repository functions as a hybrid central clearinghouse (DEX/AMM) connecting seven interconnected projects, including: COBRA-Protocol: for securing emergency communication channels and transmitting biometric data; Be-well: for settling cross-border healthcare bills; suppliers-auction: for managing industrial supply auctions split between Pi tokens and local currency; AJYAL: for distributing instant payments and point-of-sale terminals; GAV-The-Incense-Route: for verifying supply chains and releasing temporary balances; and AMAN-Protocol: for calculating dynamic premiums and clearing claims.

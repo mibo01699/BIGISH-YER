@@ -74,3 +74,6 @@ To deploy and build this sovereign institutional clearing node inside your local
 1. Clone this repository directly into your active workspace.
 2. Install production dependencies via: `npm install`.
 3. Boot the unified ecosystem gateway utilizing: `node app.js`.
+
+## License
+This project is licensed under the **PiOS License** - see the [LICENSE](LICENSE) file for details.

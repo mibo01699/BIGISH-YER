@@ -17,3 +17,6 @@
 1. `npm install`
 2. إضافة `PI_API_KEY` في ملف البيئة.
 3. `npm start`
+
+## License
+This project is licensed under the **PiOS License** - see the [LICENSE](LICENSE) file for details.

@@ -1,3 +1,20 @@
+# BIGISH-YER | الريال اليمني اللامركزي
+
+محفظة إلكترونية ونظام عقود ذكية متكامل لدعم **الريال اليمني اللامركزي (YER)**، أتمتة صرف المرتبات، وتوزيع المساعدات الإنسانية والسيولة الموازية في بيئات التشغيل المنخفضة النطاق الترددي.
+
+## 🚀 الميزات الرئيسية
+- **رمز YER المعتمد:** عقدERC-20 ذو سقف نقدي محدد حمايةً من التضخم.
+- **توزيع أجور وإغاثة مؤتمت:** تحويل مجمع (Batch Transfer) موفر لرسوم المعاملات وحماية ضد Reentrancy.
+- **إدارة صلاحيات صارمة (RBAC):** تقسيم الأدوار بين المسؤولين والمنفذين بحجم حماية عالي.
+- **إيقاف الطوارئ (Circuit Breaker):** إمكانية تجميد المعاملات عند كشف أي سلوك مشبوه.
+
+## 🛠️ كيفية التشغيل والتطوير المحلي
+1. استنسخ المستودع:
+   ```bash
+   git clone [https://github.com/mibo01699/BIGISH-YER.git](https://github.com/mibo01699/BIGISH-YER.git)
+   cd BIGISH-YER
+
+
 # BIGISH-YER: Macroeconomic Stabilization & Sovereign Clearing Infrastructure for Yemen
 
 This repository contains the production-grade decentralized software framework and economic clearing engines implementing **Research Papers No. 11046 and No. 11129 (Published via EasyChair)**. The project constructs a practical, sovereign Web3 infrastructure designed to resolve the catastrophic liquidity crisis, mitigate hyperinflation, and heal the financial fragmentation of the Republic of Yemen by leveraging the decentralized ledger of the Pi Network.

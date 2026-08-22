@@ -35,3 +35,8 @@ const clearingApi = require('./routes/clearing-api');
 app.use(express.json()); // لتمكين الخادم من قراءة بيانات الـ JSON المرسلة من الواجهات
 app.use('/api/yer/payments', clearingApi);
 
+const { processFlexibleHybridPayment } = require('./HybridClearingProcessor');
+
+// مسار معالجة المدفوعات الهجينة الديناميكية المخصصة للمستخدمين والتجار
+app.post('/api/yer/transfer-hybrid', processFlexibleHybridPayment);
+

@@ -1,3 +1,5 @@
+
+const DynamicRatioValidator = require('./DynamicRatioValidator');
 // استيراد محرك التوزيع الديناميكي المحدث
 const DynamicRatioValidator = require('./DynamicRatioValidator');
 const validator = new DynamicRatioValidator();

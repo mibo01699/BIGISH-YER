@@ -72,3 +72,30 @@ export default function MiningDashboard() {
         </div>
     );
 }
+<!-- قسم دفع الفاتورة الهجينة الديناميكية -->
+<div class="wallet-card payment-container" id="hybridPaymentContainer">
+    <h3>بوابة الدفع الهجين المرنة (Flexible Hybrid Payment)</h3>
+    <div class="invoice-summary">
+        <p>إجمالي الفاتورة الأساسية: <span id="displayInvoiceAmount" style="font-weight: bold; color: #ff9900;">1000</span> وحدة مقاصة</p>
+    </div>
+
+    <!-- شريط التحكم التفاعلي بالطلب الديناميكي للنسب -->
+    <div class="slider-wrapper" style="margin: 20px 0;">
+        <label for="hybridRatioSlider" style="display: block; margin-bottom: 10px;">اسحب لتحديد نسبة الدفع الهجين:</label>
+        <input type="range" id="hybridRatioSlider" min="0" max="100" value="50" style="width: 100%; cursor: pointer;">
+        
+        <div class="ratio-labels" style="display: flex; justify-content: space-between; margin-top: 10px; font-weight: bold;">
+            <span style="color: #625bf5;">حصة شبكة Pi: <id id="piRatioLabel">50</id>%</span>
+            <span style="color: #00cc66;">حصة رمز YER: <id id="yerRatioLabel">50</id>%</span>
+        </div>
+    </div>
+
+    <!-- تفاصيل الحسبة اللحظية للوحدات قبل الدفع لضمان الشفافية المصرفية -->
+    <div class="live-breakdown" style="background: rgba(0,0,0,0.05); padding: 10px; border-radius: 6px; font-size: 14px;">
+        <p>المبلغ بـ Pi (بالـ Stroops): <span id="piStroopsBreakdown">5000000000</span></p>
+        <p>المبلغ بـ YER (بالوحدة الصغرى): <span id="yerSubunitsBreakdown">5000000000000</span></p>
+    </div>
+
+    <button id="btnExecuteHybridPayment" class="btn-primary" style="width: 100%; margin-top: 15px; padding: 12px; font-weight: bold;">تأكيد ودفع المعاملة الهجينة</button>
+</div>
+

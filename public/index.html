@@ -43,3 +43,61 @@
     <script src="app-logic.js"></script>
 </body>
 </html>
+<!-- public/index.html -->
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>بوابة المقاصة السيادية والاستقرار الاقتصادي لليمن - BIGISH-YER</title>
+    <!-- مكتبة Pi SDK الرسمية المستضافة داخل متصفح Pi Browser -->
+    <script src="https://minepi.com"></script>
+    <link rel="stylesheet" href="style-custom.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🦅 منظومة BIGISH-YER السيادية</h1>
+            <p>بنية تحتية للمقاصة الرقمية والاستقرار المالي لجمهورية اليمن (Web3)</p>
+            <div id="auth-status" class="status-badge pending">بانتظار الاتصال بـ Pi Network...</div>
+        </header>
+
+        <!-- لوحة التحكم بالهوية والأرصدة -->
+        <section class="profile-card">
+            <h3>👤 الهوية الرقمية الموحدة</h3>
+            <p>اسم المستخدم السيادي: <span id="username">---</span></p>
+            <p>عنوان المحفظة اللامركزية: <span id="wallet-address">---</span></p>
+        </section>
+
+        <!-- نموذج إنشاء فاتورة سداد ومقاصة فورية -->
+        <section class="invoice-section">
+            <h3>💳 بوابة إنشاء فواتير المقاصة الهجينة</h3>
+            <form id="invoice-form">
+                <div class="form-group">
+                    <label for="total-amount">إجمالي المبلغ المطلوب (YER بوحدات فرعية):</label>
+                    <input type="number" id="total-amount" placeholder="مثال: 200000" required>
+                </div>
+                <div class="form-group">
+                    <label for="exchange-rate">سعر صرف AMM الحالي (YER لكل 1 Pi):</label>
+                    <input type="number" id="exchange-rate" value="50000" required readonly>
+                </div>
+                <div class="form-group">
+                    <label for="memo">بيان المعاملة / الغرض من الصرف:</label>
+                    <input type="text" id="memo" placeholder="رواتب، مساعدات إنسانية، سداد ممر طبي..." required>
+                </div>
+                <button type="submit" id="btn-pay" class="btn-primary" disabled>إرسال طلب المقاصة لشبكة Pi</button>
+            </form>
+        </section>
+
+        <!-- تتبع سجل المعاملات النشطة لمنع السحب المزدوج -->
+        <section class="logs-section">
+            <h3>🛡 سجل الحماية الفورية والمقاصة</h3>
+            <div id="telemetry-logs" class="logs-box">
+                <p class="log-item system">جاهز لبدء دورة التحقق من الأمان اللامركزي...</p>
+            </div>
+        </section>
+    </div>
+
+    <script type="module" src="app-ui.js"></script>
+</body>
+</html>

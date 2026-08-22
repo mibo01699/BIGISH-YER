@@ -43,3 +43,25 @@ app.post('/api/pi/complete', async (req, res) => {
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`الخادم يعمل على منفذ ${PORT}`));
+/**
+ * @file server.js
+ * @description خادم التشغيل والمقاصة الرئيسي لمحفظة BIGISH-YER
+ */
+
+const express = require('express');
+const piIntegration = require('./pi-integration');
+
+const app = express();
+app.use(express.json());
+
+// ربط بوابات التكامل الخاصة بـ Pi Browser والـ DEX
+app.use('/api/pi', piIntegration);
+
+const PORT = process.env.PORT || 3000;
+if (process.env.NODE_ENV !== 'test') {
+    app.listen(PORT, () => {
+        console.log(`[سيرفر سيادي]: المحفظة تعمل بنجاح على المنفذ ${PORT}`);
+    });
+}
+
+module.exports = app;

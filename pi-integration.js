@@ -1,3 +1,5 @@
+const SovereignVestingWallet = require('./SovereignVestingWallet');
+const PiYerAMMExchange = require('./PiYerAMMExchange');
 // src/pi-integration.js
 // تهيئة وإعداد اتصال Pi SDK وفقاً للمعايير المحدثة لبيئة Sandbox و متصفح Pi Browser
 

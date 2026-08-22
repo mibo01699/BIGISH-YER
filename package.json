@@ -35,3 +35,7 @@
   "author": "Mayass Ali",
   "license": "MIT"
 }
+  "scripts": {
+    "test": "node stressTestFlexibleHybrid.js && node testDexIntegration.js && node testMiningGovernance.js && node testVestingGovernance.js"
+  },
+

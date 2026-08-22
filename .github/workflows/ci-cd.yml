@@ -1,0 +1,32 @@
+name: BIGISH-YER Ecosystem CI-CD Pipeline
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  audit-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: نسخ الكود من المستودع
+      uses: actions/checkout@v3
+
+    - name: تهيئة بيئة تشغيل Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-node: 18
+
+    - name: تثبيت الحزم والاعتماديات
+      run: npm install
+
+    - name: 🔥 تشغيل اختبار الضغط والمقاصة لمليون عملية دفع هجين
+      run: node stressTestFlexibleHybrid.js
+
+    - name: 🔄 تشغيل اختبار تكامل مجمعات السيولة الآلية AMM / DEX
+      run: node testDexIntegration.js
+
+    - name: ⛏ تشغيل فحص حوكمة صمام أمان التعدين المجاني 10%
+      run: node testMiningGovernance.js

@@ -11,22 +11,25 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: نسخ الكود من المستودع
+    - name: 1. نسخ الكود من المستودع السيادي
       uses: actions/checkout@v3
 
-    - name: تهيئة بيئة تشغيل Node.js
+    - name: 2. تهيئة بيئة تشغيل Node.js
       uses: actions/setup-node@v3
       with:
-        node-node: 18
+        node-version: 18
 
-    - name: تثبيت الحزم والاعتماديات
+    - name: 3. تثبيت الحزم والاعتماديات
       run: npm install
 
-    - name: 🔥 تشغيل اختبار الضغط والمقاصة لمليون عملية دفع هجين
+    - name: 4. 🔥 تشغيل اختبار الضغط والمقاصة لمليون عملية دفع هجين
       run: node stressTestFlexibleHybrid.js
 
-    - name: 🔄 تشغيل اختبار تكامل مجمعات السيولة الآلية AMM / DEX
+    - name: 5. 🔄 تشغيل اختبار تكامل مجمعات السيولة الآلية AMM / DEX
       run: node testDexIntegration.js
 
-    - name: ⛏ تشغيل فحص حوكمة صمام أمان التعدين المجاني 10%
+    - name: 6. ⛏ تشغيل فحص حوكمة صمام أمان التعدين المجاني 10%
       run: node testMiningGovernance.js
+
+    - name: 7. 🔐 تشغيل فحص قيود الحوكمة للـ 90 مليون عملة المخصصة للإدراج
+      run: node testVestingGovernance.js

@@ -1,0 +1,103 @@
+// suppliers-auction/backend/auction-clearing.js
+// محرك المقاصة وتنظيم المزايدات الصناعية وحماية الموردين (Strict BigInt Architecture)
+
+const AntiDoubleDippingEngine = require('../../AntiDoubleDippingEngine');
+const PiPaymentProcessor = require('../../backend/pi-payment-processor');
+
+class AuctionClearingNode {
+    constructor() {
+        // مصفوفة حفظ المزادات الصناعية المقامة لتوريد الاحتياجات اللوجستية وعقود الموردين
+        this.activeAuctions = new Map();
+    }
+
+    /**
+     * إنشاء مزاد توريد صناعي جديد (مثل توريد مواد طبية، خطوط طاقة، أو مساعدات إنسانية)
+     */
+    createNewAuction(auctionId, title, institutionId, reservePriceYer) {
+        this.activeAuctions.set(auctionId, {
+            title,
+            institutionId,
+            reservePriceYer: BigInt(reservePriceYer), // التحويل الفوري لمنع الحسابات العائمة
+            bids: [],
+            status: "OPEN_FOR_BIDDING",
+            createdAt: Date.now()
+        });
+        console.log(`[عقود صناعية] تم فتح المزاد رقم ${auctionId} بنجاح لصالح المؤسسة السيادية.`);
+    }
+
+    /**
+     * تسجيل عرض سعر (Bid) مقدم من مورد رسمي وتأمين سلامة التوقيع المالي
+     * @param {string} auctionId - معرف المزاد
+     * @param {string} supplierId - الهوية السيادية للمورد (KYB Verified)
+     * @param {string} bidAmountYer - قيمة العطاء الإجمالي المقترح بالريال اليمني المستقر
+     * @param {string} exchangeRate - سعر الصرف السائد في مجمع AMM اللامركزي
+     * @param {string} bidNonce - رمز عشوائي لمنع تكرار تقديم نفس العطاء في نفس الوقت
+     */
+    submitSupplierBid(auctionId, supplierId, bidAmountYer, exchangeRate, bidNonce) {
+        const auction = this.activeAuctions.get(auctionId);
+        if (!auction) throw new Error("المزاد الصناعي المطلوب غير موجود.");
+        if (auction.status !== "OPEN_FOR_BIDDING") throw new Error("المزاد مغلق ولا يستقبل عطاءات حاليًا.");
+
+        // 1. تشغيل صمام الأمان الفوري ضد الاحتيال لمنع إرسال نفس العطاء موازياً
+        AntiDoubleDippingEngine.acquireAtomicLock(supplierId, bidNonce);
+
+        try {
+            const totalBidBig = BigInt(bidAmountYer);
+
+            // 2. استخدام معالج المقاصة الهجين لتقسيم العطاء فوراً لمعاينة قدرة الحصة النقدية المشفرة والمحلية
+            const splitResults = PiPaymentProcessor.processHybridInvoice(totalBidBig.toString(), exchangeRate);
+
+            const compiledBid = {
+                supplierId,
+                bidNonce,
+                totalAmountYer: totalBidBig.toString(),
+                splitMatrix: {
+                    localReserveYer: splitResults.yerSovereignUnits,
+                    cryptoStroops: splitResults.piStroops
+                },
+                timestamp: Date.now()
+            };
+
+            auction.bids.push(compiledBid);
+            console.log(`[عطاءات الموردين] تم قبول وفحص عطاء المورد ${supplierId} للمزاد ${auctionId} بنجاح.`);
+            
+            return { success: true, message: "تم تسجيل عطاء المورد ومطابقته لشروط المقاصة الصفرية." };
+        } catch (error) {
+            console.error(`[فشل العطاء] حدث خطأ أثناء تدوين مصفوفة المقاصة للمورد ${supplierId}:`, error.message);
+            throw error;
+        } finally {
+            // 3. تحرير قفل الحساب فور انتهاء دورة فحص وتأمين العطاء لتمكينه من مواصلة العمل
+            AntiDoubleDippingEngine.releaseLock(supplierId);
+        }
+    }
+
+    /**
+     * إغلاق المزاد وإرساء العقد رسمياً على المورد صاحب العطاء الأمثل وبدء تجميع الأرصدة
+     */
+    finalizeAuctionAndLockEscrow(auctionId) {
+        const auction = this.activeAuctions.get(auctionId);
+        if (!auction || auction.bids.length === 0) {
+            throw new Error("لا يمكن إغلاق مزاد لا يحتوي على عطاءات رسمية مسجلة.");
+        }
+
+        auction.status = "COMPLETED_AND_LOCKED";
+
+        // اختيار العطاء الأقل تكلفة لتوفير الموارد السيادية (أو حسب معايير الترسية)
+        // في هذا النموذج نختار العطاء الأول المسجل كمثال لإتمام الإرساء المالي
+        const winningBid = auction.bids[0];
+        auction.winningBid = winningBid;
+
+        // تفعيل سجل الحظر الدائم لمنع استغلال هذا الـ Nonce مجدداً في أي نظام مقاصة آخر بالشبكة
+        AntiDoubleDippingEngine.archiveTransaction(winningBid.bidNonce);
+
+        console.log(`[إرساء صناعي] تم إرساء المزاد ${auctionId} على المورد ${winningBid.supplierId}.`);
+        return {
+            auctionId,
+            winner: winningBid.supplierId,
+            clearingMatrix: winningBid.splitMatrix,
+            status: "ESCROW_MANIFEST_READY_FOR_PI_BROWSER"
+        };
+    }
+}
+
+module.exports = new AuctionClearingNode();

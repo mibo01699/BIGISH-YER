@@ -27,3 +27,11 @@ app.post('/api/settle-merchant-invoice', (req, res) => {
 });
 
 app.listen(PORT, () => console.log(`🛡️ BIGISH-YER Settlement Hub deployed stable on port ${PORT}`));
+
+// أضف هذه السطور داخل ملف app.js المذكر في المستودع لتفعيل بروتوكول المقاصة
+const clearingApi = require('./routes/clearing-api');
+
+// بعد إعداد متغير الـ app = express()
+app.use(express.json()); // لتمكين الخادم من قراءة بيانات الـ JSON المرسلة من الواجهات
+app.use('/api/yer/payments', clearingApi);
+

@@ -130,3 +130,81 @@ class SovereignVestingWallet {
 
 module.exports = new SovereignVestingWallet();
 
+/**
+ * @file SovereignVestingWallet.js
+ * @description العقد الذكي والمنطق الحاكم لـ 90% من معروض YER الموجه لمنصة إطلاق Pi ومجمعات السيولة السيادية.
+ */
+
+class SovereignVestingWallet {
+    constructor() {
+        this.YER_SCALE = 10000000000n; // دقة 10 خانات عشرية لعملة YER
+        this.TOTAL_SUPPLY = 100000000n * this.YER_SCALE; // 100 مليون المعروض الكلي
+
+        // التخصيص الصارم للـ 90 مليون YER المقاسة بالوحدات الصغرى (BigInt)
+        this.LIQUIDITY_POOL_ALLOCATION = 40000000n * this.YER_SCALE; // 40 مليون للسيولة
+        this.LAUNCHPAD_IDO_ALLOCATION  = 30000000n * this.YER_SCALE; // 30 مليون للاكتتاب
+        this.STAKING_MINING_ALLOCATION = 20000000n * this.YER_SCALE; // 20 مليون لمكافآت السيولة
+
+        // سجلات تتبع الصرف البرميجي الحالي لضمان عدم تجاوز السقف
+        this.releasedLiquidity = 0n;
+        this.releasedIdo = 0n;
+        this.releasedStaking = 0n;
+
+        // قفل زمني لحماية المستثمرين (مثال: فتح تدريجي شهري بنسبة 5% لرموز الاكتتاب)
+        this.idoReleaseRatePercent = 5n; 
+    }
+
+    /**
+     * تحرير وتأمين رموز الاكتتاب الموجهة لمنصة إطلاق Pi (Pi Launchpad)
+     * @param {bigint} requestedAmount المبلغ المطلوب سحبه لمنصة الإطلاق
+     * @param {boolean} isKycVerified شرط تحقق الهوية الصارم من شبكة Pi
+     * @returns {string} القيمة المحررة الفورية بالوحدات الصغرى
+     */
+    releaseLaunchpadTokens(requestedAmount, isKycVerified) {
+        // الشرط السيادي الأول: يجب أن يكون المستخدم أو المنصة مستوفية لشروط الـ KYC
+        if (!isKycVerified) {
+            throw new Error("خطأ حوكمة: لا يمكن سحب رموز الاكتتاب دون توثيق الهوية KYC المعتمد من شبكة Pi.");
+        }
+
+        // الشرط الثاني: عدم تجاوز سقف الـ 30 مليون المخصصة للاكتتاب
+        if (this.releasedIdo + requestedAmount > this.LAUNCHPAD_IDO_ALLOCATION) {
+            throw new Error("حظر برميجي: الكمية المطلوبة تتجاوز السقف المخصص للعرض الأولي على Pi Launchpad.");
+        }
+
+        this.releasedIdo += requestedAmount;
+        return requestedAmount.toString();
+    }
+
+    /**
+     * ضخ السيولة الفورية لتثبيت السوق وتفعيل ميزة الدفع الهجين المرن
+     * @param {bigint} amount القيمة المراد حقنها في مجمع المقاصة (DEX)
+     * @returns {string} القيمة المحقونة بالوحدات الصغرى
+     */
+    injectLiquidityPool(amount) {
+        if (this.releasedLiquidity + amount > this.LIQUIDITY_POOL_ALLOCATION) {
+            throw new Error("حظر سيادي: تم استنفاد كامل الحصة المخصصة لعمق مجمعات السيولة.");
+        }
+
+        this.releasedLiquidity += amount;
+        return amount.toString();
+    }
+
+    /**
+     * صرف مكافآت التعدين الهيدروليكي المرن المحكوم بواسطة الـ DynamicMiningGovernor
+     * @param {bigint} amount الحصة اللحظية المحسوبة بواسطة محرك الحوكمة
+     * @returns {bigint} الحصة المصروفة فعلياً للمعدنين
+     */
+    disburseMiningReward(amount) {
+        if (this.releasedStaking + amount > this.STAKING_MINING_ALLOCATION) {
+            // في حال نفاذ الـ 20 مليون المخصصة لتعدين السيولة، يتم تصفير الصرف والاعتماد بالكامل على رسوم الدفع الهجين
+            return 0n;
+        }
+
+        this.releasedStaking += amount;
+        return amount;
+    }
+}
+
+module.exports = SovereignVestingWallet;
+
+

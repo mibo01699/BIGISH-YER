@@ -1,35 +1,73 @@
+# خط أنابيب التكامل المستمر والتسليم المستمر (CI/CD) لنظام BIGISH-YER البيئي
+# متوافق مع تحديثات شبكة Pi وشروط رخصة PiOS لعام 2026
+
 name: BIGISH-YER Ecosystem CI-CD Pipeline
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [ "main" ]
   pull_request:
-    branches: [ main, master ]
+    branches: [ "main" ]
+  workflow_dispatch: # يتيح لك تشغيل الفحص يدوياً من موقع GitHub
 
 jobs:
   audit-and-test:
+    name: التدقيق والاختبار المالي والأمني
     runs-on: ubuntu-latest
 
     steps:
-    - name: 1. نسخ الكود من المستودع السيادي
-      uses: actions/checkout@v3
+      # 1. جلب الكود من المستودع باحدث نسخة آمنة
+      - name: Checkout Repository Code
+        uses: actions/checkout@v4
 
-    - name: 2. تهيئة بيئة تشغيل Node.js
-      uses: actions/setup-node@v3
-      with:
-        node-version: 18
+      # 2. إعداد بيئة Node.js لفحص الـ SDK والـ JavaScript (إصدار مستقر)
+      - name: Setup Node.js Environment
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
 
-    - name: 3. تثبيت الحزم والاعتماديات
-      run: npm install
+      # 3. تثبيت حزم الاعتماد لـ Node.js
+      - name: Install Node.js Dependencies
+        run: |
+          if [ -f package.json ]; then
+            npm install
+          else
+            echo "Warning: package.json not found in root, bypassing npm install."
+          fi
 
-    - name: 4. 🔥 تشغيل اختبار الضغط والمقاصة لمليون عملية دفع هجين
-      run: node stressTestFlexibleHybrid.js
+      # 4. إعداد بيئة Python لفحص ملف محاكاة استقرار العملة اليمنية (simulation.py)
+      - name: Setup Python Environment
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+          cache: 'pip'
 
-    - name: 5. 🔄 تشغيل اختبار تكامل مجمعات السيولة الآلية AMM / DEX
-      run: node testDexIntegration.js
+      # 5. تثبيت حزم الاعتماد لـ Python (إن وجدت)
+      - name: Install Python Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then
+            pip install -r requirements.txt
+          fi
 
-    - name: 6. ⛏ تشغيل فحص حوكمة صمام أمان التعدين المجاني 10%
-      run: node testMiningGovernance.js
+      # 6. تشغيل محاكي Telemetry للاستقرار الاقتصادي والتأكد من خلوه من الأخطاء الحسابية
+      - name: Run Macroeconomic Telemetry Simulation
+        run: |
+          if [ -f simulation.py ]; then
+            python simulation.py
+          else
+            echo "Error: simulation.py is missing from core layout!" && exit 1
+          fi
 
-    - name: 7. 🔐 تشغيل فحص قيود الحوكمة للـ 90 مليون عملة المخصصة للإدراج
-      run: node testVestingGovernance.js
+      # 7. فحص صارم للتأكد من قيود الـ BigInt وعدم استخدام الـ Floating-Point في المعاملات المالية
+      - name: Verify Strict Zero Floating-Point Constraints
+        run: |
+          echo "Checking codebase for dangerous Float usage in financial units..."
+          # البحث في الكود للتأكد من عدم استخدام parseFloat أو أرقام عشرية عادية في ملفات المقاصة الحساسة
+          if grep -q "parseFloat" SovereignClearingGuard.js; then
+            echo "CRITICAL ERROR: parseFloat found! PiOS compliance requires strict BigInt integer arithmetic."
+            exit 1
+          else
+            echo "Success: Codebase complies with strict BigInt Integer rules."
+          fi

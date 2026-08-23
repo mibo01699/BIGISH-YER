@@ -1,8 +1,1 @@
-      # . إنشاء وتمرير إعدادات مساحة عمل OpenRouter بشكل آمن للبيئة الآمنة
-      - name: Inject OpenRouter Workspace Secret Configuration
-        run: |
-          echo "PORT=5000" > .env
-          echo "NODE_ENV=test" >> .env
-          echo "OPENROUTER_API_KEY=${{ secrets.OPENROUTER_API_KEY }}" >> .env
-          echo "PI_API_KEY=pbk_mock_test_key_environment" >> .env
-          echo "DATABASE_URL=postgresql://localhost:5432/mock_db" >> .env
+name: BIGISH-YER Ecosystem CI-CD Pipelineon:push:branches: [ "main" ]pull_request:branches: [ "main" ]workflow_dispatch:jobs:audit-and-test:name: Financial and Security Auditruns-on: ubuntu-lateststeps:- name: Checkout Repository Codeuses: actions/checkout@v4- name: Setup Node.js Environment & Dependenciesuses: actions/setup-node@v4with:node-version: '20'

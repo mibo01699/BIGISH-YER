@@ -1,41 +1,28 @@
 {
-  "name": "bigish-yer-pi",
+  "name": "bigish-yer-core",
   "version": "1.0.0",
-  "description": "Pi Network App for Yemen",
-  "main": "server.js",
+  "description": "The macroeconomic stabilization and sovereign clearing infrastructure engine for Yemen via Pi Network ecosystem",
+  "main": "app.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node app.js",
+    "test": "echo \"Error: no test suite specified yet\" && exit 0"
   },
+  "keywords": [
+    "pi-network",
+    "yemen",
+    "sovereign-clearing",
+    "bigint",
+    "web3",
+    "openrouter"
+  ],
+  "author": "Mayass Ali / AEC Ecosystem",
+  "license": "PiOS-1.0",
   "dependencies": {
-    "express": "^4.18.2",
-    "axios": "^1.6.0",
-    "path": "^0.12.7"
-  }
-}
-"scripts": {
-  "start": "node server.js"
-}
-
-{
-  "name": "bigish-yer-ecosystem",
-  "version": "1.0.0",
-  "description": "Sovereign Web3 Wallet for YER Payment and Mining on Pi Network",
-  "main": "server.js",
-  "scripts": {
-    "test:hybrid": "node stressTestFlexibleHybrid.js",
-    "test:dex": "node testDexIntegration.js",
-    "test:mining": "node testMiningGovernance.js"
-  },
-  "dependencies": {
-    "express": "^4.18.2"
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "openrouter": "^0.1.3"
   },
   "engines": {
-    "node": ">=18.0.0"
-  },
-  "author": "Mayass Ali",
-  "license": "MIT"
+    "node": ">=20.0.0"
+  }
 }
-  "scripts": {
-    "test": "node stressTestFlexibleHybrid.js && node testDexIntegration.js && node testMiningGovernance.js && node testVestingGovernance.js"
-  },
-

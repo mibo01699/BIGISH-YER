@@ -57,7 +57,16 @@ jobs:
             echo "Simulation script not found in root context."
           fi
 
-      # 7. فحص أمان المعاملات المالية الحسابية الصارمة (BigInt)
+      # 7. إنشاء وتمرير إعدادات مساحة عمل OpenRouter بشكل آمن للبيئة الآمنة
+      - name: Inject OpenRouter Workspace Secret Configuration
+        run: |
+          echo "PORT=5000" > .env
+          echo "NODE_ENV=test" >> .env
+          echo "OPENROUTER_API_KEY=${{ secrets.OPENROUTER_API_KEY }}" >> .env
+          echo "PI_API_KEY=pbk_mock_test_key_environment" >> .env
+          echo "DATABASE_URL=postgresql://localhost:5432/mock_db" >> .env
+
+      # 8. فحص أمان المعاملات المالية الحسابية الصارمة (BigInt)
       - name: Audit Core BigInt Constraints
         run: |
           echo "Auditing compliance for Sovereign Clearing Layers..."

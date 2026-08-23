@@ -1,1 +1,8 @@
-في حالة:الدفع:الفروع: [ "main" ]طلب السحب:الفروع: [ "main" ]التشغيل اليدوي:الوظائف:التدقيق والاختبار:الاسم: التدقيق والاختبار المالي والأمنييعمل على: اوبونتو الأحدثالخطوات:- الاسم: جلب الكود من المستودعيستخدم: actions/checkout@v4إكمال 
+      # . إنشاء وتمرير إعدادات مساحة عمل OpenRouter بشكل آمن للبيئة الآمنة
+      - name: Inject OpenRouter Workspace Secret Configuration
+        run: |
+          echo "PORT=5000" > .env
+          echo "NODE_ENV=test" >> .env
+          echo "OPENROUTER_API_KEY=${{ secrets.OPENROUTER_API_KEY }}" >> .env
+          echo "PI_API_KEY=pbk_mock_test_key_environment" >> .env
+          echo "DATABASE_URL=postgresql://localhost:5432/mock_db" >> .env

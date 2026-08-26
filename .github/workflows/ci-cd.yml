@@ -20,7 +20,10 @@ jobs:
         cache: 'npm'
         
     - name: Install Ecosystem Dependencies
-      run: npm install
+      run: |
+        npm install bignumber.js express axios
       
     - name: Run Sovereign Ecosystem & Gaming & Visa Tests
-      run: npm test
+      run: |
+        node testVisaRecharge.js
+        node testGamingRecharge.js

@@ -7,10 +7,9 @@ const { GamingRechargeBridge } = require('./GamingRechargeBridge');
 function runGamingEngineTests() {
     console.log("⏳ جاري بدء فحص محرك شحن الألعاب وسد الثغرات...");
 
-    // فرضية تعيين خادم ربط شركات الشحن 
+    // استخدام مفتاح فحص افتراضي لتنشيط صمام أمان البيئة الافتراضية للـ GitHub
     const gameBridge = new GamingRechargeBridge("https://gaming-wholesale.com", "mock_api_key_aec_2026");
     
-    // فرضية أسعار الصرف الحية والعميقة من مجمع السيولة المباشر Pi/YER
     const mockYerToPi = "0.000025";
     const mockPiToUsdt = "1.20";
     const testPackageWholesaleUSD = 50; 
@@ -18,7 +17,6 @@ function runGamingEngineTests() {
     // 1. فحص معادلة التسعير المنفصلة (YER للتكلفة و 5% Pi للأرباح وفق GCV)
     const invoiceResult = gameBridge.calculateGamingInvoice(testPackageWholesaleUSD, mockYerToPi, mockPiToUsdt);
     
-    // التدقيق الصارم لمنع الكسور العائمة (Zero Floating-Point Audit)
     assert.strictEqual(typeof invoiceResult.requiredYER, "string", "خطأ: قيمة الـ YER يجب أن تكون نصية دقيقة");
     assert.strictEqual(typeof invoiceResult.requiredPiStroops, "string", "خطأ: قيمة أرباح Pi Stroops يجب أن تكون نصية دقيقة");
     

@@ -1,44 +1,61 @@
-// Visa Card Issuance & Capital Rotation Engine
-// مدمج بمستودع BIGISH-YER - منظومة النسر العربي (A.E.C.)
+// Visa Card Sovereign Clearing Engine - Refactored Version 2026
+// مدمج بمستودع BIGISH-YER - يفرض 5% أرباح عند الشراء و 0% أرباح عند التغذية
 const BigNumber = require('bignumber.js');
-const { PiYerAMMExchange } = require('./PiYerAMMExchange'); // استدعاء مجمع السيولة المباشر للمستودع
 
 class VisaSovereignClearing {
     constructor() {
-        this.gcvPi = new BigNumber('314159.0000000'); // مرجعية GCV الثابتة بـ 7 خانات عشرية
-        this.visaProfitRate = new BigNumber('0.05');    // نسبة الأرباح الصافية 5% مقابل Pi
-        this.fiatWithdrawalOverhead = new BigNumber('1.04'); // إضافة 4% لتغطية رسوم غاز البلوكشين والتحويل البنكي كاش على المستفيد
+        this.gcvPi = new BigNumber('314159.0000000'); // مرجعية GCV لـ Pi (7 خانات)
+        this.withdrawalOverhead = new BigNumber('1.04'); // 4% لتغطية رسوم غاز السحب والدولار الورقي للمورد
     }
 
     /**
-     * حساب الفاتورة الإجمالية لإصدار أو شحن بطاقة فيزا وتدوير رأس المال لشركات الإصدار
-     * @param {number|string} cardCostUSD - التكلفة المطلوبة للبطاقة أو مبلغ الشحن بالدولار
-     * @param {number|string} yerToPiRate - سعر الـ YER مقابل الـ Pi من مجمع الـ AMM
-     * @param {number|string} piToUsdtRate - سعر الـ Pi مقابل الـ USDT من الـ DEX
+     * 1. حساب الفاتورة عند الشراء والإصدار الأول للبطاقة (تطبيق 5% أرباح بـ Pi وفق GCV)
      */
-    calculateVisaInvoiceAndRotation(cardCostUSD, yerToPiRate, piToUsdtRate) {
-        const C_card = new BigNumber(cardCostUSD);
+    calculateInitialPurchase(cardBaseCostUSD, yerToPiRate, piToUsdtRate) {
+        const C_card = new BigNumber(cardBaseCostUSD);
         const X_yer_pi = new BigNumber(yerToPiRate);
         const X_pi_usdt = new BigNumber(piToUsdtRate);
 
-        // 1. حساب صافي الأرباح (5%) المدمجة صامتاً في الخلفية لخصمها بـ Pi
-        const netProfitUSD = C_card.times(this.visaProfitRate);
+        // حساب 5% أرباح صافية للاحتياطي وتُدفع بـ Pi Stroops وفق GCV
+        const profitUSD = C_card.times('0.05');
+        const requiredPiProfitStroops = profitUSD.div(this.gcvPi).toFixed(7);
 
-        // 2. تحميل كافة رسوم السحب والغاز والتحويل (4%) على المستفيد لضمان وصول المبلغ للمورد كاملاً وصفر خسائر
-        const grossOperationalCostUSD = C_card.times(this.fiatWithdrawalOverhead);
-        
-        // 3. التحويل الديناميكي العكسي لمعرفة القيمة الإجمالية المطلوبة بـ YER لتغطية رأس مال المورد
+        // التكلفة الأساسية ورسوم السحب (4%) تُدفع بالكامل برمز YER
+        const grossOperationalCostUSD = C_card.times(this.withdrawalOverhead);
         const requiredPiForCapital = grossOperationalCostUSD.div(X_pi_usdt);
-        const finalRetailCostYER = requiredPiForCapital.div(X_yer_pi).toFixed(10); // 10 خانات عشرية لـ YER
-
-        // 4. فرز وتجميد الـ 5% أرباح صافية بوحدات الـ Stroops وتحويلها للاحتياطي بـ Pi بناءً على GCV
-        const backendPiProfitStroops = netProfitUSD.div(this.gcvPi).toFixed(7); // 7 خانات عشرية لـ Pi
+        const finalCostYER = requiredPiForCapital.div(X_yer_pi).toFixed(10);
 
         return {
-            userDisplayCostYER: finalRetailCostYER.toString(), // السعر الإجمالي النهائي الظاهر للمستخدم بالـ YER شامل الرسوم
-            fiatRotationTargetUSDT: grossOperationalCostUSD.toFixed(2), // كاش الدولار الرقمي الموجه فوراً لحساب المدير التنفيذي لتغذية شركات فيزا
-            sovereignReservePi: backendPiProfitStroops.toString(), // حصة أرباح النسر العربي 5% المحفوظة بـ Pi
-            status: "VISA_ROTATION_SECURED_ZERO_LOSS"
+            txType: "INITIAL_PURCHASE",
+            userDisplayCostYER: finalCostYER.toString(), // التكلفة المدفوعة بالـ YER شاملة الـ 4% رسوم سحب
+            sovereignReservePi: requiredPiProfitStroops.toString(), // أرباح الشراء 5% بالـ Pi
+            fiatRotationTargetUSDT: grossOperationalCostUSD.toFixed(2), // كاش المورد لضمان صفر خسائر
+            status: "PURCHASE_PROFIT_APPLIED"
+        };
+    }
+
+    /**
+     * 2. حساب الفاتورة عند التغذية والشحن اللاحق (صفر أرباح 0% - دفع التكلفة الصافية فقط بالـ YER)
+     */
+    calculateInstantReload(reloadAmountUSD, yerToPiRate, piToUsdtRate) {
+        const C_reload = new BigNumber(reloadAmountUSD);
+        const X_yer_pi = new BigNumber(yerToPiRate);
+        const X_pi_usdt = new BigNumber(piToUsdtRate);
+
+        // تطبيق صفر أرباح 0% للمنصة بناءً على التوجيه
+        const requiredPiProfitStroops = "0.0000000"; 
+
+        // العميل يدفع فقط التكلفة الحقيقية الصافية للمبلغ مشمولاً بـ 4% رسوم السحب وضخ الدولار الورقي للمورد
+        const grossOperationalCostUSD = C_reload.times(this.withdrawalOverhead);
+        const requiredPiForCapital = grossOperationalCostUSD.div(X_pi_usdt);
+        const finalCostYER = requiredPiForCapital.div(X_yer_pi).toFixed(10);
+
+        return {
+            txType: "INSTANT_RELOAD",
+            userDisplayCostYER: finalCostYER.toString(), // التكلفة الصافية بالـ YER متضمنة فقط أعباء السحب والتحويل
+            sovereignReservePi: requiredPiProfitStroops, // صفر أرباح بـ Pi عند الشحن
+            fiatRotationTargetUSDT: grossOperationalCostUSD.toFixed(2), // الأموال الموجهة بالكامل لشحن بطاقة الفيزا كاش وصفر نقص
+            status: "RELOAD_ZERO_PROFIT_EXECUTIVE"
         };
     }
 }

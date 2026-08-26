@@ -1,53 +1,52 @@
-const SovereignVestingWallet = require('./SovereignVestingWallet');
-const PiYerAMMExchange = require('./PiYerAMMExchange');
-// src/pi-integration.js
-// تهيئة وإعداد اتصال Pi SDK وفقاً للمعايير المحدثة لبيئة Sandbox و متصفح Pi Browser
+/**
+ * Pi Network Secure Sandbox Clearing Integration
+ * Built for production-grade transaction execution
+ */
 
-const PiNetwork = {
-    sdk: null,
-    currentUser: null,
+const axios = require('axios');
 
-    // 1. تهيئة الـ SDK والتحقق من البيئة
-    init: async function() {
-        if (typeof window.Pi !== 'undefined') {
-            this.sdk = window.Pi;
-            // تحديد إصدار الـ SDK المعتمد للاستقرار المالي
-            this.sdk.init({ version: "2.0", sandbox: true }); 
-            console.log("تم تهيئة Pi SDK بنجاح.");
-            return true;
-        } else {
-            console.error("يرجى فتح التطبيق من خلال متصفح Pi Browser الحقيقي.");
-            return false;
-        }
-    },
-
-    // 2. تسجيل دخول المستخدم وتوثيق الهوية الرقمية الموحدة لليمن
-    authenticateUser: async function() {
-        try {
-            const scopes = ['username', 'payments', 'wallet_address'];
-            
-            // طلب التوثيق من خوادم Pi المزامنة مع SovereignClearingGuard
-            const authResult = await this.sdk.authenticate(scopes, this.onIncompletePaymentFound);
-            this.currentUser = authResult.user;
-            
-            console.log(`تم توثيق المستخدم السيادي: ${this.currentUser.username}`);
-            return this.currentUser;
-        } catch (error) {
-            console.error("فشل التحقق من الهوية الرقمية لشبكة Pi:", error);
-            throw error;
-        }
-    },
-
-    // 3. معالجة المدفوعات المعلقة (شرط إلزامي في تحديثات Pi لمنع تعليق الأموال)
-    onIncompletePaymentFound: function(payment) {
-        console.warn("تم العثور على معاملة معلقة غير مكتملة، يتم إرسالها للمقاصة الفورية:", payment);
-        // هنا يتم إرسال الدفع المعلق مباشرة إلى خادم backend لتسويته عبر الـ API
-        fetch('/api/yer/payments/complete', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ paymentId: payment.identifier, txid: payment.transaction.txid })
-        });
+class PiIntegrationBridge {
+    constructor() {
+        // استدعاء متغيرات البيئة من الملف الآمن .env المحدث محلياً
+        this.apiKey = process.env.PI_NETWORK_SANDBOX_KEY || "mock_sandbox_key_for_testing";
+        this.apiBaseUrl = "https://minepi.com";
     }
-};
 
-export default PiNetwork;
+    /**
+     * التحقق من سلامة الفاتورة وعقد المعاملة قبل التوقيع الرقمي
+     */
+    async verifyAndInjectManifest(paymentId, expectedStroops) {
+        // فحص أولي للمدخلات لمنع حقن الأكواد الضارة
+        if (!paymentId || typeof paymentId !== 'string') {
+            throw new Error("CRITICAL: Invalid or malicious Payment ID structural layout.");
+        }
+
+        try {
+            // الاتصال الآمن مع خوادم الـ API الخاصة بالشبكة
+            const response = await axios.get(`${this.apiBaseUrl}/payments/${paymentId}`, {
+                headers: { 'Authorization': `Key ${this.apiKey}` }
+            });
+
+            const paymentData = response.data;
+
+            // مطابقة المبلغ الفعلي المسجل في البلوكشين مع الحسابات الداخلية للمستودع
+            if (BigInt(paymentData.amount) !== BigInt(expectedStroops)) {
+                throw new Error("SECURITY FRAUD ALERT: Blockchain asset weights mismatch.");
+            }
+
+            return {
+                verified: true,
+                txHash: paymentData.transaction.txid,
+                clearingStatus: "SUCCESS"
+            };
+        } catch (error) {
+            return {
+                verified: false,
+                clearingStatus: "FAILED",
+                reason: error.message
+            };
+        }
+    }
+}
+
+module.exports = PiIntegrationBridge;

@@ -1,1 +1,26 @@
-name: BIGISH-YER Ecosystem CI-CD Pipelineon:push:branches: [ "main" ]pull_request:branches: [ "main" ]workflow_dispatch:jobs:audit-and-test:name: Financial and Security Auditruns-on: ubuntu-lateststeps:- name: Checkout Repository Codeuses: actions/checkout@v4- name: Setup Node.js Environment & Dependenciesuses: actions/setup-node@v4with:node-version: '20'
+name: BIGISH-YER Ecosystem CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Use Node.js 20.x
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20.x'
+        cache: 'npm'
+        
+    - name: Install Ecosystem Dependencies
+      run: npm install
+      
+    - name: Run Sovereign Ecosystem & Gaming & Visa Tests
+      run: npm test

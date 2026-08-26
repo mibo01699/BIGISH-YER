@@ -18,10 +18,10 @@ jobs:
       with:
         node-version: '20.x'
         
-    - name: Clean Install Modules
+    - name: Forced Clean Dependency Installation
       run: |
-        npm init -y
-        npm install bignumber.js express axios --save
+        rm -rf node_modules package-lock.json
+        npm install bignumber.js express axios --no-package-lock --legacy-peer-deps
       
     - name: Execute Clean Sovereign Visa & Gaming Audit
       run: |

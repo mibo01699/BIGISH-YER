@@ -1,19 +1,24 @@
 {
-  "name": "bigish-yer-clearing-infrastructure",
-  "version": "2.0.26",
-  "description": "Macroeconomic Stabilization & Sovereign Clearing Infrastructure for Yemen",
+  "name": "bigish-yer",
+  "version": "1.0.0",
+  "description": "The backbone of economic stabilization in Yemen through the Pi Network infrastructure, digital wallets, and financial transfers.",
   "main": "app.js",
   "scripts": {
-    "start": "node server.js",
-    "test": "node testVisaRecharge.js && node testGamingRecharge.js"
+    "start": "node app.js",
+    "test": "jest",
+    "simulate": "python3 simulation.py"
   },
   "dependencies": {
+    "axios": "^1.6.0",
     "bignumber.js": "^9.1.2",
-    "express": "^4.19.2",
-    "axios": "^1.7.2"
+    "express": "^4.18.2"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0"
   },
   "engines": {
-    "node": ">=20.x"
+    "node": ">=18.0.0"
   },
+  "author": "mibo01699",
   "license": "PiOS"
 }

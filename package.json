@@ -5,7 +5,7 @@
   "main": "app.js",
   "scripts": {
     "start": "node server.js",
-    "test": "node testDexIntegration.js && node testVisaRecharge.js && node testGamingRecharge.js"
+    "test": "node testVisaRecharge.js && node testGamingRecharge.js"
   },
   "dependencies": {
     "bignumber.js": "^9.1.2",

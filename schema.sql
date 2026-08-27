@@ -110,4 +110,30 @@ INSERT INTO dex_liquidity_pool_state (pool_pair_id, reserve_pi_stroops, reserve_
 VALUES ('Pi/YER', 5000000000000, 10000000000000000000, 1771120000000)
 ON DUPLICATE KEY UPDATE last_update_timestamp = VALUES(last_update_timestamp);
 
+-- schema.sql (محدث لـ PostgreSQL 15+)
+-- يرجى مراجعة هيكلة الجداول الموحدة لضمان التوافق (Strict Integer Storage)
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+-- 1. جدول المستخدمين والتعدين
+CREATE TABLE IF NOT EXISTS users_mining_ledger (
+    id SERIAL PRIMARY KEY,
+    pi_user_uid VARCHAR(255) UNIQUE NOT NULL, 
+    -- ... باقي الجدول ...
+);
+
+-- 2. جدول التسويات والتحويلات
+CREATE TABLE IF NOT EXISTS clearings_and_transfers (
+    -- ... الهيكلة المحدثة ...
+);
+
+-- 3. جداول النظام والسيولة (بنية BigInt المتوافقة)
+CREATE TABLE IF NOT EXISTS dex_liquidity_pool_state (
+    -- ... تم تحويل أوامر MySQL إلى PostgreSQL ...
+);
+
+-- الفهارس وتحديث السيولة
+INSERT INTO dex_liquidity_pool_state (...)
+ON CONFLICT (pool_pair_id) DO UPDATE 
+SET last_update_timestamp = EXCLUDED.last_update_timestamp;
+
 

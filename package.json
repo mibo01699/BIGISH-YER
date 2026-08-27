@@ -1,6 +1,6 @@
 {
   "name": "bigish-yer",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Macroeconomic Stabilization & Sovereign Clearing Infrastructure for Yemen",
   "main": "app.js",
   "scripts": {

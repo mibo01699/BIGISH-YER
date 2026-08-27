@@ -1,20 +1,12 @@
 {
   "name": "bigish-yer",
   "version": "1.0.1",
-  "description": "Macroeconomic Stabilization & Sovereign Clearing Infrastructure for Yemen",
   "main": "app.js",
   "scripts": {
-    "start": "node app.js",
-    "simulate": "python simulation.py",
-    "test": "node ecosystem_security.test.js && node cobra_wallet_integration.test.js"
+    "start": "node app.js"
   },
   "dependencies": {
     "express": "^4.19.2",
-    "dotenv": "^16.4.5",
     "cors": "^2.8.5"
-  },
-  "engines": {
-    "node": ">=18.0.0"
-  },
-  "license": "PiOS"
+  }
 }

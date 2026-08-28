@@ -1,4 +1,5 @@
-# BIGISH-YER Hybrid Tokenomics (PiRC1 & Protocol 23 Compliant)
+# BIGISH-YER Tokenomics
+## YER Ecosystem Distribution Specification
 
 This document outlines the macroeconomic and technical specifications governing the issuance of the **Yemen Economic Recovery Token (YER)** as a native utility asset deployed via Pi Network Protocol 23 smart contracts.
 

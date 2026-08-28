@@ -39,3 +39,9 @@ class PiYerAMMExchange {
 }
 
 module.exports = new PiYerAMMExchange();
+
+<!-- ⚠️ CRITICAL COMPLIANCE DISCLAIMER -->
+### 📢 Ecosystem Compliance & Valuation Disclaimer
+* **Valuation Anchor:** The Global Consensus Value (GCV = $314,159) referenced within this document serves exclusively as an internal community pricing benchmark for alignment simulations. It does NOT represent an official, binding, or authorized financial valuation by the Pi Network Core Team.
+* **Exchange Infrastructure:** The Pi DEX/AMM mechanics described herein are targeted for Testnet integration sandboxes. Absolute separation is maintained between experimental testnet operations and production mainnet frameworks to prevent unauthorized real-asset simulation exposure.
+

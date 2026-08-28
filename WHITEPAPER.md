@@ -1,4 +1,5 @@
-# 🦅 Arabian Eagle Ecosystem (A.E.C) - Official Tokenomics Whitepaper
+# 🦅 Arabian Eagle Ecosystem (A.E.C)
+## BIGISH-YER — Official Ecosystem Tokenomics Whitepaper
 
 ## 1. Executive Summary
 The **BIGISH-YER** framework serves as the core sovereign clearinghouse ledger for the **Arabian Eagle Ecosystem (A.E.C)**. Designed as a global Digital Public Good (DPG) and fully compliant with the **UNICEF Innovation Fund** and **Pi Network Open Network (2026)** requirements, this infrastructure mitigates hyperinflation and liquidity failure through a strictly bounded, non-floating-point Web3 economic matrix.

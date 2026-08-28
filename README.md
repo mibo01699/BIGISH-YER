@@ -42,6 +42,19 @@ Led by **Mayass Ali**, BIGISH-YER coordinates clearings across seven specialized
 
 ---
 
+# BIGISH-YER: Macroeconomic Stabilization & Sovereign Tokenized Asset Infrastructure for Yemen
+
+## 📊 Core Tokenomics & Network Alignment
+* **Sovereign Token Asset:** Yemen Economic Recovery Token (YER)
+* **Fixed Maximum Supply:** 300,000,000 YER (Strictly unified across all ecosystem repositories)
+* **Precision Scale:** Fixed-point Strict BigInt Arithmetic (YER: 10 decimals; Pi: 7 decimals)
+* **Network Target:** Target: Protocol 26 compatible (Testnet-first validation environment)
+
+## 🛡️ Architectural & Valuation Safeguards
+1. **Strict Zero-Float Constraint:** All financial clearing loops operate exclusively on precise micro-units using integer mathematics. The use of floating-point numbers or float-to-int transformations (`Math.floor`) is completely deprecated.
+2. **Global Consensus Value (GCV) Policy:** GCV (314,159) is explicitly classified as a **Community/Internal Pricing Reference only**. It is NOT an official Pi Network Core Team valuation and shall not be hardcoded as an immutable financial anchor.
+3. **Ledger Operational Model:** Operates as a **Hybrid Clearing Gateway Middleware**. On-chain settlement is routed through authorized sandboxes, ensuring data integrity without assuming unverified Mainnet DEX availability.
+
 ## 📊 Run & Test
 
 Run macroeconomic telemetry simulation:

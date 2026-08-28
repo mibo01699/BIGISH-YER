@@ -84,9 +84,17 @@ to exceed 300,000,000 YER.
 * **Anti-Double Dipping Engine**: 
   Enforces atomic concurrent transaction locks to eliminate race conditions during mass payload clearings.
 
-## 4. Institutional Compliance
-* **UNICEF Innovation Fund**: 100% equity-free open-source architecture under the **PiOS License**.
-* **Pi Network 2026 Core Rules**: Complete decoupling from legacy commercial fiat payment processors, operating exclusively through native Pi KYC and decentralized Web3 liquidity validation
+## 4. The architecture is designed to align with relevant
+UNICEF Innovation Fund principles and Pi Network
+developer/ecosystem requirements.
+
+This repository does not represent an official
+endorsement, certification, funding award, or approval
+by UNICEF or Pi Network.
+
+The ecosystem is designed to use Pi-supported
+authentication, identity, payment, and ecosystem
+integration mechanisms where officially available.
 
 <!-- ⚠️ CRITICAL COMPLIANCE DISCLAIMER -->
 ### 📢 Ecosystem Compliance & Valuation Disclaimer

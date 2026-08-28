@@ -1,3 +1,18 @@
+# Deployment Architecture and Environment Specifications
+
+## 🌐 Target Environment Alignment
+* **Blockchain Core:** Pi Network Protocol 26 Target Structure.
+* **Network Mode:** Testnet-first sandbox simulation framework. Mainnet routing is restricted until official ecosystem token compliance APIs are authorized.
+* **Ledger Status:** Hybrid Clearing Middleware Gateway.
+
+## ⚙️ Initial Boot Parameters
+Ensure the application runtime parameters are initialized with the fixed tokenomics limits:
+* `GLOBAL_MAX_SUPPLY = 3000000000000000000n` (300M YER scaled to 10 decimals)
+* `TARGET_PROTOCOL_VERSION = 26`
+
+## 🔒 Production Security Protocols
+1. **Zero Secrets Leakage:** No API keys, credentials, or private keys must exist within repo files.
+2. **Environment Variables:** All clearing configurations must be injected dynamically via secure `.env` variables at boot time.
 Technical Roadmap, Scale Benchmarks & Deployment Guide: Pi Network Ecosystem
 
 This document outlines the end-to-end technical deployment, transaction processing benchmarks, ecosystem architectures, and hybrid ledger matrices implementation across our unified open-source ecosystem:

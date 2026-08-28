@@ -29,3 +29,8 @@ To ensure programmatic stability and prevent illicit token dilution, the total l
 ## 4. Institutional Compliance
 * **UNICEF Innovation Fund**: 100% equity-free open-source architecture under the **PiOS License**.
 * **Pi Network 2026 Core Rules**: Complete decoupling from legacy commercial fiat payment processors, operating exclusively through native Pi KYC and decentralized Web3 liquidity validation
+
+<!-- ⚠️ CRITICAL COMPLIANCE DISCLAIMER -->
+### 📢 Ecosystem Compliance & Valuation Disclaimer
+* **Valuation Anchor:** The Global Consensus Value (GCV = $314,159) referenced within this document serves exclusively as an internal community pricing benchmark for alignment simulations. It does NOT represent an official, binding, or authorized financial valuation by the Pi Network Core Team.
+* **Exchange Infrastructure:** The Pi DEX/AMM mechanics described herein are targeted for Testnet integration sandboxes. Absolute separation is maintained between experimental testnet operations and production mainnet frameworks to prevent unauthorized real-asset simulation exposure.

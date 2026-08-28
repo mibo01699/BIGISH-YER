@@ -87,7 +87,15 @@ to exceed 300,000,000 YER.
 * **Anti-Double Dipping Engine**: 
   Enforces atomic concurrent transaction locks to eliminate race conditions during mass payload clearings.
 
-## 4. The architecture is designed to align with relevant
+## 4. ## 4. Ecosystem Alignment & Compliance Disclaimer
+The architecture is designed to align with relevant
+UNICEF Innovation Fund principles and Pi Network
+developer/ecosystem requirements.
+
+This repository does not represent an official
+endorsement, certification, funding award, or approval
+by UNICEF or Pi Network.
+
 UNICEF Innovation Fund principles and Pi Network
 developer/ecosystem requirements.
 

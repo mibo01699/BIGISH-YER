@@ -77,10 +77,6 @@ The three allocations MUST always satisfy:
 No allocation may cause the lifetime YER supply
 to exceed 300,000,000 YER.
 
-### 🔹 Pipeline 3: Institutional Sovereign Fund Capital (60% - 200,000,000 YER)
-* **Objective**: Secure non-exploitative microfinance, civic payrolls, and national infrastructure.
-* **Mechanism**: Scripted on-chain block emission delegated to the `Sovereign-Fund` repository under rigorous cryptographic escrow locks.
-
 ## 3. Mathematical Constraints
 * **Zero Floating-Point Constraint**: 
   All ledger balances are handled via fixed-point **Strict BigInt Arithmetic** (1 YER = $10^{10}$ sub-units) to eradicate rounding exploits across humanitarian distribution chains.

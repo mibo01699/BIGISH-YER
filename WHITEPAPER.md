@@ -83,7 +83,7 @@ to exceed 300,000,000 YER.
 
 ## 3. Mathematical Constraints
 * **Zero Floating-Point Constraint**: 
-  All ledger balances are handled via fixed-point **Strict BigInt Arithmetic** (1 YER = $10^{10}$ sub-units) to eradicate rounding exploits across humanitarian distribution chains.
+  All ledger balances are handled via fixed-point **Strict BigInt Arithmetic** (1 YER = $10^{10}$ sub-units)to eradicate rounding exploits across humanitarian distribution chains.
 * **Anti-Double Dipping Engine**: 
   Enforces atomic concurrent transaction locks to eliminate race conditions during mass payload clearings.
 

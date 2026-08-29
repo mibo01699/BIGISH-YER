@@ -1,4 +1,5 @@
-name: Node.js CI
+```yaml
+name: BIGISH-YER Ecosystem CI
 
 on:
   push:
@@ -11,16 +12,18 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
-    
-    - name: Use Node.js
+    - name: 1. Repository Checkout
+      uses: actions/checkout@v4
+
+    - name: 2. Setup Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: '20.x'
+        node-version: '18.x'
         cache: 'npm'
-        
-    - name: Install Dependencies
+
+    - name: 3. Install Dependencies
       run: npm install
-      
-    - name: Run Tests
+
+    # تشغيل الاختبارات بشكل صارم. إذا فشلت، سيفشل السير (وهذا هو المطلوب لضمان الجودة)
+    - name: 4. Run Automated Tests (Strict)
       run: npm test

@@ -1,33 +1,44 @@
 /**
  * SovereignClearingGuard.js
- * Enforces UNICEF Anti-Fraud Standards and Pi Network Official KYC Sandbox Mapping.
+ * Enforces Supported Integration Verification and Sandbox-Based Identity Mapping.
+ * No claims of official Pi Network KYC access or UNICEF funding are made.
  */
 
 const AntiDoubleDippingEngine = require('./AntiDoubleDippingEngine');
 
 class SovereignClearingGuard {
     constructor() {
-        this.verifiedWallets = new Set();
+        // لتتبع الحالات المدعومة (Supported Integration) - لا يخزن أي بيانات KYC حساسة
+        this.verifiedEntities = new Set();
     }
 
     /**
-     * المصادقة على الهوية الرقمية للمستفيد عبر المحفظة الرسمية لشبكة باي
+     * التحقق من الأهلية من خلال حالة التكامل المدعومة (Supported Integration Status)
+     * لا يقوم بالوصول الفعلي لبيانات Pi KYC، بل يعتمد على محول (Adapter) يدعم التحقق في بيئة الاختبار (Sandbox).
+     * @param {string} entityId - المعرف الرقمي الموحد للجهة أو المستفيد
+     * @param {string} integrationStatus - حالة التكامل (مثال: "SUPPORTED_SANDBOX", "SUPPORTED_TESTNET")
+     * @param {string} claimNonce - رمز فريد لمنع إعادة الاستخدام
      */
-    async verifyBeneficiary(piWalletAddress, piKycStatus) {
-        // شرط اليونيسف: الشفافية الكاملة والتحقق من الاستحقاق
-        if (!piWalletAddress || piKycStatus !== 'APPROVED') {
-            console.error(`[Guard Alert] Wallet ${piWalletAddress} rejected. Failed Pi KYC validation.`);
-            return { approved: false, reason: 'Incomplete_Pi_KYC' };
+    verifyBeneficiary(entityId, integrationStatus, claimNonce) {
+        // التحقق من حالة التكامل المدعومة (وليس ادعاء الوصول الرسمي لبيانات KYC من Pi)
+        if (!entityId || !integrationStatus || !integrationStatus.startsWith('SUPPORTED_')) {
+            console.error(`[Guard Alert] Entity ${entityId} rejected: Integration status is not supported or incomplete.`);
+            return { approved: false, reason: 'Unsupported_Integration_Status' };
         }
 
-        // منع الاحتيال والتكرار (Anti-Double Dipping Lock)
-        const isLocked = AntiDoubleDippingEngine.isWalletLocked ? AntiDoubleDippingEngine.isWalletLocked(piWalletAddress) : false;
-        if (isLocked) {
+        // منع الاحتيال والتكرار باستخدام محرك الأمان الحالي
+        // نتحقق إذا كان الكيان مقفلاً برمجياً مع nonce معين
+        if (AntiDoubleDippingEngine.isLocked(entityId, claimNonce)) {
             return { approved: false, reason: 'Concurrent_Payout_Attempt_Detected' };
         }
 
-        this.verifiedWallets.add(piWalletAddress);
-        return { approved: true, scope: 'Humanitarian_Aid_Eligible' };
+        // تسجيل الكيان كمدعوم (Supported) وليس كـ KYC رسمي
+        this.verifiedEntities.add(entityId);
+        
+        return { 
+            approved: true, 
+            scope: 'Community_Public_Utility_Eligible' 
+        };
     }
 }
 

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>بوابة المقاصة السيادية الفورية لليمن - BIGISH-YER</title>
+    <title>بوابة المقاصة السيادية التجريبية - BIGISH-YER (Sandbox)</title>
     <style>
         body { font-family: sans-serif; background: #0f0f1e; color: #fff; text-align: center; padding: 20px; }
         .card { background: #1a1a2e; border: 1px solid #333; padding: 20px; border-radius: 12px; max-width: 450px; margin: 0 auto 20px auto; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
@@ -18,18 +18,19 @@
 </head>
 <body>
 
-    <h2>🦅 منظومة الصقر العربي للمقاصة السيادية</h2>
-    <p>بنية ممتثلة لشروط Pi Network المحدثة 2026 ومعايير اليونيسف للابتكار</p>
+    <h2>🦅 منظومة الصقر العربي للمقاصة السيادية (وضع المحاكاة)</h2>
+    <p>نسخة تجريبية (Sandbox) - لا توجد أي علاقة رسمية مع Pi Network أو UNICEF</p>
 
     <!-- بطاقة توليد رمز QR للاستلام -->
     <div class="card">
         <h3>📥 طلب استلام فوري (توليد QR)</h3>
-        <input type="number" id="ui-amount" placeholder="أدخل المبلغ المطلوب استلامه" step="any">
+        <!-- تم إزالة step="any" لمنع الإدخال العشري غير الدقيق -->
+        <input type="text" id="ui-amount" placeholder="أدخل المبلغ (أرقام صحيحة فقط)" pattern="[0-9]+">
         <select id="ui-currency">
-            <option value="YER">YER Token (على بلوكشين باي)</option>
-            <option value="Pi">Pi Coin (العملة الأساسية)</option>
+            <option value="YER">YER Token (محاكاة)</option>
+            <option value="Pi">Pi Coin (محاكاة)</option>
         </select>
-        <button class="btn-gold" onclick="actionGenerate()">إنشاء رمز الـ QR الرسومي حياً</button>
+        <button class="btn-gold" onclick="actionGenerate()">إنشاء رمز QR تجريبي</button>
         
         <div id="qr-wrapper" style="display: none;">
             <div id="qr-visual-container"></div>
@@ -39,15 +40,17 @@
 
     <!-- بطاقة معالجة ودفع رمز QR الممسوح -->
     <div class="card">
-        <h3>💸 مسح ودفع الفاتورة الفورية</h3>
+        <h3>💸 مسح ودفع الفاتورة (محاكاة)</h3>
         <input type="text" id="ui-scan-input" placeholder="الصق نص الـ PAYLOAD المشفر هنا">
-        <button class="btn-green" onclick="actionPay()">تأكيد وتخليص المعاملة فوراً عبر السلسلة</button>
+        <button class="btn-green" onclick="actionPay()">تأكيد المعاملة (محاكاة)</button>
         <div id="ui-status-msg" style="margin-top: 15px; font-weight: bold; font-size: 15px;"></div>
     </div>
 
-    <!-- استدعاء المحرك الصارم المكتمل -->
-    <script src="qr_clearing_handler.js"></script>
+    <!-- استدعاء المحرك الصارم (نسخة متوافقة مع المتصفح) -->
+    <script src="qr_clearing_handler_browser.js"></script>
     <script>
+        // محاولة إنشاء الكائن من الكلاس المتاح في المتصفح
+        // إذا كان الملف يستخدم module.exports، يجب تحميله كـ script وليس module
         const engine = new QrClearingEngine();
         const mySovereignWallet = "G-AEC-YEMEN-SQUE-2026-ACTIVE-METADATA";
 
@@ -63,13 +66,13 @@
                 const payload = engine.generateQrPayload(mySovereignWallet, amt, cur);
                 const fullPayloadString = `PAYLOAD:${payload}`;
                 
-                // 2. تصيير ورسم الـ QR كـ SVG رسومي 100% بدون أي انترنت خارجي
+                // 2. تصيير ورسم الـ QR كـ SVG رسومي (يعمل بدون إنترنت)
                 visual.innerHTML = engine.generateRawSvgHtml(fullPayloadString, 200);
                 strOut.innerText = fullPayloadString;
                 
                 wrapper.style.display = "block";
                 document.getElementById('ui-status-msg').style.color = "gold";
-                document.getElementById('ui-status-msg').innerText = "✅ تم إنشاء وتصيير فاتورة الـ QR الذكية بنجاح!";
+                document.getElementById('ui-status-msg').innerText = "✅ تم إنشاء رمز QR تجريبي بنجاح!";
             } catch (e) {
                 alert("خطأ: " + e.message);
             }
@@ -82,13 +85,13 @@
             const receipt = engine.parseQrPayload(rawText);
             if (receipt.success) {
                 msg.style.color = "#28a745";
-                msg.innerHTML = `🚀 تمت التصفية والمقاصة الكلية عبر البلوكشين!<br>
-                                 <b>تم تحويل:</b> ${receipt.displayAmount} ${receipt.currency}<br>
+                msg.innerHTML = `🚀 تمت المعاملة (محاكاة)!<br>
+                                 <b>المبلغ:</b> ${receipt.rawAmount} ${receipt.currency}<br>
                                  <b>إلى المحفظة:</b> <span style='font-size:11px;color:cyan;'>${receipt.receiver}</span><br>
-                                 <b>البروتوكول المسؤول:</b> <span class='badge'>${receipt.node}</span>`;
+                                 <b>البروتوكول:</b> <span class='badge'>${receipt.node}</span>`;
             } else {
                 msg.style.color = "#dc3545";
-                msg.innerText = `❌ فشل التخليص: ${receipt.error}`;
+                msg.innerText = `❌ فشل: ${receipt.error}`;
             }
         }
     </script>

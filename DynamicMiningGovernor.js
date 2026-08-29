@@ -63,3 +63,4 @@ class DynamicMiningGovernor {
 }
 
 module.exports = DynamicMiningGovernor;
+

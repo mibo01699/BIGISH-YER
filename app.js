@@ -77,3 +77,9 @@ module.exports = {
     clearTransaction,
     state
 };
+module.exports = {
+    YER_MAX_SUPPLY,
+    parseToFixedPoint,
+    clearTransaction,
+    state
+};

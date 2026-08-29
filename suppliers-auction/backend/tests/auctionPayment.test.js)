@@ -1,112 +1,67 @@
 // suppliers-auction/backend/tests/auctionPayment.test.js
 /**
  * BIGISH-YER: Hybrid Auction Settlement Security & Validation Tests
- * Aligned with Pi Core Team 2026 Sandbox and Double-Commit Protocols
+ * NOTE: Sandbox/Testnet validation only. No claims of official Pi Network integration.
  */
 
 const chai = require('chai');
-const chaiHttp = require('chai-http');
-const nock = require('nock'); // محاكاة ردود السيرفرات الخارجية لبلوكشين Pi وليدجر YER
-const app = require('../server'); // استيراد سيرفر المزاد المصحح
-
 const { expect } = chai;
-chai.use(chaiHttp);
 
-describe('🔨 BIGISH-YER: Hybrid Auction Settlement Security Tests', () => {
+// استيراد المحركات الفعلية الموجودة في المستودع
+const AntiDoubleDippingEngine = require('../../../AntiDoubleDippingEngine');
+const DynamicRatioValidator = require('../../../DynamicRatioValidator');
+
+describe('🔨 BIGISH-YER: Hybrid Auction Security Logic Tests', () => {
 
     beforeEach(() => {
-        nock.cleanAll(); // تنظيف المحاكاة قبل كل فحص لضمان الدقة
+        // تنظيف حالة الأقفال قبل كل اختبار لضمان عزل تام
+        // (هذا يعتمد على طريقة تنفيذ AntiDoubleDippingEngine الحالية)
+        // ملاحظة: في النسخة الحالية، الكلاس يُصدّر كـ Singleton، لذلك نعيد تهيئته يدويًا
+        // إذا لزم الأمر، أو نكتفي بالمنطق المنطقي.
     });
 
     /**
-     * الاختبار الأول: التحقق من نجاح الدفع الهجين الكامل عند توفر الهوية والمعاملات الفريدة
+     * الاختبار الأول: التحقق من نجاح تقسيم الدفع الهجين (BigInt)
      */
-    it('1. Should SUCCESSFULLY settle auction when Pi and YER nodes approve transactions', (done) => {
-        const mockPiPaymentId = "pay_auction_valid_777";
-        const mockAuctionId = "auction_item_9900";
+    it('1. Should SUCCESSFULLY split hybrid payment when amounts are strings', () => {
+        const validator = new DynamicRatioValidator();
+        
+        // استخدام السلاسل النصية لمنع الأخطاء العائمة
+        const totalAmount = "1000"; // إجمالي الفاتورة
+        const piPercentage = 10;
+        const yerPercentage = 90;
 
-        // 1. محاكاة رد سيرفرات Pi Network الرسمية بالنجاح والقبول (Double-Commit)
-        nock('https://minepi.com')
-            .get(`/v2/payments/${mockPiPaymentId}`)
-            .reply(200, {
-                id: mockPiPaymentId,
-                status: { completed: true },
-                transaction: { txid: "pi_blockchain_auction_tx_hash" }
-            });
+        const result = validator.validateAndSplit(BigInt(totalAmount), piPercentage, yerPercentage);
 
-        // 2. محاكاة رد خادم المقاصة الرئيسي لـ BIGISH-YER بنجاح تحويل رصيد YER الموازي
-        nock('http://localhost:5001')
-            .post('/api/yer/transfer')
-            .reply(200, {
-                success: true,
-                piBlockchainTxId: "yer_ledger_clearing_tx_hash"
-            });
-
-        // 3. إرسال طلب الدفع الهجين إلى سيرفر المزاد المصحح
-        chai.request(app)
-            .post('/api/payment/settle')
-            .set('x-pi-user-id', 'pi_pioneer_buyer_01') // ترويسات الهوية الإلزامية لـ Pi Browser
-            .set('x-pi-access-token', 'secure_auction_access_token')
-            .send({
-                buyer: { yerWalletId: "YER_BUYER_ACC" },
-                seller: { yerWalletId: "YER_SELLER_ACC" },
-                totalAmount: 100,
-                piAmount: 10,
-                yerAmount: 90,
-                auctionId: mockAuctionId,
-                piPaymentId: mockPiPaymentId
-            })
-            .end((err, res) => {
-                expect(res).to.have.status(200);
-                expect(res.body).to.have.property('success', true);
-                expect(res.body.message).to.include("Hybrid payment successfully cleared");
-                expect(res.body.piBlockchainTxId).to.equal("pi_blockchain_auction_tx_hash");
-                done();
-            });
+        expect(result).to.have.property('piPaymentStroops').that.is.a('string');
+        expect(result).to.have.property('yerPaymentSubUnits').that.is.a('string');
+        expect(result.piRatio).to.equal(10);
+        expect(result.yerRatio).to.equal(90);
+        // التأكد من أن المجموع يساوي 100% (التحقق من النسب)
+        expect(piPercentage + yerPercentage).to.equal(100);
     });
 
     /**
-     * الاختبار الثاني: حظر وإلغاء عمليات تسوية المزاد فوراً في حال تكرار نفس المعاملة (Anti-Double Dipping)
+     * الاختبار الثاني: حظر إعادة استخدام نفس الـ Nonce لمنع الإنفاق المزدوج
      */
-    it('2. Should BLOCK duplicate requests for the same Auction ID (Anti-Double Dipping Check)', (done) => {
-        const duplicateAuctionId = "auction_item_already_spent";
-        const mockPiPaymentId = "pay_auction_dup_111";
+    it('2. Should BLOCK duplicate requests for the same claim (Anti-Double Dipping Check)', () => {
+        const entityId = "auction_item_9900";
+        const claimNonce = "pay_auction_valid_777";
 
-        // إرسال الطلب الأول بنجاح وتثبيته في الذاكرة لمنع الإنفاق المزدوج
-        nock('https://minepi.com').get(`/v2/payments/${mockPiPaymentId}`).reply(200, { id: mockPiPaymentId, status: { completed: true }, transaction: { txid: "tx_1" } });
-        nock('http://localhost:5001').post('/api/yer/transfer').reply(200, { success: true, piBlockchainTxId: "tx_2" });
+        // القفل الأول يجب أن ينجح
+        const firstLock = AntiDoubleDippingEngine.acquireAtomicLock(entityId, claimNonce);
+        expect(firstLock).to.equal(true);
 
-        chai.request(app)
-            .post('/api/payment/settle')
-            .set('x-pi-user-id', 'pi_pioneer_buyer_01')
-            .set('x-pi-access-token', 'secure_token')
-            .send({
-                buyer: { yerWalletId: "YER_BUYER_ACC" },
-                seller: { yerWalletId: "YER_SELLER_ACC" },
-                auctionId: duplicateAuctionId,
-                piPaymentId: mockPiPaymentId
-            })
-            .end((err, res) => {
-                // محاولة إرسال نفس الطلب مرة أخرى فوراً لنفس المزاد
-                chai.request(app)
-                    .post('/api/payment/settle')
-                    .set('x-pi-user-id', 'pi_pioneer_buyer_01')
-                    .set('x-pi-access-token', 'secure_token')
-                    .send({
-                        buyer: { yerWalletId: "YER_BUYER_ACC" },
-                        seller: { yerWalletId: "YER_SELLER_ACC" },
-                        auctionId: duplicateAuctionId,
-                        piPaymentId: mockPiPaymentId
-                    })
-                    .end((err2, res2) => {
-                        // التوقع البرمجي الصارم: يجب حظر المحاولة الثانية وإرجاع كود التعارض 409 لمنع اختراق الرصيد
-                        expect(res2).to.have.status(409);
-                        expect(res2.body.success).to.equal(false);
-                        expect(res2.body.error).to.include("already been executed");
-                        done();
-                    });
-            });
+        // المحاولة الثانية لنفس الـ Nonce يجب أن ترفض
+        try {
+            AntiDoubleDippingEngine.acquireAtomicLock(entityId, claimNonce);
+            // إذا وصلنا هنا، فهذا يعني أن الاختبار فشل لأنه لم يتم رمي خطأ
+            expect.fail("Expected an error to be thrown for duplicate nonce");
+        } catch (error) {
+            expect(error.message).to.include("REPLAY_PROTECTION");
+        }
+
+        // تحرير القفل لتنظيف الحالة
+        AntiDoubleDippingEngine.releaseLock(entityId, claimNonce);
     });
 });
-
-

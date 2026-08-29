@@ -31,7 +31,7 @@
 ---
 
 ## 4. Identity & Security (P0 Criticals)
-* **IDENTITY:** Pi-supported authentication/identity mechanisms only (Pi KYC / Auth APIs). 
+* **IDENTITY:** Supported Verification Status / Adapter-based Integration only (e.g., `SUPPORTED_SANDBOX`, `SUPPORTED_TESTNET`). **Strictly forbidden** to claim, store, or request raw Pi KYC data.
 * **BIOMETRICS:** Absolute restriction on collecting, processing, or storing raw biometric data within the ecosystem.
 * **SECURITY PURGE:** Zero tolerance for hardcoded credentials, API keys, or private seeds in repositories. All secrets must reside in secure environment variables (`.env`).
 

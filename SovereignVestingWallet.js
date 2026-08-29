@@ -1,27 +1,55 @@
-// SovereignVestingWallet.js - النسخة المحدثة لاعتماد سعر صرف الـ AMM الرسمي داخل الـ DEX
+// SovereignVestingWallet.js
+// الإصدار الموحد (Class واحدة + Export واحد) - متوافق مع 300M YER Tokenomics
+// يعتمد على المصدر المركزي (يجب إنشاء ملف YERTokenomicsCanonical.js كما في المرحلة 3)
+
+const AntiDoubleDippingEngine = require('./AntiDoubleDippingEngine');
+const PiPaymentProcessor = require('./backend/pi-payment-processor');
+const YER_TOKENOMICS = require('./YERTokenomicsCanonical'); // المصدر المركزي الجديد
 
 class SovereignVestingWallet {
-    constructor(sovereignEntityId) {
-        this.entityId = sovereignEntityId;
+    constructor(entityId = "AEC_SOVEREIGN_ENTITY") {
+        this.entityId = entityId;
+        this.YER_SCALE = 10000000000n; // دقة 10 خانات عشرية
+
+        // المصدر الاقتصادي الحقيقي (يتم استيراده من الملف المركزي)
+        this.MAX_SUPPLY = YER_TOKENOMICS.maximumSupply; // 300M
+        this.COMMUNITY_ALLOCATION = YER_TOKENOMICS.allocations.communityPublicUtility; // 30M
+        this.ECOSYSTEM_ALLOCATION = YER_TOKENOMICS.allocations.ecosystemLaunchLiquidity; // 90M
+        this.RESERVE_ALLOCATION = YER_TOKENOMICS.allocations.aecSovereignReserve; // 180M
+
+        // المحافظ الداخلية
         this.internalPiBalanceStroops = 0n;
         this.internalYerBalance = 0n;
+
+        // سجلات التتبع والتخصيص الفعلي (تبدأ من الصفر، لأنها لم تُسك بعد)
+        this.currentMintedSupply = 0n;
+        this.releasedCommunity = 0n;
+        this.releasedEcosystem = 0n;
+        this.releasedReserve = 0n;
+
+        // سجلات الرواتب والاستحقاق
+        this.vestingSchedules = new Map();
     }
 
     /**
-     * الشراء الآلي والمباشر لعملة YER بناءً على سعر الـ AMM الرسمي لمجمع السيولة داخل DEX Pi
-     * @param {BigInt} piAmountStroops - كمية الـ Pi المرسلة للمبادلة
-     * @param {BigInt} currentAmmPriceInStroops - السعر اللحظي الفعلي المحدث الصادر من خوارزمية الـ AMM للمجمع
+     * (الوظيفة 1) الشراء المباشر من DEX - لا يزال يستخدم لضخ السيولة في مجمع AMM
+     * @param {BigInt} piAmountStroops 
+     * @param {BigInt} currentAmmPriceInStroops 
      */
     executeDirectDexLiquidityPurchase(piAmountStroops, currentAmmPriceInStroops) {
         if (piAmountStroops <= 0n || currentAmmPriceInStroops <= 0n) {
             throw new Error("DEX_ERROR: Invalid liquidity amounts or zero AMM price pool.");
         }
+        // فحص سقف الـ 90M للسيولة
+        if (this.releasedEcosystem + piAmountStroops > this.ECOSYSTEM_ALLOCATION) {
+            throw new Error("SOVEREIGN_LIMIT_ERROR: Cannot allocate more than 90M to Ecosystem Liquidity.");
+        }
 
-        // الحساب الميكانيكي المباشر بناءً على سعر صانع السوق الآلي الرسمي للمجمع لمنع الاختلال
-        const conversionOutputYer = (piAmountStroops * currentAmmPriceInStroops) / 10000000n; // دقة الـ BigInt
+        const conversionOutputYer = (piAmountStroops * currentAmmPriceInStroops) / 10000000n;
         
         this.internalPiBalanceStroops -= piAmountStroops;
         this.internalYerBalance += conversionOutputYer;
+        this.releasedEcosystem += conversionOutputYer;
 
         return {
             status: "Sovereign_Liquidity_Funded_Via_AMM_DEX",
@@ -30,32 +58,18 @@ class SovereignVestingWallet {
             dexReceiptProof: "BLOCKCHAIN_AUTOMATED_MARKET_MAKER_MATCH"
         };
     }
-}
-module.exports = SovereignVestingWallet;
-
-// SovereignVestingWallet.js
-// محرك جدولة وإطلاق الرواتب والمستحقات السيادية الهجينة الخالية من الفواصل العشريّة
-
-const AntiDoubleDippingEngine = require('./AntiDoubleDippingEngine');
-const PiPaymentProcessor = require('./backend/pi-payment-processor');
-
-class SovereignVestingWallet {
-    constructor() {
-        // مصفوفة لتخزين المحافظ والمستحقات المجدولة للموظفين والقطاعات المدنية
-        this.vestingSchedules = new Map();
-    }
 
     /**
-     * إنشاء جدول استحقاق راتب أو تمويل مؤسسي مجدول زمنياً
-     * @param {string} employeeId - الرقم الرقمي الموحد للموظف أو الجهة
-     * @param {string} totalVestingAmountYer - إجمالي مبلغ التمويل السنوي أو المجدول بالـ YER Sub-units
-     * @param {number} durationMonths - فترة الاستحقاق بالأشهر
+     * (الوظيفة 2) إنشاء جدول استحقاق الرواتب
      */
     createVestingSchedule(employeeId, totalVestingAmountYer, durationMonths) {
         const totalAmountBig = BigInt(totalVestingAmountYer);
         const durationBig = BigInt(durationMonths);
         
-        // حساب القيمة المستحقة شهرياً بدقة بدون كسور
+        if (totalAmountBig > this.COMMUNITY_ALLOCATION) {
+             throw new Error("SOVEREIGN_LIMIT_ERROR: Vesting amount exceeds 30M Community Allocation.");
+        }
+
         const monthlyReleaseYer = totalAmountBig / durationBig;
 
         this.vestingSchedules.set(employeeId, {
@@ -67,15 +81,11 @@ class SovereignVestingWallet {
             lastClaimTimestamp: 0,
             status: "ACTIVE_VESTING"
         });
-
         console.log(`[جدولة سيادية] تم تفعيل خطة استحقاق لـ ${employeeId} بقيمة شهرية: ${monthlyReleaseYer.toString()} وحدة.`);
     }
 
     /**
-     * إطلاق وصرف الراتب الشهري الهجين للموظف بعد فحص أمان البلوكشين والوقت
-     * @param {string} employeeId - هوية الموظف
-     * @param {string} currentExchangeRate - سعر صرف مجمع AMM الحالي
-     * @param {string} claimNonce - رمز فريد لحظر هجمات إعادة الطلب المتزامن
+     * (الوظيفة 2) صرف الراتب مع الحماية الزمنية ومنع السحب المزدوج
      */
     releaseMonthlyShare(employeeId, currentExchangeRate, claimNonce) {
         const schedule = this.vestingSchedules.get(employeeId);
@@ -83,128 +93,69 @@ class SovereignVestingWallet {
         if (schedule.status !== "ACTIVE_VESTING") throw new Error("خطة الاستحقاق هذه مجمدة أو مكتملة الصرف.");
 
         const currentTime = Date.now();
-        // شرط حماية زمني: منع السحب لأكثر من مرة واحدة كل 30 يوماً (محاكاة بالثواني للاختبار: 10 ثوانٍ)
         if (currentTime - schedule.lastClaimTimestamp < 10000) {
             throw new Error("⚠️ حظر زمني: المستحقات الشهرية تم صرفها بالفعل لهذه الدورة الحالية.");
         }
 
-        // 1. فرض قفل الأمان الذري لمنع هجمات السحب المزدوج الموازي للمحفظة
+        // قفل ذري لمنع الـ Double-Dipping
         AntiDoubleDippingEngine.acquireAtomicLock(employeeId, claimNonce);
 
         try {
             const monthlyAmountBig = BigInt(schedule.monthlyReleaseYer);
+            // منع تجاوز السقف الإجمالي للـ Community (30M)
+            if (this.releasedCommunity + monthlyAmountBig > this.COMMUNITY_ALLOCATION) {
+                throw new Error("SOVEREIGN_LIMIT_ERROR: Exceeds 30M Community Allocation cap.");
+            }
 
-            // 2. تقسيم الراتب الشهري فوراً: 50% احتياطي محلي و 50% عبر شبكة Pi اللامركزية
             const splitResults = PiPaymentProcessor.processHybridInvoice(monthlyAmountBig.toString(), currentExchangeRate);
 
-            // 3. تحديث سجلات الاستحقاق الداخلية للمحفظة السيادية
             schedule.monthsClaimed += 1;
             const updatedReleased = BigInt(schedule.releasedAmountYer) + monthlyAmountBig;
             schedule.releasedAmountYer = updatedReleased.toString();
+            this.releasedCommunity += monthlyAmountBig; // تحديث المصروف الفعلي
             schedule.lastClaimTimestamp = currentTime;
 
             if (schedule.monthsClaimed >= schedule.durationMonths) {
                 schedule.status = "FULLY_VESTED";
             }
 
-            console.log(`[صرف الرواتب] تم إنتاج مصفوفة المقاصة لراتب الموظف ${employeeId} بنجاح للدفعة رقم ${schedule.monthsClaimed}.`);
-            
-            return {
-                success: true,
-                employeeId,
-                paymentNonce: claimNonce,
-                localSovereignYer: splitResults.yerSovereignUnits,
-                piStroopsPayload: splitResults.piStroops,
-                status: "ROUTING_TO_PI_BROWSER_SDK"
-            };
+            return { success: true, employeeId, paymentNonce: claimNonce, localSovereignYer: splitResults.yerSovereignUnits, piStroopsPayload: splitResults.piStroops };
 
         } catch (error) {
-            console.error(`[فشل الاستحقاق] تراجع عن الصرف للموظف ${employeeId}:`, error.message);
             throw error;
         } finally {
-            // 4. فك قفل الحساب الآمن لمواصلة معالجة الدورات التالية
             AntiDoubleDippingEngine.releaseLock(employeeId);
         }
     }
-}
-
-module.exports = new SovereignVestingWallet();
-
-/**
- * @file SovereignVestingWallet.js
- * @description العقد الذكي والمنطق الحاكم لـ 90% من معروض YER الموجه لمنصة إطلاق Pi ومجمعات السيولة السيادية.
- */
-
-class SovereignVestingWallet {
-    constructor() {
-        this.YER_SCALE = 10000000000n; // دقة 10 خانات عشرية لعملة YER
-        this.TOTAL_SUPPLY = 100000000n * this.YER_SCALE; // 100 مليون المعروض الكلي
-
-        // التخصيص الصارم للـ 90 مليون YER المقاسة بالوحدات الصغرى (BigInt)
-        this.LIQUIDITY_POOL_ALLOCATION = 40000000n * this.YER_SCALE; // 40 مليون للسيولة
-        this.LAUNCHPAD_IDO_ALLOCATION  = 30000000n * this.YER_SCALE; // 30 مليون للاكتتاب
-        this.STAKING_MINING_ALLOCATION = 20000000n * this.YER_SCALE; // 20 مليون لمكافآت السيولة
-
-        // سجلات تتبع الصرف البرميجي الحالي لضمان عدم تجاوز السقف
-        this.releasedLiquidity = 0n;
-        this.releasedIdo = 0n;
-        this.releasedStaking = 0n;
-
-        // قفل زمني لحماية المستثمرين (مثال: فتح تدريجي شهري بنسبة 5% لرموز الاكتتاب)
-        this.idoReleaseRatePercent = 5n; 
-    }
 
     /**
-     * تحرير وتأمين رموز الاكتتاب الموجهة لمنصة إطلاق Pi (Pi Launchpad)
-     * @param {bigint} requestedAmount المبلغ المطلوب سحبه لمنصة الإطلاق
-     * @param {boolean} isKycVerified شرط تحقق الهوية الصارم من شبكة Pi
-     * @returns {string} القيمة المحررة الفورية بالوحدات الصغرى
+     * (الوظيفة 3) إطلاق رموز الـ Community / Launchpad (بدلاً من التعدين القديم)
+     * @param {BigInt} requestedAmount 
+     * @param {boolean} isKycVerified 
      */
     releaseLaunchpadTokens(requestedAmount, isKycVerified) {
-        // الشرط السيادي الأول: يجب أن يكون المستخدم أو المنصة مستوفية لشروط الـ KYC
         if (!isKycVerified) {
-            throw new Error("خطأ حوكمة: لا يمكن سحب رموز الاكتتاب دون توثيق الهوية KYC المعتمد من شبكة Pi.");
+            throw new Error("خطأ حوكمة: لا يمكن سحب رموز الاكتتاب دون توثيق الهوية KYC.");
         }
-
-        // الشرط الثاني: عدم تجاوز سقف الـ 30 مليون المخصصة للاكتتاب
-        if (this.releasedIdo + requestedAmount > this.LAUNCHPAD_IDO_ALLOCATION) {
-            throw new Error("حظر برميجي: الكمية المطلوبة تتجاوز السقف المخصص للعرض الأولي على Pi Launchpad.");
+        if (this.releasedCommunity + requestedAmount > this.COMMUNITY_ALLOCATION) {
+            throw new Error("حظر برمجي: الكمية المطلوبة تتجاوز السقف المخصص (30M).");
         }
-
-        this.releasedIdo += requestedAmount;
+        this.releasedCommunity += requestedAmount;
         return requestedAmount.toString();
     }
 
     /**
-     * ضخ السيولة الفورية لتثبيت السوق وتفعيل ميزة الدفع الهجين المرن
-     * @param {bigint} amount القيمة المراد حقنها في مجمع المقاصة (DEX)
-     * @returns {string} القيمة المحقونة بالوحدات الصغرى
+     * (الوظيفة 3) صرف من احتياطي A.E.C (180M)
+     * تم استبدال `disburseMiningReward` بـ `disburseSovereignReserve` لعدم وجود تعدين بعد الآن
      */
-    injectLiquidityPool(amount) {
-        if (this.releasedLiquidity + amount > this.LIQUIDITY_POOL_ALLOCATION) {
-            throw new Error("حظر سيادي: تم استنفاد كامل الحصة المخصصة لعمق مجمعات السيولة.");
+    disburseSovereignReserve(amount) {
+        if (this.releasedReserve + amount > this.RESERVE_ALLOCATION) {
+            throw new Error("SOVEREIGN_LIMIT_ERROR: Exceeds 180M Reserve cap.");
         }
-
-        this.releasedLiquidity += amount;
+        this.releasedReserve += amount;
         return amount.toString();
-    }
-
-    /**
-     * صرف مكافآت التعدين الهيدروليكي المرن المحكوم بواسطة الـ DynamicMiningGovernor
-     * @param {bigint} amount الحصة اللحظية المحسوبة بواسطة محرك الحوكمة
-     * @returns {bigint} الحصة المصروفة فعلياً للمعدنين
-     */
-    disburseMiningReward(amount) {
-        if (this.releasedStaking + amount > this.STAKING_MINING_ALLOCATION) {
-            // في حال نفاذ الـ 20 مليون المخصصة لتعدين السيولة، يتم تصفير الصرف والاعتماد بالكامل على رسوم الدفع الهجين
-            return 0n;
-        }
-
-        this.releasedStaking += amount;
-        return amount;
     }
 }
 
+// تصدير واحد فقط، مع السماح بإنشاء نسخ جديدة
 module.exports = SovereignVestingWallet;
-
-

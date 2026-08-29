@@ -113,3 +113,4 @@ const PORT = process.env.PORT || 5002;
 app.listen(PORT, () => console.log(`🔒 Secure Auction Settlement Service active on port ${PORT}`));
 
 module.exports = app;
+

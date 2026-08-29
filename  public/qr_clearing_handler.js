@@ -1,7 +1,9 @@
 /**
  * BIGISH-YER: Comprehensive QR Code Sovereign Clearing & Native SVG Generator Engine
- * 100% Standalone Implementation - Compliant with Pi Network Web3 & UNICEF Open-Source Standards.
+ * NOTE: Pure Node.js implementation. Sandbox/Testnet compliant. No claims of official Pi or UNICEF partnership.
  */
+
+const crypto = require('crypto'); // للاستخدام الآمن بدلاً من btoa
 
 class QrClearingEngine {
     constructor() {
@@ -11,14 +13,33 @@ class QrClearingEngine {
 
     /**
      * 1. توليد النص المشفر وتجهيز البيانات الحسابية الصارمة (Zero Floating-Point)
+     * @param {string} receiverWallet - عنوان المحفظة
+     * @param {string} amount - المبلغ كسلسلة نصية (String) لمنع الأخطاء العائمة
+     * @param {string} currency - 'Pi' أو 'YER'
+     * @param {string} protocolNode - اسم العقدة
      */
     generateQrPayload(receiverWallet, amount, currency, protocolNode = "BIGISH-YER") {
-        if (!receiverWallet || !amount || isNaN(amount) || amount <= 0) {
-            throw new Error("Invalid transaction parameters for QR generation.");
+        // التحقق الصارم: يجب أن يكون المبلغ سلسلة نصية، وليس رقماً عائماً
+        if (!receiverWallet || !amount || typeof amount !== 'string') {
+            throw new Error("Invalid transaction parameters: Amount must be a string.");
         }
 
         let scale = currency === 'Pi' ? this.piScale : this.yerScale;
-        let bigAmount = BigInt(Math.floor(amount * Number(scale)));
+        
+        // تحويل النص إلى BigInt بطريقة آمنة (بدون Math.floor أو Number)
+        // باستخدام تقسيم السلسلة
+        const parts = amount.split('.');
+        let whole = parts[0] || "0";
+        let fraction = parts[1] || "";
+        
+        const expectedDecimals = Number(currency === 'Pi' ? 7n : 10n);
+        fraction = fraction.substring(0, expectedDecimals).padEnd(expectedDecimals, '0');
+        
+        const bigAmount = BigInt(whole + fraction);
+
+        if (bigAmount <= 0n) {
+            throw new Error("Invalid transaction amount: Must be greater than zero.");
+        }
 
         const payload = {
             v: "AEC-QR-1.0",
@@ -29,26 +50,26 @@ class QrClearingEngine {
             ts: Date.now()
         };
 
-        return btoa(JSON.stringify(payload));
+        // استخدام Buffer بدلاً من btoa (متوافق مع Node.js)
+        return Buffer.from(JSON.stringify(payload)).toString('base64');
     }
 
     /**
      * 2. محرك رسومي مدمج لتوليد مصفوفة ومكعبات الـ QR وتصديقها كـ SVG مرئي
+     * (تم الحفاظ على منطق الرسم كما هو، لكن إزالة أي تبعيات على المتصفح)
      */
     generateRawSvgHtml(text, size = 180) {
-        // مصفوفة محاكاة ذكية متوافقة ومستقرة للأجهزة المحمولة لتوليد نمط الـ QR الصوري بدون حزم خارجية
         let pseudoHash = 0;
         for (let i = 0; i < text.length; i++) {
             pseudoHash = text.charCodeAt(i) + ((pseudoHash << 5) - pseudoHash);
         }
 
         let svgBlocks = '';
-        const matrixSize = 25; // النمط القياسي للـ QR العادي
+        const matrixSize = 25;
         const blockSize = size / matrixSize;
 
         for (let row = 0; row < matrixSize; row++) {
             for (let col = 0; col < matrixSize; col++) {
-                // بناء مربعات التحديد الثلاثة الزاوية الثابتة للـ QR الكلاسيكي لحماية مسح الكاميرات
                 const isFinderPattern = 
                     (row < 7 && col < 7) || 
                     (row < 7 && col > matrixSize - 8) || 
@@ -56,13 +77,11 @@ class QrClearingEngine {
                 
                 let isFilled = false;
                 if (isFinderPattern) {
-                    // تشكيل حدود مصفوفة الزوايا للـ QR
                     const innerRow = row < 7 ? row : (row > matrixSize - 8 ? row - (matrixSize - 7) : row);
                     const innerCol = col < 7 ? col : (col > matrixSize - 8 ? col - (matrixSize - 7) : col);
                     isFilled = (innerRow === 0 || innerRow === 6 || innerCol === 0 || innerCol === 6) || 
                                (innerRow >= 2 && innerRow <= 4 && innerCol >= 2 && innerCol <= 4);
                 } else {
-                    // ملء النقاط الداخلية بناءً على تشفير النص الممسوح لتوليد بصمة فريدة للمعاملة
                     const bitIndex = (row * matrixSize + col) % 32;
                     isFilled = ((pseudoHash >> bitIndex) & 1) === 1;
                 }
@@ -81,7 +100,8 @@ class QrClearingEngine {
      */
     parseQrPayload(base64Payload) {
         try {
-            const jsonString = atob(base64Payload);
+            // استخدام Buffer بدلاً من atob
+            const jsonString = Buffer.from(base64Payload, 'base64').toString('utf-8');
             const data = JSON.parse(jsonString);
 
             if (data.v !== "AEC-QR-1.0") {
@@ -91,8 +111,9 @@ class QrClearingEngine {
             return {
                 success: true,
                 receiver: data.address,
-                rawAmount: data.amt,
-                displayAmount: Number(BigInt(data.amt)) / Number(data.cur === 'Pi' ? this.piScale : this.yerScale),
+                rawAmount: data.amt, // إبقاؤه كنص (String) لمنع فقدان الدقة
+                // إزالة تحويل Number نهائياً
+                displayAmount: data.amt, // يمكن عرضه كنص أو تحويله لاحقاً حسب الحاجة
                 currency: data.cur,
                 node: data.node
             };

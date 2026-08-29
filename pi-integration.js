@@ -1,36 +1,35 @@
 /**
  * Pi Network Secure Sandbox Clearing Integration
  * Built for production-grade transaction execution
+ * NOTE: Uses sandbox/testnet adapter. No official Pi KYC claims.
  */
 
 const axios = require('axios');
 
 class PiIntegrationBridge {
     constructor() {
-        // استدعاء متغيرات البيئة من الملف الآمن .env المحدث محلياً
+        // استدعاء متغيرات البيئة من الملف الآمن .env
         this.apiKey = process.env.PI_NETWORK_SANDBOX_KEY || "mock_sandbox_key_for_testing";
-        this.apiBaseUrl = "https://minepi.com";
+        this.apiBaseUrl = "https://api.minepi.com"; // تم تصحيح الرابط
     }
 
-    /**
-     * التحقق من سلامة الفاتورة وعقد المعاملة قبل التوقيع الرقمي
-     */
     async verifyAndInjectManifest(paymentId, expectedStroops) {
-        // فحص أولي للمدخلات لمنع حقن الأكواد الضارة
         if (!paymentId || typeof paymentId !== 'string') {
             throw new Error("CRITICAL: Invalid or malicious Payment ID structural layout.");
         }
 
         try {
-            // الاتصال الآمن مع خوادم الـ API الخاصة بالشبكة
-            const response = await axios.get(`${this.apiBaseUrl}/payments/${paymentId}`, {
+            const response = await axios.get(`${this.apiBaseUrl}/v2/payments/${paymentId}`, {
                 headers: { 'Authorization': `Key ${this.apiKey}` }
             });
 
             const paymentData = response.data;
 
-            // مطابقة المبلغ الفعلي المسجل في البلوكشين مع الحسابات الداخلية للمستودع
-            if (BigInt(paymentData.amount) !== BigInt(expectedStroops)) {
+            // تحويل آمن من نص إلى BigInt (مع التأكد من أن المبلغ نص صحيح)
+            const actualAmount = BigInt(paymentData.amount.toString());
+            const expectedAmount = BigInt(expectedStroops.toString());
+
+            if (actualAmount !== expectedAmount) {
                 throw new Error("SECURITY FRAUD ALERT: Blockchain asset weights mismatch.");
             }
 

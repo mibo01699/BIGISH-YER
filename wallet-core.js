@@ -1,63 +1,23 @@
-// wallet-core.js
-// مصفوفة الربط لتسوية وتمرير أرصدة التعدين المعتمدة (10% الرموز المخصصة للمستخدمين)
-
-const axios = require('axios');
-
-async function claimMinedTokensToWallet(piUserId, yerWalletAddress, amountToClaim) {
-    if (amountToClaim <= 0) return { success: false, error: "No claimable balance found." };
-
-    try {
-        // التحقق من الحماية ضد الإنفاق المزدوج والتكرار قبل معالجة النقل إلى الليدجر
-        console.log(`Securing transfer tracking via AntiDoubleDippingEngine for user: ${piUserId}`);
-        
-        const txPayload = {
-            user: piUserId,
-            destination: yerWalletAddress,
-            amount: amountToClaim,
-            distributionType: "IN_APP_MINING_10_PERCENT",
-            timestamp: new Date()
-        };
-
-        // تسجيل تسوية رصيد التعدين في قاعدة ليدجر المقاصة والتطبيقات الخارجية الموازية
-        // يتكامل هذا الطلب مباشرة مع واجهة /api/yer/transfer التي قمنا ببنائها
-        return {
-            success: true,
-            status: "CLAIMED_AND_VAULTED",
-            distributedAmount: amountToClaim,
-            ledgerReference: "MNG-CLAIM-" + Math.floor(Math.random() * 1000000)
-        };
-    } catch (error) {
-        console.error("Wallet core clearance failure:", error.message);
-        return { success: false, error: "Internal blockchain ledger synchronization error." };
-    }
-}
-
-module.exports = { claimMinedTokensToWallet };
-
 /**
- * BIGISH-YER: Sovereign Wallet & Beneficiary Core Ledger
- * ممتثل بالكامل لشروط منصة إطلاق Pi ومعايير الحسابات الصارمة
+ * wallet-core.js
+ * Sovereign Wallet & Beneficiary Core Ledger
+ * Compliant with 300M YER Tokenomics (Community = 30M)
  */
 
 const crypto = require('crypto');
+const AntiDoubleDippingEngine = require('./AntiDoubleDippingEngine');
 
 class SovereignWalletEngine {
     constructor() {
-        // ميزان العناوين والمستفيدين داخل قاعدة بيانات المحفظة المؤقتة
         this.beneficiaries = new Map();
-        // مقياس العملة المعتمد في مستند المشروع: 10 خانات عشرية لـ YER
-        this.YER_SCALE = 10n ** 10n; 
+        this.YER_SCALE = 10n ** 10n; // 10 decimals
     }
 
-    /**
-     * إنشاء محفظة سيادية جديدة للمستفيد مرتبطة بمعرف التوثيق لـ Pi
-     */
     createBeneficiaryWallet(piUsername, institutionalRole = 'Citizen') {
         if (this.beneficiaries.has(piUsername)) {
             return this.beneficiaries.get(piUsername);
         }
 
-        // توليد مفاتيح تشفير غير حضانية لضمان أمان أموال المستفيد
         const { publicKey, privateKey } = crypto.generateKeyPairSync('rsa', {
             modulusLength: 2048,
             publicKeyEncoding: { type: 'spki', format: 'pem' },
@@ -65,43 +25,44 @@ class SovereignWalletEngine {
         });
 
         const walletData = {
-            piUsername: piUsername,
-            role: institutionalRole, // (Citizen, Merchant, Humanitarian_Aid)
-            yerBalance: 0n, // تخزين الرصيد كـ BigInt منعاً للتضخم والكسور العائمة
-            publicKey: publicKey,
-            privateKey: privateKey,
+            piUsername,
+            role: institutionalRole,
+            yerBalance: 0n,
+            publicKey,
+            privateKey,
             createdAt: new Date().toISOString()
         };
 
         this.beneficiaries.set(piUsername, walletData);
         return {
-            piUsername: walletData.piUsername,
-            role: walletData.role,
-            publicKey: walletData.publicKey,
+            piUsername,
+            role,
+            publicKey,
             balance: "0.0000000000 YER"
         };
     }
 
-    /**
-     * شحن رصيد المحفظة (رواتب، مساعدات إنسانية عبر AJYAL)
-     */
     creditSovereignBalance(piUsername, amountYER) {
         if (!this.beneficiaries.has(piUsername)) {
-            throw new Error(`المستفيد ${piUsername} غير مسجل في السجل السيادي الموحد.`);
+            throw new Error(`المستفيد ${piUsername} غير مسجل.`);
         }
 
         const wallet = this.beneficiaries.get(piUsername);
-        const incrementalValue = BigInt(Math.floor(amountYER * 1e10)); // تحويل آمن إلى 10 خانات
         
+        // تحويل آمن من نص إلى BigInt (بدلاً من Math.floor)
+        const incrementalValue = BigInt(amountYER); 
+        
+        // التحقق من سقف الـ 30M المجتمعي (منع التجاوز)
+        if (wallet.yerBalance + incrementalValue > (30000000n * this.YER_SCALE)) {
+            throw new Error("SOVEREIGN_LIMIT_ERROR: Exceeds 30M Community Allocation.");
+        }
+
         wallet.yerBalance += incrementalValue;
         this.beneficiaries.set(piUsername, wallet);
 
         return this.formatBalance(wallet.yerBalance);
     }
 
-    /**
-     * قراءة الرصيد وتنسيقه للمستفيد
-     */
     getWalletBalance(piUsername) {
         if (!this.beneficiaries.has(piUsername)) {
             return "0.0000000000 YER";
@@ -117,5 +78,39 @@ class SovereignWalletEngine {
     }
 }
 
-module.exports = new SovereignWalletEngine();
+/**
+ * [إعادة تسمية] استبدال دالة التعدين القديمة بتوزيع مجتمعي آمن
+ */
+function claimCommunityAllocation(piUserId, yerWalletAddress, amountToClaim) {
+    if (typeof amountToClaim !== 'string' || BigInt(amountToClaim) <= 0n) {
+        return { success: false, error: "No claimable balance found." };
+    }
 
+    try {
+        // قفل ذري لمنع التكرار
+        AntiDoubleDippingEngine.acquireAtomicLock(piUserId, `claim-${Date.now()}`);
+
+        const txPayload = {
+            user: piUserId,
+            destination: yerWalletAddress,
+            amount: amountToClaim.toString(),
+            distributionType: "COMMUNITY_PUBLIC_UTILITY", // تم تغييرها من MINING
+            timestamp: new Date().toISOString()
+        };
+
+        return {
+            success: true,
+            status: "CLAIMED_AND_VAULTED",
+            distributedAmount: amountToClaim.toString(),
+            ledgerReference: "COMMUNITY-CLAIM-" + crypto.randomUUID() // إزالة Math.random
+        };
+    } catch (error) {
+        console.error("Wallet core clearance failure:", error.message);
+        return { success: false, error: "Internal blockchain ledger synchronization error." };
+    } finally {
+        // تحرير القفل
+        AntiDoubleDippingEngine.releaseLock(piUserId, `claim-${Date.now()}`);
+    }
+}
+
+module.exports = { SovereignWalletEngine: new SovereignWalletEngine(), claimCommunityAllocation };

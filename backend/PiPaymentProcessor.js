@@ -2,7 +2,8 @@
 // محرك المقاصة السيادي الخالي من الفواصل العشريّة (Zero Floating-Point Engine)
 // نسخة متوافقة مع BigInt بشكل كامل، ولا تستخدم أي عمليات عائمة في المسار المالي.
 
-const YER_TOKENOMICS = require('./YERTokenomicsCanonical'); // المصدر المركزي (اختياري للتحقق من السقف)
+const crypto = require('crypto'); // مطلوب لتوليد UUID آمن
+const YER_TOKENOMICS = require('../YERTokenomicsCanonical'); // [تم الإصلاح] رفع المسار لمستوى الجذر
 
 const PI_SCALE = 10_000_000n; // 1 Pi = 10^7 Stroops (Strict BigInt)
 const YER_SCALE = 10_000_000_000n; // 1 YER = 10^10 Sub-units

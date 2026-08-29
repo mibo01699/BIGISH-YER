@@ -1,6 +1,6 @@
 // SovereignVestingWallet.js
 // الإصدار الموحد (Class واحدة + Export واحد) - متوافق مع 300M YER Tokenomics
-// يعتمد على المصدر المركزي (يجب إنشاء ملف YERTokenomicsCanonical.js كما في المرحلة 3)
+// يعتمد على المصدر المركزي YERTokenomicsCanonical.js
 
 const AntiDoubleDippingEngine = require('./AntiDoubleDippingEngine');
 const PiPaymentProcessor = require('./backend/pi-payment-processor');
@@ -40,13 +40,15 @@ class SovereignVestingWallet {
         if (piAmountStroops <= 0n || currentAmmPriceInStroops <= 0n) {
             throw new Error("DEX_ERROR: Invalid liquidity amounts or zero AMM price pool.");
         }
-        // فحص سقف الـ 90M للسيولة
-        if (this.releasedEcosystem + piAmountStroops > this.ECOSYSTEM_ALLOCATION) {
+
+        // الحساب الميكانيكي المباشر (يستخدم BigInt فقط)
+        const conversionOutputYer = (piAmountStroops * currentAmmPriceInStroops) / 10000000n;
+        
+        // [✅ إصلاح حاسم]: فحص سقف الـ 90M بناءً على كمية YER الناتجة، وليس كمية Pi المُرسلة
+        if (this.releasedEcosystem + conversionOutputYer > this.ECOSYSTEM_ALLOCATION) {
             throw new Error("SOVEREIGN_LIMIT_ERROR: Cannot allocate more than 90M to Ecosystem Liquidity.");
         }
 
-        const conversionOutputYer = (piAmountStroops * currentAmmPriceInStroops) / 10000000n;
-        
         this.internalPiBalanceStroops -= piAmountStroops;
         this.internalYerBalance += conversionOutputYer;
         this.releasedEcosystem += conversionOutputYer;
@@ -67,7 +69,7 @@ class SovereignVestingWallet {
         const durationBig = BigInt(durationMonths);
         
         if (totalAmountBig > this.COMMUNITY_ALLOCATION) {
-             throw new Error("SOVEREIGN_LIMIT_ERROR: Vesting amount exceeds 30M Community Allocation.");
+            throw new Error("SOVEREIGN_LIMIT_ERROR: Vesting amount exceeds 30M Community Allocation.");
         }
 
         const monthlyReleaseYer = totalAmountBig / durationBig;
@@ -124,7 +126,8 @@ class SovereignVestingWallet {
         } catch (error) {
             throw error;
         } finally {
-            AntiDoubleDippingEngine.releaseLock(employeeId);
+            // [✅ إصلاح حاسم]: تحرير القفل بإرسال الوسيطين المطلوبين بواسطة محرك الأمان الجديد
+            AntiDoubleDippingEngine.releaseLock(employeeId, claimNonce);
         }
     }
 

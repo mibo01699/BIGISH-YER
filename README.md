@@ -20,9 +20,9 @@ The platform uses transparent **On-Chain Tokenized Asset Infrastructure** to ens
 
 ---
 
-## ⚡ Ecosystem Integration Matrix (The Seven Protocols)
+## ⚡ Ecosystem Integration Matrix (The Nine Protocols)
 
-Led by **Mayass Ali**, BIGISH-YER coordinates clearings across seven specialized nodes within the **Arabian Eagle Ecosystem (A.E.C.)**:
+Led by **Mayass Ali**, BIGISH-YER coordinates clearings across nine specialized nodes within the **Arabian Eagle Ecosystem (A.E.C.)**:
 1. **BIGISH-YER**: Core ledger, wallet management, and supply management.
 2. **COBRA-Protocol**: Emergency broadband channels and telemetry.
 3. **Be-well Platform**: Healthcare utility accounts and biomedical alerts.
@@ -30,6 +30,8 @@ Led by **Mayass Ali**, BIGISH-YER coordinates clearings across seven specialized
 5. **AJYAL Framework**: Localized transactions and digital payrolls.
 6. **GAV-The-Incense-Route**: Geopolitical supply line asset routing.
 7. **AMAN-Protocol**: Decentralized smart insurance and programmatic payouts.
+8. **Telecom-Mobile-Protocol**: A decentralized, sovereign communications platform. It offers integrated solutions for real virtual numbers and unblockable encrypted messaging. The platform enables account activation and high-quality international calling.
+9. **Arab-Eagle-Sovereign-Fund-A.E.C.**: The Arab Eagle Sovereign Fund (A.E.C.) is a sovereign financial institution offering financing services, microloans, and interest-free credit management.
 
 ---
 

@@ -1,41 +1,45 @@
 // tests/smartContract.test.js
 /**
  * BIGISH-YER: Smart Contract Unit Tests & Liquidity Pool Assertions
- * Aligned with Pi Network v2.0 DEX Guidelines & Security Frameworks
+ * NOTE: Sandbox/Testnet validation only. No claims of official Pi Network integration.
  */
 
-const chai = require('chai');
-const { expect } = chai;
+const { test, describe, beforeEach } = require('node:test');
+const assert = require('node:assert');
 
 // محاكاة سريعة لهيكل العقد الذكي لـ Solidity (YERSettlementPool) بغرض الفحص السريع داخل بيئة Node CI
 class MockYERSettlementPool {
     constructor(tokenAddress) {
         this.tokenAddress = tokenAddress;
         this.processedPiPayments = new Set();
-        this.totalLiquidityInPool = 1000000; // رصيد مبدئي في المجمع لمحاكاة الـ 30% سيولة
+        // تحويل المبالغ إلى BigInt (باستخدام نص)
+        this.totalLiquidityInPool = 1000000n; // رصيد مبدئي (1 مليون وحدة صغرى)
     }
 
-    // محاكاة دالة تنفيذ تسوية المقاصة التبادلية على البلوكشين (executeOnChainClearing)
+    // محاكاة دالة تنفيذ تسوية المقاصة التبادلية على البلوكشين
     async executeOnChainClearing(piPaymentId, merchantWallet, amountYER) {
         if (!merchantWallet) throw new Error("Clearing Failed: Invalid receiver address.");
-        if (amountYER <= 0) throw new Error("Clearing Failed: Volume must be positive.");
         
-        // جدار الحماية ضد التكرار لمنع الإنفاق المزدوج
+        // تحويل المدخل إلى BigInt (إذا كان نصاً)
+        const amountBig = BigInt(amountYER);
+        if (amountBig <= 0n) throw new Error("Clearing Failed: Volume must be positive.");
+        
+        // جدار الحماية ضد التكرار
         if (this.processedPiPayments.has(piPaymentId)) {
             throw new Error("Security Alert: Duplicate settlement attempt blocked.");
         }
 
-        if (this.totalLiquidityInPool < amountYER) {
+        if (this.totalLiquidityInPool < amountBig) {
             throw new Error("Liquidity Failure: Insufficient reserve in clearing vault.");
         }
 
-        // إتمام التسوية بنجاح وتثبيتها في سجلات البلوكشين لمنع ثغرات إعادة الدخول
+        // إتمام التسوية
         this.processedPiPayments.add(piPaymentId);
-        this.totalLiquidityInPool -= amountYER;
+        this.totalLiquidityInPool -= amountBig;
 
         return {
             status: "SUCCESS_ON_CHAIN",
-            remainingLiquidity: this.totalLiquidityInPool
+            remainingLiquidity: this.totalLiquidityInPool.toString()
         };
     }
 }
@@ -49,55 +53,49 @@ describe('📜 BIGISH-YER: On-Chain Liquidity & Pool Contract Assertions', () =>
     });
 
     /**
-     * الاختبار الأول: التحقق من نجاح تسوية المقاصة ونقل رصيد YER لمحفظة التاجر (GAV POS)
+     * الاختبار الأول: التحقق من نجاح تسوية المقاصة ونقل رصيد YER لمحفظة التاجر
      */
-    it('1. Should successfully execute on-chain clearance for valid unique Pi payments', async () => {
+    test('1. Should successfully execute on-chain clearance for valid unique Pi payments', async () => {
         const mockPaymentId = "pay_blockchain_valid_9988";
         const merchantWallet = "0xMerchantGAVTerminalSanaa";
-        const amountYER = 50000; // 50,000 YER
+        const amountYER = "50000"; // كنص لضمان دقة BigInt
 
         const result = await settlementPool.executeOnChainClearing(mockPaymentId, merchantWallet, amountYER);
         
-        expect(result.status).to.equal("SUCCESS_ON_CHAIN");
-        expect(result.remainingLiquidity).to.equal(950000); // تأكيد خصم المبلغ بدقة من مجمع المقاصة
+        assert.strictEqual(result.status, "SUCCESS_ON_CHAIN");
+        // 1,000,000 - 50,000 = 950,000
+        assert.strictEqual(result.remainingLiquidity, "950000");
     });
 
     /**
-     * الاختبار الثاني: التحقق من قوة جدار الحماية ضد التكرار (Anti-Double Dipping) وحظر محاولات الاختراق
+     * الاختبار الثاني: التحقق من قوة جدار الحماية ضد التكرار
      */
-    it('2. Should strictly REJECT duplicate Pi Payment IDs on the contract level', async () => {
+    test('2. Should strictly REJECT duplicate Pi Payment IDs on the contract level', async () => {
         const duplicatePaymentId = "pay_blockchain_exploit_attempt";
         const merchantWallet = "0xMerchantGAVTerminalAden";
-        const amountYER = 10000;
+        const amountYER = "10000";
 
-        // تنفيذ عملية المقاصة للمرة الأولى بنجاح
+        // تنفيذ العملية الأولى بنجاح
         await settlementPool.executeOnChainClearing(duplicatePaymentId, merchantWallet, amountYER);
 
-        // محاولة إعادة إرسال نفس الطلب ومعرف الدفع للمرة الثانية لتكرار سحب العملات
-        try {
-            await settlementPool.executeOnChainClearing(duplicatePaymentId, merchantWallet, amountYER);
-            // إذا مر الطلب دون إطلاق خطأ، يفشل الاختبار تلقائياً
-            expect.fail("The contract allowed a double dipping security breach.");
-        } catch (error) {
-            // التوقع البرمجي الصارم: يجب إطلاق استثناء أمني يطابق جدار الحماية في Solidity
-            expect(error.message).to.include("Duplicate settlement attempt blocked.");
-        }
+        // محاولة تكرار نفس العملية
+        await assert.rejects(
+            () => settlementPool.executeOnChainClearing(duplicatePaymentId, merchantWallet, amountYER),
+            /Duplicate settlement attempt blocked./
+        );
     });
 
     /**
-     * الاختبار الثالث: منع إتمام التسوية في حال عجز السيولة الاحتياطية في العقد الذكي
+     * الاختبار الثالث: منع إتمام التسوية في حال عجز السيولة الاحتياطية
      */
-    it('3. Should block transaction if request exceeds the pool reserve limits', async () => {
+    test('3. Should block transaction if request exceeds the pool reserve limits', async () => {
         const mockPaymentId = "pay_excessive_volume_01";
         const merchantWallet = "0xMerchantGAVTerminalTaiz";
-        const hugeAmountYER = 2000000; // طلب 2 مليون بينما الاحتياطي المتوفر 1 مليون فقط
+        const hugeAmountYER = "2000000"; // 2 مليون (أكبر من 1 مليون)
 
-        try {
-            await settlementPool.executeOnChainClearing(mockPaymentId, merchantWallet, hugeAmountYER);
-            expect.fail("The contract processed an overdraft transfer.");
-        } catch (error) {
-            // التوقع البرمجي الصارم: حظر المعاملة فوراً بسبب عجز السيولة
-            expect(error.message).to.include("Insufficient reserve in clearing vault.");
-        }
+        await assert.rejects(
+            () => settlementPool.executeOnChainClearing(mockPaymentId, merchantWallet, hugeAmountYER),
+            /Insufficient reserve in clearing vault./
+        );
     });
 });

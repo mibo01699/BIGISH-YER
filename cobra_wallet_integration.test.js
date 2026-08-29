@@ -1,3 +1,5 @@
+
+```javascript
 /**
  * BIGISH-YER: COBRA Wallet & Asset Integration Test
  * Verifies anti-slippage compliance and zero floating-point ledger transfers.
@@ -22,11 +24,11 @@ function testWalletIntegration() {
         console.log("✅ Slippage Protection Guard: Anti-Market Manipulation Active.");
 
         console.log("\n🔒 COBRA INTEGRATION SANITY CHECK PASSED SUCCESSFULLY!");
-        process.exit(0);
     } catch (error) {
         console.error("❌ Wallet Integration Test Failed:", error.message);
-        process.exit(1);
+        process.exitCode = 1; // بدلاً من process.exit
     }
 }
 
 testWalletIntegration();
+```

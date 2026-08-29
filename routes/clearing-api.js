@@ -1,12 +1,13 @@
 // routes/clearing-api.js
 const express = require('express');
 const router = express.Router();
-const PiPaymentProcessor = require('../backend/pi-payment-processor');
+const PiPaymentProcessor = require('../backend/PiPaymentProcessor'); // تصحيح المسار
 
 // محاكاة سريعة لقاعدة بيانات معالجة المعاملات السيادية السيالة
+// ملاحظة: هذه مجرد محاكاة (Sandbox)، لا تمثل أرقاماً حقيقية على الشبكة
 const mockDatabase = {
     payments: {},
-    wallets: { 'sovereign_reserve': 10000000000000n } 
+    wallets: { 'sovereign_reserve': 0n } // تم التصحيح من قيمة وهمية إلى 0n
 };
 
 /**
@@ -24,20 +25,20 @@ router.post('/create-invoice', (req, res) => {
         // معالجة الفاتورة بحسابات BigInt دقيقة متوافقة مع القيود الصارمة للمشروع
         const clearingManifest = PiPaymentProcessor.processHybridInvoice(totalAmount, currentRate);
         
-        // توليد وثيقة الدفع المتوافقة مع متصفح Pi
+        // توليد وثيقة الدفع (واجهة تجريبية / محاكاة)
         const piManifest = PiPaymentProcessor.createPiPaymentManifest(userId, clearingManifest.piStroops, memo || "Sovereign Settlement");
 
-        // حفظ المعاملة مؤقتاً بحالة "بانتظار التأكيد اللامركزي"
+        // حفظ المعاملة مؤقتاً بحالة "بانتظار التأكيد"
         mockDatabase.payments[piManifest.payment_identifier] = {
             userId,
             clearingDetails: clearingManifest,
             piManifest: piManifest,
-            status: "PENDING_BLOCKCHAIN_CONFIRMATION"
+            status: "PENDING_SANDBOX_CONFIRMATION"
         };
 
         res.status(200).json({
             success: true,
-            message: "تم تجهيز مصفوفة المقاصة بنجاح والتوافق مع Pi SDK جاهز.",
+            message: "تم تجهيز مصفوفة المقاصة بنجاح (وضع المحاكاة).",
             piPayload: piManifest
         });
 
@@ -47,7 +48,7 @@ router.post('/create-invoice', (req, res) => {
 });
 
 /**
- * 2. مسار تسوية المعاملات المعلقة والمكتملة من الـ SDK (إلزامي في تحديثات Pi)
+ * 2. مسار تسوية المعاملات المعلقة والمكتملة (في بيئة الاختبار)
  * POST /api/yer/payments/complete
  */
 router.post('/complete', (req, res) => {
@@ -72,12 +73,12 @@ router.post('/complete', (req, res) => {
         transaction.txid = txid;
         transaction.settledAt = Date.now();
 
-        console.log(`[المقاصة السيادية] تم تأكيد المعاملة رقم ${paymentId} عبر البلوكشين بمعرف: ${txid}`);
+        console.log(`[المقاصة السيادية] تم تأكيد المعاملة رقم ${paymentId} (محاكاة) بمعرف: ${txid}`);
 
         res.status(200).json({
             success: true,
             status: "CLEARED_AND_ARCHIVED",
-            message: "تم الحفظ الفوري في دفاتر الاستقرار المالي لليمن."
+            message: "تم الحفظ الفوري في دفاتر الاستقرار المالي (محاكاة)."
         });
 
     } catch (error) {

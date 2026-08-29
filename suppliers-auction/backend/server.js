@@ -1,41 +1,32 @@
 // suppliers-auction/backend/server.js
 /**
- * BIGISH-YER: Hybrid Auction Settlement Gateway (Pi + YER)
- * Secure Refactoring Implementation Aligned with Pi Core Team 2026 Guidelines
+ * BIGISH-YER: Hybrid Auction Settlement Gateway (Sandbox)
+ * NOTE: Local Sandbox validation only. No access to Pi Mainnet. No claims of official Pi integration.
  */
 
 const express = require('express');
-const axios = require('axios'); // تم استبدال fetch بـ axios لدعم معالجة المهلة والإلغاء الآمن
 const app = express();
+
+// المحركات الداخلية للحماية والتوزيع
+const AntiDoubleDippingEngine = require('../../../AntiDoubleDippingEngine');
+const DynamicRatioValidator = require('../../../DynamicRatioValidator');
+const YER_TOKENOMICS = require('../../../YERTokenomicsCanonical');
 
 app.use(express.json());
 
-// عنوان خادم BIGISH-YER الرئيسي المستدعى للمقاصة
-const BIGISH_YER_API = process.env.BIGISH_YER_API || 'http://localhost:5001/api';
-
-// محاكمة محلية سريعة لمنع التكرار قبل تمرير الطلب للشبكة الكبرى
+// محاكاة محلية سريعة لمنع التكرار (بدلاً من الاتصال بالشبكة)
 const internalProcessedAuctions = new Set();
+const validator = new DynamicRatioValidator();
 
 /**
- * API: تنفيذ الدفع الهجين (Pi + YER) الآمن والموثق بالكامل
+ * API: تنفيذ الدفع الهجين (Sandbox) - تحويل المبالغ إلى BigInt
  * POST /api/payment/settle
  */
 app.post('/api/payment/settle', async (req, res) => {
     try {
         const { buyer, seller, totalAmount, piAmount, yerAmount, auctionId, piPaymentId } = req.body;
 
-        // 1. شروط الأمان الصارمة: التحقق من الترويسات الأمنية لـ Pi Browser
-        const piUserId = req.headers['x-pi-user-id'];
-        const piAccessToken = req.headers['x-pi-access-token'];
-
-        if (!piUserId || !piAccessToken) {
-            return res.status(401).json({ 
-                success: false, 
-                error: "Security Rejection: Missing validated Pi Network user identity or access credentials." 
-            });
-        }
-
-        // 2. التحقق من المدخلات الأساسية للمزاد
+        // 1. التحقق من المدخلات الأساسية
         if (!buyer || !seller || !auctionId || !piPaymentId) {
             return res.status(400).json({ 
                 success: false, 
@@ -43,7 +34,22 @@ app.post('/api/payment/settle', async (req, res) => {
             });
         }
 
-        // 3. الحماية ضد التكرار المالي والإنفاق المزدوج (Anti-Double Dipping Validation)
+        // 2. تحويل جميع المبالغ إلى نصوص و BigInt (منع الأخطاء العائمة)
+        if (typeof totalAmount !== 'string' || typeof piAmount !== 'string' || typeof yerAmount !== 'string') {
+            return res.status(400).json({ success: false, error: "Invalid Amount Types: Amounts must be strings." });
+        }
+
+        const totalBig = BigInt(totalAmount);
+        const piBig = BigInt(piAmount);
+        const yerBig = BigInt(yerAmount);
+
+        // 3. التحقق من أن Pi + YER = Total (باستخدام محرك النسب)
+        const splitCheck = validator.validateAndSplit(totalBig, Number(piBig * 100n / totalBig), Number(yerBig * 100n / totalBig));
+        if (!splitCheck) {
+            return res.status(400).json({ success: false, error: "Ratio Mismatch: Pi and YER amounts do not sum to total." });
+        }
+
+        // 4. الحماية ضد التكرار المالي (Anti-Double Dipping)
         if (internalProcessedAuctions.has(auctionId) || internalProcessedAuctions.has(piPaymentId)) {
             return res.status(409).json({ 
                 success: false, 
@@ -51,53 +57,32 @@ app.post('/api/payment/settle', async (req, res) => {
             });
         }
 
-        // 4. دمج توثيق بلوكشين Pi الحقيقي (Server-to-Server Double Commit)
-        // التحقق من خوادم Pi الرسمية للتأكد من قيام المشتري بدفع كمية الـ Pi المطلوبة للمزاد
-        const piVerificationUrl = `https://minepi.com{piPaymentId}`;
-        const piNetworkResponse = await axios.get(piVerificationUrl, {
-            headers: { 'Authorization': `Bearer ${process.env.PI_API_KEY}` },
-            timeout: 5000 // مهلة استجابة قصيرة لحماية السيرفر من التجميد
-        });
+        // 5. القفل الذري للمعاملة (محاكاة)
+        AntiDoubleDippingEngine.acquireAtomicLock(`auction-${auctionId}`, piPaymentId);
 
-        const piPaymentData = piNetworkResponse.data;
-        if (!piPaymentData || piPaymentData.status.completed !== true) {
-            return res.status(400).json({ 
-                success: false, 
-                error: "Blockchain Settlement Failed: The associated Pi transaction is unverified or incomplete." 
-            });
+        // 6. التحقق من سقف 300M (لا يمكن تجاوز المعروض الكلي)
+        const currentSupply = BigInt(YER_TOKENOMICS.maximumSupply);
+        // في الوضع الحقيقي، يجب قراءة الرصيد الفعلي، هنا نتحقق منطقياً من أن المبلغ لا يتجاوز السقف
+        if (yerBig > currentSupply) {
+            throw new Error("SUPPLY_CAP_ERROR: Cannot allocate more than 300M YER.");
         }
 
-        // 5. تنفيذ تحويل YER الموازي عبر خادم BIGISH-YER الرئيسي مع تمرير الهوية وتحديد مهلة أمان
-        const yerResponse = await axios.post(`${BIGISH_YER_API}/yer/transfer`, {
-            piPaymentId: piPaymentId,
-            senderYerWallet: buyer.yerWalletId,
-            receiverPosWallet: seller.yerWalletId,
-            amountYer: yerAmount,
-            memo: `Hybrid auction clearing settlement for ID: ${auctionId}`
-        }, {
-            headers: { 
-                'Content-Type': 'application/json',
-                'x-pi-user-id': piUserId,
-                'x-pi-access-token': piAccessToken
-            },
-            timeout: 6000 // ضبط مهلة أمان (6 ثوانٍ) لمنع اختناق منافذ السيرفر (DoS)
-        });
-
-        const yerData = yerResponse.data;
-        if (!yerData.success) {
-            throw new Error(`YER Ledger Node Refusal: ${yerData.error}`);
-        }
-
-        // 6. حظر المعاملة وتثبيتها في مصفوفة المنع لضمان عدم تكرارها مطلقاً بعد النجاح
+        // 7. محاكاة نجاح عملية التحويل (بدون الاتصال بـ Pi)
+        console.log(`[Sandbox] Simulating hybrid settlement for auction ${auctionId}`);
+        
+        // 8. تثبيت المعاملة
         internalProcessedAuctions.add(auctionId);
         internalProcessedAuctions.add(piPaymentId);
 
-        // 7. إرجاع النتيجة النهائية والآمنة 100% للمزاد
+        // 9. تحرير القفل بعد النجاح
+        AntiDoubleDippingEngine.releaseLock(`auction-${auctionId}`, piPaymentId);
+
+        // 10. إرجاع النتيجة النهائية
         return res.status(200).json({
             success: true,
-            message: `Hybrid payment successfully cleared and recorded for Auction ${auctionId}`,
-            piBlockchainTxId: piPaymentData.transaction.txid,
-            yerTransaction: yerData.piBlockchainTxId
+            message: `Hybrid payment successfully cleared and recorded for Auction ${auctionId} (Sandbox)`,
+            piBlockchainTxId: `sandbox_pi_tx_${piPaymentId}`,
+            yerTransaction: `sandbox_yer_tx_${auctionId}`
         });
 
     } catch (error) {
@@ -110,7 +95,6 @@ app.post('/api/payment/settle', async (req, res) => {
 });
 
 const PORT = process.env.PORT || 5002;
-app.listen(PORT, () => console.log(`🔒 Secure Auction Settlement Service active on port ${PORT}`));
+app.listen(PORT, () => console.log(`🔒 Secure Auction Settlement Service (Sandbox) active on port ${PORT}`));
 
 module.exports = app;
-

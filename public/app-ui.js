@@ -1,6 +1,5 @@
 // public/app-ui.js
-import PiNetwork from './pi-integration.js';
-
+// واجهة المستخدم التجريبية (Sandbox Demo) - لا تدعي الوصول الرسمي لشبكة Pi.
 document.addEventListener('DOMContentLoaded', async () => {
     const authStatus = document.getElementById('auth-status');
     const btnPay = document.getElementById('btn-pay');
@@ -14,33 +13,33 @@ document.addEventListener('DOMContentLoaded', async () => {
         logsBox.scrollTop = logsBox.scrollHeight;
     }
 
-    // 1. بدء تهيئة الـ SDK والتحقق من البيئة داخل المتصفح الآمن
-    const isInitialized = await PiNetwork.init();
+    // 1. محاكاة تهيئة طبقة التكامل التجريبية (بدلاً من Pi SDK الرسمي)
+    // ملاحظة: لا يوجد تحقق من وجود Pi Browser، فقط بيئة محاكاة.
+    const isInitialized = true; // محاكاة النجاح دائمًا في بيئة الاختبار
     if (!isInitialized) {
-        authStatus.innerText = "فشل الاتصال: يرجى فتح التطبيق من متصفح Pi Browser حصرًا.";
+        authStatus.innerText = "فشل الاتصال: بيئة الاختبار غير متاحة.";
         authStatus.className = "status-badge error";
         return;
     }
 
     try {
-        // 2. توثيق هوية المستخدم وجلب بياناته اللامركزية
-        log("جاري طلب التحقق من الهوية الرقمية السيادية...");
-        const user = await PiNetwork.authenticateUser();
-        
+        // 2. محاكاة توثيق المستخدم (لا توجد هوية حقيقية من Pi)
+        log("جاري محاكاة طلب التحقق من الهوية الداخلية...");
+        const user = { username: "test_user", uid: "12345" }; // بيانات وهمية
         document.getElementById('username').innerText = user.username;
         document.getElementById('wallet-address').innerText = user.uid.substring(0, 15) + "...";
         
-        authStatus.innerText = "تم التوثيق والربط بنجاح";
+        authStatus.innerText = "تم الربط (وضع المحاكاة)";
         authStatus.className = "status-badge success";
-        btnPay.disabled = false; // تفعيل زر الدفع والمقاصة
-        log(`المستخدم ${user.username} متصل الآن بالشبكة السيادية.`, 'success');
+        btnPay.disabled = false; // تفعيل زر الدفع
+        log(`المستخدم ${user.username} متصل الآن بالوضع التجريبي.`, 'success');
     } catch (err) {
-        authStatus.innerText = "فشل التوثيق الرقمي";
+        authStatus.innerText = "فشل المحاكاة";
         authStatus.className = "status-badge error";
-        log("خطأ في جلب بيانات المستخدم المحدثة لشبكة Pi.", 'error');
+        log("خطأ في محاكاة بيانات المستخدم.", 'error');
     }
 
-    // 3. معالجة إرسال نموذج الفاتورة وتنفيذ عملية الدفع الهجين
+    // 3. معالجة إرسال نموذج الفاتورة (محاكاة كاملة)
     document.getElementById('invoice-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         
@@ -49,48 +48,40 @@ document.addEventListener('DOMContentLoaded', async () => {
         const memo = document.getElementById('memo').value;
 
         btnPay.disabled = true;
-        log("جاري استدعاء مصفوفة المقاصة السيادية وحساب الحصص الخالية من الكسور العشرية...");
+        log("جاري محاكاة استدعاء نظام المقاصة وحساب الحصص...");
 
         try {
-            // إرسال البيانات للـ Backend الخاص بك لتوليد الفاتورة ومطابقتها مع أمان Anti-Double Dipping
+            // إرسال بيانات إلى Backend لإنشاء فاتورة تجريبية
             const response = await fetch('/api/yer/payments/create-invoice', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ totalAmount, currentRate, userId: document.getElementById('username').innerText, memo })
+                body: JSON.stringify({ totalAmount, currentRate, userId: 'test_user', memo })
             });
             
             const data = await response.json();
             if (!data.success) throw new Error(data.error);
 
-            log(`تمت عملية التقسيم بنجاح: الحصة الرقمية المطلوبة بـ Stroops هي: ${data.piPayload.metadata.sub_unit_stroops}`, 'success');
-            log("جاري إطلاق نافذة الدفع الرسمية لـ Pi Network لتأكيد النقل للبلوكشين...");
+            // عرض معلومات الفاتورة التجريبية
+            log(`تمت محاكاة التقسيم: الحصة الرقمية (Stroops) هي: ${data.piPayload?.metadata?.sub_unit_stroops || 'N/A'}`, 'success');
+            log("جاري محاكاة نافذة الدفع (بدون Pi SDK رسمي)...");
 
-            // استدعاء نافذة الدفع للـ SDK لتوقيع المعاملة من محفظة المستخدم الفردية
-            const paymentCallbacks = {
-                onReadyForServerApproval: (paymentId) => log(`تم إنشاء المعاملة رقم ${paymentId} على البلوكشين، بانتظار موافقة الخادم السيادي.`, 'info'),
-                onReadyForServerCompletion: async (paymentId, txid) => {
-                    log(`المعاملة وقعت بنجاح بمعرف البلوكشين: ${txid}. جاري التسوية الختامية...`, 'success');
-                    
-                    // تأكيد التسوية في دفاتر نظام المقاصة المركزي وإغلاق الفاتورة
-                    const compRes = await fetch('/api/yer/payments/complete', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ paymentId, txid })
-                    });
-                    const compData = await compRes.json();
-                    if(compData.success) {
-                        log("🦅 تم الانتهاء من المقاصة بالكامل وحفظ الحصص في احتياطي استقرار اليمن!", 'success');
-                    }
-                },
-                onCancel: (paymentId) => log(`تم إلغاء عملية السداد لـ ${paymentId} من قبل المستخدم بشكل آمن.`, 'warning'),
-                onError: (error, payment) => log(`تنبيه أمان: حدث خطأ أثناء توقيع المعاملة: ${error.message}`, 'error')
-            };
-
-            // تشغيل محرك الدفع لواجهة المستعرض
-            window.Pi.createPayment(data.piPayload, paymentCallbacks);
+            // محاكاة تأكيد الدفع (بدلاً من window.Pi.createPayment)
+            // هنا يمكننا فقط تسجيل رسالة نجاح افتراضية
+            log("تمت عملية الدفع بنجاح (محاكاة) - التسوية الختامية جارية...", 'success');
+            
+            // تأكيد التسوية للـ Backend (محاكاة)
+            const compRes = await fetch('/api/yer/payments/complete', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ paymentId: 'demo_payment_123', txid: 'demo_tx_abc' })
+            });
+            const compData = await compRes.json();
+            if(compData.success) {
+                log("🦅 تم الانتهاء من المقاصة (محاكاة) وحفظ الحصص!", 'success');
+            }
 
         } catch (error) {
-            log(`فشلت المعاملة: ${error.message}`, 'error');
+            log(`فشلت المحاكاة: ${error.message}`, 'error');
         } finally {
             btnPay.disabled = false;
         }

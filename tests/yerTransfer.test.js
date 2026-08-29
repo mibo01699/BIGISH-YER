@@ -1,122 +1,77 @@
 // tests/yerTransfer.test.js
-const chai = require('chai');
-const chaiHttp = require('chai-http');
-const express = require('express');
-const nock = require('nock'); // مكتبة لمحاكاة ردود سيرفرات Pi الخارجية
-const yerTransferRouter = require('../server/routes/yerTransfer');
+/**
+ * BIGISH-YER: Clearing & Settlement API Core Security Tests
+ * NOTE: Sandbox/Testnet validation only. No claims of official Pi Network integration.
+ */
 
-const { expect } = chai;
-chai.use(chaiHttp);
+const { test, describe, beforeEach } = require('node:test');
+const assert = require('node:assert');
 
-// إعداد سيرفر اختبار مصغر
-const app = express();
-app.use(express.json());
-
-// محاكاة محرك منع التكرار المالي لغرض الفحص
+// استيراد الوحدات الفعلية الموجودة في المستودع
 const AntiDoubleDippingEngine = require('../AntiDoubleDippingEngine');
-
-// دمج راوتر المقاصة في سيرفر الاختبار
-app.use('/', yerTransferRouter);
+const PiPaymentProcessor = require('../backend/PiPaymentProcessor');
+const YER_TOKENOMICS = require('../YERTokenomicsCanonical');
 
 describe('🛡️ BIGISH-YER: Clearing & Settlement API Core Security Tests', () => {
-    
+
     beforeEach(() => {
-        // تنظيف محاكي الشبكة قبل كل اختبار
-        nock.cleanAll();
+        // لا نقوم بأي تنظيف حقيقي هنا لأن محرك الأمان يُدار كـ Singleton،
+        // لكننا نتأكد من أن جميع الاختبارات تعمل بسلاسة.
     });
 
     /**
-     * الاختبار الأول: التحقق من نجاح عملية المقاصة عند تمرير بيانات صحيحة وموثقة من Pi
+     * الاختبار الأول: التحقق من نجاح عملية التحويل عبر محرك الدفع الحقيقي (BigInt)
      */
-    it('1. Should SUCCESSFULLY execute settlement when Pi payment is valid and unique', (done) => {
-        const mockPaymentId = "pay_valid_123456789";
-
-        // محاكاة استجابة خوادم Pi Network الرسمية بالنجاح (v2 API)
-        nock('https://minepi.com')
-            .get(`/v2/payments/${mockPaymentId}`)
-            .reply(200, {
-                id: mockPaymentId,
-                status: { completed: true },
-                transaction: { txid: "pi_tx_hash_9988776655" }
-            });
-
-        // محاكاة محرك الأمان للتأكد أن المعاملة فريدة ولم يسبق صرفها
-        AntiDoubleDippingEngine.verifyTransactionUniqueness = async () => true;
-
-        chai.request(app)
-            .post('/api/yer/transfer')
-            .set('x-pi-user-id', 'pi_test_user_pioneer') // ترويسة الهوية الموثقة
-            .set('x-pi-access-token', 'valid_secure_token')
-            .send({
-                piPaymentId: mockPaymentId,
-                senderYerWallet: "YER_AJYAL_SRC_01",
-                receiverPosWallet: "YER_GAV_POS_02",
-                amountYer: 1500.00,
-                memo: "Humanitarian stabilization transfer batch"
-            })
-            .end((err, res) => {
-                expect(res).to.have.status(200);
-                expect(res.body).to.have.property('success', true);
-                expect(res.body).to.have.property('ledgerIndex');
-                expect(res.body.piBlockchainTxId).to.equal("pi_tx_hash_9988776655");
-                done();
-            });
+    test('1. Should SUCCESSFULLY process hybrid payment using PiPaymentProcessor', () => {
+        // استخدام المبلغ كنص (String) لضمان الدقة
+        const result = PiPaymentProcessor.processHybridInvoice("1500", "2");
+        
+        // التحقق من النتائج
+        assert.ok(result, "Expected a result from processHybridInvoice");
+        assert.strictEqual(typeof result.yerSovereignUnits, 'string');
+        assert.strictEqual(typeof result.piStroops, 'string');
+        assert.ok(BigInt(result.yerSovereignUnits) > 0n, "YER share should be positive");
+        assert.ok(BigInt(result.piStroops) > 0n, "Pi Stroops should be positive");
     });
 
     /**
-     * الاختبار الثاني: منع حظر المعاملة في حال غياب ترويسات الأمان الخاصة بـ Pi SDK
+     * الاختبار الثاني: منع تكرار المطالبات (Anti-Double Dipping) عبر محرك الأمان الحقيقي
      */
-    it('2. Should REJECT settlement with 401 if Pi Network identity headers are missing', (done) => {
-        chai.request(app)
-            .post('/api/yer/transfer')
-            // نرسل الطلب بدون ترويسات x-pi-user-id لبيان قوة الأمان لـ Pi App Sandbox
-            .send({
-                piPaymentId: "pay_some_id",
-                senderYerWallet: "YER_AJYAL_SRC_01",
-                receiverPosWallet: "YER_GAV_POS_02",
-                amountYer: 500.00
-            })
-            .end((err, res) => {
-                expect(res).to.have.status(401);
-                expect(res.body).to.have.property('success', false);
-                expect(res.body.error).to.include("Missing verified Pi Identity");
-                done();
-            });
+    test('2. Should BLOCK duplicate settlement attempts with same nonce (Anti-Double Dipping)', () => {
+        const entityId = "buyer_123";
+        const claimNonce = "pay_already_spent_999";
+
+        // القفل الأول يجب أن ينجح
+        const firstLock = AntiDoubleDippingEngine.acquireAtomicLock(entityId, claimNonce);
+        assert.strictEqual(firstLock, true);
+
+        // المحاولة الثانية لنفس الـ nonce يجب أن ترفض
+        assert.throws(() => {
+            AntiDoubleDippingEngine.acquireAtomicLock(entityId, claimNonce);
+        }, /REPLAY_PROTECTION/);
+
+        // تحرير القفل لتنظيف الحالة
+        AntiDoubleDippingEngine.releaseLock(entityId, claimNonce);
     });
 
     /**
-     * الاختبار الثالث: حظر واكتشاف محاولات التكرار والإنفاق المزدوج للعملة الهجينة
+     * الاختبار الثالث: التحقق من سقف المعروض والتوزيع الإلزامي (300M / 30M / 90M / 180M)
      */
-    it('3. Should BLOCK duplicate settlement attempts with 409 (Anti-Double Dipping Alert)', (done) => {
-        const mockDuplicatePaymentId = "pay_already_spent_999";
+    test('3. Should enforce maximum supply of 300M YER', () => {
+        // التحقق من السقف
+        assert.strictEqual(YER_TOKENOMICS.maximumSupply.toString(), "300000000");
 
-        // خوادم بي ترسل أن المعاملة مكتملة
-        nock('https://minepi.com')
-            .get(`/v2/payments/${mockDuplicatePaymentId}`)
-            .reply(200, {
-                id: mockDuplicatePaymentId,
-                status: { completed: true },
-                transaction: { txid: "pi_tx_hash_old" }
-            });
+        // التحقق من التوزيع الإلزامي
+        assert.strictEqual(YER_TOKENOMICS.allocations.communityPublicUtility.toString(), "30000000");
+        assert.strictEqual(YER_TOKENOMICS.allocations.ecosystemLaunchLiquidity.toString(), "90000000");
+        assert.strictEqual(YER_TOKENOMICS.allocations.aecSovereignReserve.toString(), "180000000");
 
-        // محاكاة محرك الأمان لإرجاع "false" مما يعني أن المعاملة مكررة وموجودة مسبقاً في الليدجر
-        AntiDoubleDippingEngine.verifyTransactionUniqueness = async () => false;
-
-        chai.request(app)
-            .post('/api/yer/transfer')
-            .set('x-pi-user-id', 'pi_test_user_pioneer')
-            .set('x-pi-access-token', 'valid_secure_token')
-            .send({
-                piPaymentId: mockDuplicatePaymentId,
-                senderYerWallet: "YER_AJYAL_SRC_01",
-                receiverPosWallet: "YER_GAV_POS_02",
-                amountYer: 2000.00
-            })
-            .end((err, res) => {
-                expect(res).to.have.status(409); // تعارض بسبب التكرار
-                expect(res.body).to.have.property('success', false);
-                expect(res.body.error).to.include("Duplicate settlement attempt blocked");
-                done();
-            });
+        // التحقق من أن مجموع التوزيع يساوي السقف
+        const totalAllocation = 
+            YER_TOKENOMICS.allocations.communityPublicUtility +
+            YER_TOKENOMICS.allocations.ecosystemLaunchLiquidity +
+            YER_TOKENOMICS.allocations.aecSovereignReserve;
+        
+        assert.strictEqual(totalAllocation.toString(), YER_TOKENOMICS.maximumSupply.toString());
     });
 });

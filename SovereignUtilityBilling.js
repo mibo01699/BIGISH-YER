@@ -1,44 +1,45 @@
-// Starlink Sovereign Query & Billing Engine
-const BigNumber = require('bignumber.js');
+// Starlink Sovereign Query & Billing Engine (BigInt Version)
+
 const axios = require('axios');
-const { PiYerAMMExchange } = require('./PiYerAMMExchange');
 
 class StarlinkSovereignBilling {
     constructor() {
-        this.gcvPi = new BigNumber('314159.0000000');
-        this.profitRate = new BigNumber('1.02'); // دمج 2% أرباح صافية
-        this.withdrawalOverhead = new BigNumber('1.04'); // 4% لتغطية رسوم غاز السحب والدولار الورقي للشركة
+        // تم استبدال BigNumber بـ BigInt (لا نستخدم القيم العشرية)
+        this.gcvPi = 314159n; // GCV كمرجع داخلي فقط (غير رسمي)
+        this.profitRate = 102n; // 2% (أساس 100)
+        this.withdrawalOverhead = 104n; // 4% (أساس 100)
+        this.SCALE = 10000000000n; // دقة YER
     }
 
-    // 1. خيار الاستعلام الحي عن قيمة فاتورة الحساب من نظام شركة ستارلينك
     async fetchLiveStarlinkInvoice(starlinkAccountId, starlinkProviderApiUrl, apiKey) {
         try {
             const response = await axios.get(`${starlinkProviderApiUrl}/v1/accounts/${starlinkAccountId}/invoice`, {
                 headers: { 'Authorization': `Bearer ${apiKey}` }
             });
-            return new BigNumber(response.data.amountUSD); // جلب القيمة الدقيقة بالدولار (مثال: $120)
+            // إرجاع المبلغ كنص (عدد صحيح بالدولار أو بالسنت)
+            return BigInt(Math.round(parseFloat(response.data.amountUSD) * 100)); // تحويل بسيط للدولار، لكن نفضل نص
         } catch (error) {
             throw new Error(`فشل الاستعلام عن حساب ستارلينك: ${error.message}`);
         }
     }
 
-    // 2. معالجة التسعير والمقاصة بالدفع الفردي (YER أو Pi) لمنع الخسائر
     async processPayment(invoiceUSD, paymentMethod, yerToPiRate, piToUsdtRate) {
-        const C_invoice = new BigNumber(invoiceUSD);
-        const X_yer_pi = new BigNumber(yerToPiRate);
-        const X_pi_usdt = new BigNumber(piToUsdtRate);
+        // تحويل المدخلات إلى BigInt (بافتراض أن المدخلات نصوص أرقام صحيحة أو يمكن تحويلها)
+        const C_invoice = BigInt(invoiceUSD);
+        const X_yer_pi = BigInt(yerToPiRate);
+        const X_pi_usdt = BigInt(piToUsdtRate);
 
-        // حساب التكلفة الإجمالية بالدولار شاملة الأرباح ورسوم تحويل الدولار الورقي لحساب الشركة
-        const totalRequiredUSD = C_invoice.times(this.profitRate).times(this.withdrawalOverhead);
+        // حساب التكلفة الإجمالية بالدولار شاملة الأرباح ورسوم التحويل
+        const totalRequiredUSD = (C_invoice * this.profitRate * this.withdrawalOverhead) / (100n * 100n);
 
         let finalCost = "0";
         if (paymentMethod === "YER") {
-            // الدفع الكامل برمز YER بناءً على مجمع السيولة
-            const requiredPi = totalRequiredUSD.div(X_pi_usdt);
-            finalCost = requiredPi.div(X_yer_pi).toFixed(10);
+            // الدفع الكامل برمز YER
+            const requiredPi = (totalRequiredUSD * this.SCALE) / X_pi_usdt;
+            finalCost = ((requiredPi * this.SCALE) / X_yer_pi).toString();
         } else if (paymentMethod === "PI") {
-            // الدفع الكامل بعملة Pi بناءً على مجمع السيولة (Stroops)
-            finalCost = totalRequiredUSD.div(X_pi_usdt).toFixed(7);
+            // الدفع الكامل بعملة Pi (Stroops)
+            finalCost = ((totalRequiredUSD * 10000000n) / X_pi_usdt).toString();
         } else {
             throw new Error("طريقة الدفع غير مدعومة");
         }
@@ -46,10 +47,10 @@ class StarlinkSovereignBilling {
         return {
             paymentMethod,
             amountRequired: finalCost,
-            fiatPaperTargetUSD: C_invoice.times(this.withdrawalOverhead).toFixed(2), // الأموال الخارجة كاش للمورد
+            fiatPaperTargetUSD: ((C_invoice * this.withdrawalOverhead) / 100n).toString(),
             status: "INVOICE_QUERIED_AND_PRICED"
         };
     }
 }
 
-module.exports = { StarlinkSovereignBilling };
+module.exports = new StarlinkSovereignBilling();

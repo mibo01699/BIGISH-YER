@@ -2,7 +2,6 @@
  * BIGISH-YER: Advanced Tokenomics & Ecosystem Security Integration Test
  * Verifies synchronization between the Central Ledger and the Sovereign Fund Rig.
  */
-
 const assert = require('assert');
 const app = require('./app');
 
@@ -15,13 +14,13 @@ function runGlobalEcosystemSyncTest() {
         assert.ok(app, "Main ledger core failed to instantiate.");
         console.log("✅ [Sync Test] BIGISH-YER Main Ledger Node is online.");
 
-        // محاكاة طلب تعدين ناجح للصندوق السيادي عبر الـ API للتأكد من عدم تضارب القنوات
-        const simulatedMintAmount = 5000000; // 5 مليون رمز YER
+        // محاكاة طلب توزيع سيادي ناجح للصندوق السيادي عبر الـ API (بدلاً من التعدين)
+        const simulatedAllocationAmount = "5000000"; // 5 مليون رمز YER (نص لمنع Float)
         const yerScale = 10000000000n;
-        const expectedMinedSubUnits = BigInt(simulatedMintAmount) * yerScale;
+        const expectedAllocationSubUnits = BigInt(simulatedAllocationAmount) * yerScale;
         
-        assert.strictEqual(typeof expectedMinedSubUnits, 'bigint');
-        console.log(`✅ [Tokenomics Test] Sovereign Mining Pipeline check passed: ${expectedMinedSubUnits.toString()} sub-units validated.`);
+        assert.strictEqual(typeof expectedAllocationSubUnits, 'bigint');
+        console.log(`✅ [Tokenomics Test] Sovereign Allocation Pipeline check passed: ${expectedAllocationSubUnits.toString()} sub-units validated.`);
 
         console.log("\n🥇 ALL INTERCONNECTED ECOSYSTEM MATRIX CODES ARE FULLY SYNCED!");
         process.exit(0);

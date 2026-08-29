@@ -1,6 +1,6 @@
 {
   "short_name": "BigishYer",
-  "name": "Bigish Yemen - Pi Network Mall",
+  "name": "BIGISH-YER - Sovereign Clearing Platform (Sandbox)",
   "icons": [
     {
       "src": "favicon.ico",
@@ -16,6 +16,5 @@
   "start_url": ".",
   "display": "standalone",
   "theme_color": "#673ab7",
-  "background_color": "#ffffff",
-  "pi_sdk_version": "v2.0"
+  "background_color": "#ffffff"
 }

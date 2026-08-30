@@ -1,4 +1,4 @@
-/* تحسينات الواجهة لمتصفح Pi */
+/* تحسينات الواجهة المتوافقة مع بيئة Pi (Sandbox) */
 body {
     -webkit-tap-highlight-color: transparent;
     user-select: none; /* منع تحديد النصوص لإعطاء إحساس التطبيق */

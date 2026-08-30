@@ -1,112 +1,76 @@
-// client/components/MiningDashboard.js
+// client/components/DistributionDashboard.js
+// استبدال "Mining" بـ "Community Distribution" - بدون أي ادعاءات Pi رسمية
+
 import React, { useState, useEffect } from 'react';
 
-export default function MiningDashboard() {
-    const [miningData, setMiningData] = useState({
-        isMiningActive: false,
-        currentRatePerHour: 0.00,
+export default function DistributionDashboard() {
+    const [distributionData, setDistributionData] = useState({
+        isDistributionActive: false,
+        currentRatePerHour: "0.00",
         hoursRemaining: 0,
-        unclaimedBalance: 0.00
+        unclaimedBalance: "0.00"
     });
     const [loading, setLoading] = useState(false);
 
-    const fetchMiningStatus = (piUserId) => {
-        fetch('/api/yer/mining/status', {
-            headers: { 'x-pi-user-id': piUserId }
+    // استخدام هوية مستخدم محلية (Sandbox) بدلاً من Pi SDK
+    const mockUserId = "sandbox_user_123";
+
+    const fetchDistributionStatus = () => {
+        fetch('/api/yer/distribution/status', {
+            headers: { 'x-user-id': mockUserId }
         })
         .then(res => res.json())
-        .then(data => { if (data.success) setMiningData(data); });
+        .then(data => { if (data.success) setDistributionData(data); });
     };
 
-    const handleStartMining = () => {
+    const handleStartDistribution = () => {
         setLoading(true);
-        if (window.Pi) {
-            window.Pi.authenticate(['username'], (auth) => {
-                fetch('/api/yer/mining/start', {
-                    method: 'POST',
-                    headers: { 'x-pi-user-id': auth.user.uid }
-                })
-                .then(res => res.json())
-                .then(data => {
-                    if (data.success) fetchMiningStatus(auth.user.uid);
-                    setLoading(false);
-                });
-            });
-        }
+        // محاكاة بدء التوزيع (بدون window.Pi)
+        fetch('/api/yer/distribution/start', {
+            method: 'POST',
+            headers: { 'x-user-id': mockUserId }
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) fetchDistributionStatus();
+            setLoading(false);
+        });
     };
 
     return (
-        <div className="mining-dashboard-container" style={{ padding: '20px', background: '#1a0933', color: '#fff', borderRadius: '12px', textAlign: 'center' }}>
-            <h2 style={{ color: '#e5a93c' }}>⛏️ YER Token Mining Hub (10% Allocation)</h2>
-            <p style={{ fontSize: '14px', color: '#bbb' }}>Empowering economic inclusion via Pi Network cloud framework</p>
+        <div className="distribution-dashboard-container" style={{ padding: '20px', background: '#1a0933', color: '#fff', borderRadius: '12px', textAlign: 'center' }}>
+            <h2 style={{ color: '#e5a93c' }}>📊 YER Community Distribution Hub (10% Allocation)</h2>
+            <p style={{ fontSize: '14px', color: '#bbb' }}>Empowering economic inclusion via Pi-compatible Sandbox framework</p>
             
             <div className="balance-display" style={{ margin: '30px 0' }}>
                 <h3 style={{ fontSize: '16px', textTransform: 'uppercase' }}>Unclaimed YER Balance</h3>
                 <span style={{ fontSize: '42px', fontWeight: 'bold', color: '#4caf50' }}>
-                    {miningData.unclaimedBalance.toFixed(4)} YER
+                    {distributionData.unclaimedBalance} YER
                 </span>
             </div>
 
             <div className="status-box" style={{ background: '#251245', padding: '15px', borderRadius: '8px', marginBottom: '20px' }}>
-                <p>⚡ Current Mining Rate: <strong>{miningData.currentRatePerHour} YER/hr</strong></p>
-                <p>⏳ Session Status: {miningData.isMiningActive ? `Active (${miningData.hoursRemaining.toFixed(1)}h left)` : 'Inactive'}</p>
+                <p>⚡ Current Distribution Rate: <strong>{distributionData.currentRatePerHour} YER/hr</strong></p>
+                <p>⏳ Session Status: {distributionData.isDistributionActive ? `Active (${distributionData.hoursRemaining}h left)` : 'Inactive'}</p>
             </div>
 
             <button 
-                onClick={handleStartMining} 
-                disabled={miningData.isMiningActive || loading}
+                onClick={handleStartDistribution} 
+                disabled={distributionData.isDistributionActive || loading}
                 style={{
-                    background: miningData.isMiningActive ? '#555' : '#e5a93c',
+                    background: distributionData.isDistributionActive ? '#555' : '#e5a93c',
                     color: '#000',
                     border: 'none',
                     padding: '12px 30px',
                     fontSize: '18px',
                     fontWeight: 'bold',
                     borderRadius: '25px',
-                    cursor: miningData.isMiningActive ? 'not-allowed' : 'pointer',
+                    cursor: distributionData.isDistributionActive ? 'not-allowed' : 'pointer',
                     transition: '0.3s'
                 }}
             >
-                {miningData.isMiningActive ? "⚡ MINING IN PROGRESS" : "⛏️ START 24H MINING SESSION"}
+                {distributionData.isDistributionActive ? "⚡ DISTRIBUTION IN PROGRESS" : "📊 START 24H DISTRIBUTION SESSION"}
             </button>
         </div>
     );
 }
-
-
-<!-- قسم دفع الفاتورة الهجينة الديناميكية المصحح بالكامل لـ CI/CD -->
-<div class="wallet-card payment-container" id="hybridPaymentContainer">
-    <h3>بوابة الدفع الهجين المرنة (Flexible Hybrid Payment)</h3>
-    <div class="invoice-summary">
-        <p>إجمالي الفاتورة الأساسية: <span id="displayInvoiceAmount" style="font-weight: bold; color: #ff9900;">1000</span> وحدة مقاصة</p>
-    </div>
-
-    <!-- شريط التحكم التفاعلي بالطلب الديناميكية للنسب -->
-    <div class="slider-wrapper" style="margin: 20px 0;">
-        <label for="hybridRatioSlider" style="display: block; margin-bottom: 10px;">اسحب لتحديد نسبة الدفع الهجين:</label>
-        <input type="range" id="hybridRatioSlider" min="0" max="100" value="50" style="width: 100%; cursor: pointer;">
-        
-        <div class="ratio-labels" style="display: flex; justify-content: space-between; margin-top: 10px; font-weight: bold;">
-            <span style="color: #625bf5;">حصة شبكة Pi: <span id="piRatioLabel">50</span>%</span>
-            <span style="color: #00cc66;">حصة رمز YER: <span id="yerRatioLabel">50</span>%</span>
-        </div>
-    </div>
-
-    <!-- تفاصيل الحسبة اللحظية للوحدات قبل الدفع لضمان الشفافية المصرفية -->
-    <div class="live-breakdown" style="background: rgba(0,0,0,0.05); padding: 10px; border-radius: 6px; font-size: 14px;">
-        <p>المبلغ بـ Pi (بالـ Stroops): <span id="piStroopsBreakdown">5000000000</span></p>
-        <p>المبلغ بـ YER (بالوحدة الصغرى): <span id="yerSubunitsBreakdown">5000000000000</span></p>
-    </div>
-
-    <button id="btnExecuteHybridPayment" class="btn-primary" style="width: 100%; margin-top: 15px; padding: 12px; font-weight: bold;">تأكيد ودفع المعاملة الهجينة</button>
-</div>
-
-    <!-- تفاصيل الحسبة اللحظية للوحدات قبل الدفع لضمان الشفافية المصرفية -->
-    <div class="live-breakdown" style="background: rgba(0,0,0,0.05); padding: 10px; border-radius: 6px; font-size: 14px;">
-        <p>المبلغ بـ Pi (بالـ Stroops): <span id="piStroopsBreakdown">5000000000</span></p>
-        <p>المبلغ بـ YER (بالوحدة الصغرى): <span id="yerSubunitsBreakdown">5000000000000</span></p>
-    </div>
-
-    <button id="btnExecuteHybridPayment" class="btn-primary" style="width: 100%; margin-top: 15px; padding: 12px; font-weight: bold;">تأكيد ودفع المعاملة الهجينة</button>
-</div>
-

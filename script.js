@@ -1,20 +1,5 @@
-// هذا هو التنسيق القياسي الذي يطلبه فريق Pi للـ SDK
-const Pi = window.Pi;
+// hybrid-payment.js - Sandbox Payment UI Logic (No Pi SDK, No Floating Point)
 
-async function onIncompletePaymentFound(payment) {
-    // إذا وجد التطبيق دفعة لم تكتمل، يرسلها فوراً للخادم لإكمالها
-    await axios.post('/api/pi/complete', {
-        paymentId: payment.identifier,
-        txid: payment.transaction.txid
-    });
-};
-
-// تشغيل الـ SDK
-Pi.init({ version: "2.0", sandbox: true });
-
-/**
- * نظام إدارة واجهة الدفع الهجين والتكامل مع السيرفر الخلفي لمشروع BIGISH-YER
- */
 document.addEventListener("DOMContentLoaded", () => {
     const slider = document.getElementById("hybridRatioSlider");
     const piLabel = document.getElementById("piRatioLabel");
@@ -23,22 +8,23 @@ document.addEventListener("DOMContentLoaded", () => {
     const yerBreakdown = document.getElementById("yerSubunitsBreakdown");
     const btnExecute = document.getElementById("btnExecuteHybridPayment");
 
-    // محاكاة قيمة الفاتورة الأساسية القادمة من المزاد أو نقطة البيع لـ AJYAL
-    const INVOICE_AMOUNT = 1000; 
-    
-    // الثوابت العشرية الصارمة المعتمدة في المستودع الرئيسي لـ BIGISH-YER
+    // محاكاة قيمة الفاتورة الأساسية (كنص لضمان الدقة)
+    const INVOICE_AMOUNT = "1000"; 
+
+    // الثوابت العشرية الصارمة المعتمدة في المستودع
     const PI_SCALE = 10000000n;        // دقة 7 خانات لـ Pi
     const YER_SCALE = 10000000000n;    // دقة 10 خانات لـ YER
 
     // دالة تحديث الواجهة اللحظية ومنع أي كسور عشرية قبل الإرسال
     function updateLiveBreakdown() {
+        // تحويل قيمة الشريط إلى BigInt مباشرة (بدون parseInt)
         const piRatio = BigInt(slider.value);
         const yerRatio = 100n - piRatio;
 
         piLabel.innerText = slider.value;
         yerLabel.innerText = (100n - piRatio).toString();
 
-        // حساب الحصص الأساسية بشكل صحيح ومحاذاة الفائض
+        // حساب الحصص الأساسية بدقة
         const totalInvoiceBig = BigInt(INVOICE_AMOUNT);
         const piShareRaw = (totalInvoiceBig * piRatio) / 100n;
         let yerShareRaw = (totalInvoiceBig * yerRatio) / 100n;
@@ -49,7 +35,7 @@ document.addEventListener("DOMContentLoaded", () => {
             yerShareRaw += (totalInvoiceBig - checkTotal);
         }
 
-        // إظهار الوحدات الدقيقة للمستخدم
+        // إظهار الوحدات الدقيقة للمستخدم (كنصوص وليس أرقام عائمة)
         piBreakdown.innerText = (piShareRaw * PI_SCALE).toString() + " Stroops";
         yerBreakdown.innerText = (yerShareRaw * YER_SCALE).toString() + " Sub-units";
     }
@@ -59,10 +45,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // تنفيذ عملية الدفع وإرسال البيانات ديناميكياً للسيرفر الخلفي
     btnExecute.addEventListener("click", async () => {
+        // بناء الحمولة باستخدام BigInt وتحويلها إلى نصوص
         const payload = {
             invoiceAmount: INVOICE_AMOUNT,
-            piRatio: parseInt(slider.value),
-            yerRatio: 100 - parseInt(slider.value),
+            piRatio: slider.value, // يُرسل كنص
+            yerRatio: (100n - BigInt(slider.value)).toString(), // يُرسل كنص
             merchantId: "merchant_yemen_pos_01"
         };
 
@@ -78,12 +65,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
             const result = await response.json();
             if (result.success) {
-                alert(`🎯 تم الدفع بنجاح! \nالـ Pi بالـ Stroops: ${result.data.piPaymentStroops}\nالـ YER بالـ Sub-units: ${result.data.yerPaymentSubUnits}`);
+                // استبدال alert بـ console.log لبيئة الاختبارات
+                console.log(`🎯 تم الدفع بنجاح! \nالـ Pi بالـ Stroops: ${result.data.piPaymentStroops}\nالـ YER بالـ Sub-units: ${result.data.yerPaymentSubUnits}`);
             } else {
-                alert("فشلت المعاملة: " + result.error);
+                console.error("فشلت المعاملة: " + result.error);
             }
         } catch (error) {
-            alert("خطأ في الاتصال بالشبكة اللامركزية: " + error.message);
+            console.error("خطأ في الاتصال بالشبكة اللامركزية: " + error.message);
         } finally {
             btnExecute.disabled = false;
             btnExecute.innerText = "تأكيد ودفع المعاملة الهجينة";

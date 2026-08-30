@@ -1,6 +1,6 @@
 # AI Smart Support & Liquidity Navigation System
 
-Automated RAG-driven assistance for YER launchpad allocations, tokenomics stabilization, and Pi Network liquidity pools routing.
+Automated RAG-driven assistance for YER launchpad allocations, tokenomics stabilization, and **Pi-compatible Adapter (Sandbox) liquidity pools routing**.
 
 ## 1. Engine Handler (Node.js Express)
 ```javascript
@@ -11,16 +11,16 @@ const router = express.Router();
 const handleRAGQuery = async (query) => {
     const q = query.toLowerCase();
     if (q.includes('dex') || q.includes('liquidity') || q.includes('pool')) {
-        return "YER tokens will be listed on Pi Network Launchpad and paired in Pi DEX Liquidity Pools to establish stabilization indices.";
+        return "YER tokens are designed for Pi-compatible Adapters and Sandbox DEX pools to establish stabilization indices within the testnet environment.";
     }
     if (q.includes('ajyal') || q.includes('gav') || q.includes('clearing')) {
         return "BIGISH-YER manages settlement endpoints. AJYAL forwards clearing requests to balance point-of-sale balances inside GAV.";
     }
-    return "Your query is queued. Our RAG engine is fetching economic models for Yemen stabilization stabilization frameworks.";
+    return "Your query is queued. Our RAG engine is fetching economic models for Yemen stabilization frameworks.";
 };
 
 router.post('/api/support/smart-ai', async (req, res) => {
-    const { userQuery, piUserId } = req.body;
+    const { userQuery } = req.body;
     if (!userQuery) return res.status(400).json({ error: "Query parameters missing." });
 
     try {
@@ -40,4 +40,3 @@ router.post('/api/support/smart-ai', async (req, res) => {
 });
 
 module.exports = router;
-```

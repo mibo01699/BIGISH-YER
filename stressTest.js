@@ -1,67 +1,71 @@
 // tests/stressTest.js
 /**
  * BIGISH-YER: High-Throughput Performance & Stress Testing Suite
- * Aligned with Pi Core Team 2026 Scale & Latency Verification Guidelines
- * Simulates 10,000 concurrent clearing operations across economic nodes
+ * NOTE: Sandbox/Testnet validation only. No claims of Pi Network or official guidelines.
+ * Simulates 10,000 concurrent clearing operations using BigInt-safe random amounts.
  */
 
-const axios = require('axios');
+const { performance } = require('perf_hooks'); // لتوقيت دقيق
 
 // إعداد معايير الفحص والضغط النقدي
 const TOTAL_CONCURRENT_REQUESTS = 10000;
 const TARGET_API_URL = process.env.TEST_API_URL || 'http://localhost:5000/api/yer/transfer';
 
-// محاكاة حمولة بيانات المقاصة والتسوية لرمز YER
-const generateMockClearingPayload = (index) => ({
-    piPaymentId: `pay_stress_test_hash_${index}_${Date.now()}`,
-    senderYerWallet: `YER_AJYAL_STRESS_SRC_${index}`,
-    receiverPosWallet: `YER_GAV_STRESS_POS_${index}`,
-    amountYer: parseFloat((Math.random() * 5000 + 100).toFixed(2)),
-    memo: "Automated high-throughput macroeconomic stabilization benchmark"
-});
+// محاكاة حمولة بيانات المقاصة والتسوية لرمز YER (توليد أرقام صحيحة آمنة)
+function generateMockClearingPayload(index) {
+    // توليد مبلغ عشوائي آمن كـ BigInt (من 100 إلى 5100، بدون كسور)
+    const randomBase = Math.floor(Math.random() * 5000) + 100; // نستخدم Math.floor هنا، لكن الناتج عدد صحيح
+    const amountYer = randomBase.toString(); // تحويل إلى نص لضمان BigInt
 
-// ترويسات أمان الهوية الثابتة لبيئة المحاكاة الآمنة (Sandbox)
-const mockSecurityHeaders = {
-    'Content-Type': 'application/json',
-    'x-pi-user-id': 'pi_pioneer_stress_actor_v2',
-    'x-pi-access-token': 'mock_ci_cd_immutable_access_token_2026'
-};
+    return {
+        piPaymentId: `pay_stress_test_hash_${index}_${Date.now()}`,
+        senderYerWallet: `YER_AJYAL_STRESS_SRC_${index}`,
+        receiverPosWallet: `YER_GAV_STRESS_POS_${index}`,
+        amountYer: amountYer, // نص
+        memo: "Automated high-throughput macroeconomic stabilization benchmark"
+    };
+}
 
 async function executeEcosystemStressTest() {
     console.log(`\n🚀 Initializing BIGISH-YER Infrastructure Stress Test...`);
     console.log(`📊 Target Load: Sending ${TOTAL_CONCURRENT_REQUESTS.toLocaleString()} concurrent clearance transactions to ${TARGET_API_URL}\n`);
 
-    const startTime = Date.now();
+    const startTime = performance.now();
     let successfulTransactions = 0;
     let failedTransactions = 0;
 
     // توليد مصفوفة من الوعود (Promises) لضمان الإطلاق المتزامن
-    const requestPool = Array.from({ length: TOTAL_CONCURRENT_REQUESTS }, (_, index) => {
+    const requestPool = Array.from({ length: TOTAL_CONCURRENT_REQUESTS }, async (_, index) => {
         const payload = generateMockClearingPayload(index);
         
-        // استخدام axios أو fetch لمحاكاة إطلاق الطلب البرمجي للسيرفر خلف الكواليس
-        return axios.post(TARGET_API_URL, payload, { headers: mockSecurityHeaders, timeout: 5000 })
-            .then(response => {
-                if (response.status === 200 && response.data.success) {
-                    successfulTransactions++;
-                } else {
-                    failedTransactions++;
-                }
-            })
-            .catch(() => {
-                // احتساب الأخطاء في حال حدوث مهلة استجابة (Timeout) بسبب الضغط العالي
-                failedTransactions++;
+        try {
+            // استخدام fetch (المدمج في Node.js 18) بدلاً من axios
+            const response = await fetch(TARGET_API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload),
+                signal: AbortSignal.timeout(5000) // مهلة 5 ثوانٍ
             });
+            
+            const data = await response.json();
+            if (response.status === 200 && data.success) {
+                successfulTransactions++;
+            } else {
+                failedTransactions++;
+            }
+        } catch (error) {
+            failedTransactions++;
+        }
     });
 
-    // إطلاق الـ 10,000 عملية دفعة واحدة بشكل متوازٍ والانتظار حتى اكتمالها
+    // إطلاق العمليات دفعة واحدة والانتظار
     await Promise.all(requestPool);
 
-    const endTime = Date.now();
+    const endTime = performance.now();
     const durationInSeconds = (endTime - startTime) / 1000;
     const transactionsPerSecond = TOTAL_CONCURRENT_REQUESTS / durationInSeconds;
 
-    // طباعة تقرير الكفاءة والسرعة النهائي لتقييم استقرار الخادم
+    // طباعة تقرير الكفاءة والسرعة النهائي
     console.log("=======================================================");
     console.log("🏁 STRESS TEST EXECUTION COMPLETE - BENCHMARK REPORT");
     console.log("=======================================================");

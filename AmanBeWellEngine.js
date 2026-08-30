@@ -1,30 +1,41 @@
 // backend/AmanBeWellEngine.js
 // محرك دمج التأمين الساتلي والرعاية الصحية السيادية عبر منصة المقاصة الموحدة
 
-const PiPaymentProcessor = require('./pi-payment-processor');
+const PiPaymentProcessor = require('./PiPaymentProcessor'); // [إصلاح] تم تصحيح المسار
+const YER_TOKENOMICS = require('../YERTokenomicsCanonical'); // [إضافة] استيراد المصدر المركزي
 
 class AmanBeWellEngine {
     constructor() {
         // سجل بوالص التأمين وعقود الرعاية الصحية النشطة في اليمن
         this.insurancePolicies = new Map();
+
+        // [إضافة] حدود قصوى للتوزيع (للتأمين والرعاية الصحية)
+        // نفترض أن التأمين والرعاية يتبعان تخصيص المجتمع (30M) أو النظام البيئي (90M).
+        // هنا سنستخدم تخصيص المجتمع (30M) كحد أقصى صارم للتعويضات.
+        this.maxSettlementCap = YER_TOKENOMICS.allocations.communityPublicUtility; // 30M
+        this.totalAmanPayouts = 0n;
+        this.totalBeWellSettlements = 0n;
     }
 
     /**
-     * 1. بروتوكول أمان (AMAN): إنشاء عقد تأمين ذكي يحسب الأقساط بناءً على مستوى خطورة الموقع الجغرافي
+     * 1. بروتوكول أمان (AMAN): إنشاء عقد تأمين ذكي
      * @param {string} policyId - رقم وثيقة التأمين السيادية
-     * @param {string} beneficiaryId - المستفيد (مزارع، صياد، منشأة إمداد لوجستي)
-     * @param {number} satelliteRiskScore - مؤشر المخاطر القادم من بيانات الأقمار الصناعية (1 إلى 10)
+     * @param {string} beneficiaryId - المستفيد
+     * @param {number|string} satelliteRiskScore - مؤشر المخاطر الساتلي (1 إلى 10)
      */
     registerAmanPolicy(policyId, beneficiaryId, satelliteRiskScore) {
-        // قاعدة احتساب القسط الأساسي الحازم بدون فواصل: 50,000 وحدة فرعية مضروبة في مؤشر الخطر الساتلي
-        const basePremiumYer = BigInt(50000) * BigInt(satelliteRiskScore);
+        // [إصلاح] تحويل آمن إلى BigInt
+        const riskScoreBig = BigInt(satelliteRiskScore);
         
-        // مبلغ التغطية الأقصى في حالات الكوارث الطارئة (مثال: 100 مليون وحدة فرعية ثابتة)
-        const maxCoverageYer = BigInt(100_000_000);
+        // قاعدة احتساب القسط الأساسي: 50,000 وحدة فرعية مضروبة في مؤشر الخطر
+        const basePremiumYer = BigInt(50000) * riskScoreBig;
+        
+        // [إصلاح] تحديد مبلغ التغطية ضمن حدود التخصيص (30M)
+        const maxCoverageYer = this.maxSettlementCap;
 
         this.insurancePolicies.set(policyId, {
             beneficiaryId,
-            satelliteRiskScore,
+            satelliteRiskScore: riskScoreBig.toString(),
             premiumYer: basePremiumYer.toString(),
             maxCoverageYer: maxCoverageYer.toString(),
             status: "POLICY_ACTIVE",
@@ -35,10 +46,7 @@ class AmanBeWellEngine {
     }
 
     /**
-     * 2. منصة الرعاية (Be-well): معالجة فواتير الحالات الصحية والمستشفيات العابرة للحدود وتوزيع قيمتها هجيناً
-     * @param {string} patientId - الهوية الرقمية للمريض
-     * @param {string} hospitalInvoiceYer - إجمالي تكلفة العلاج الطبي بالـ YER الفرعي
-     * @param {string} exchangeRate - سعر صرف مجمع السيولة الحالي لـ Pi
+     * 2. منصة الرعاية (Be-well): معالجة فواتير الحالات الصحية
      */
     processBeWellMedicalSettlement(patientId, hospitalInvoiceYer, exchangeRate) {
         console.log(`[منصة Be-well الصحية] جاري مراجعة الفاتورة الحيوية للمريض: ${patientId}`);
@@ -46,8 +54,16 @@ class AmanBeWellEngine {
         const invoiceBig = BigInt(hospitalInvoiceYer);
         if (invoiceBig <= 0n) throw new Error("قيمة الفاتورة الطبية يجب أن تكون أكبر من الصفر.");
 
-        // تقسيم الفاتورة الصحية فوراً بنظام 50% نقد مستقر لتغطية التكاليف المحلية و 50% سداد عبر بلوكشين Pi
+        // [إضافة] التحقق من الحد الأقصى للتوزيع (30M)
+        if (this.totalBeWellSettlements + invoiceBig > this.maxSettlementCap) {
+            throw new Error("SOVEREIGN_LIMIT_ERROR: Exceeds 30M Community Allocation cap for healthcare.");
+        }
+
+        // تقسيم الفاتورة الصحية بنظام 50% نقد محلي و 50% عبر بلوكشين Pi
         const clearingMatrix = PiPaymentProcessor.processHybridInvoice(invoiceBig.toString(), exchangeRate);
+        
+        // [إضافة] تحديث الإجمالي
+        this.totalBeWellSettlements += invoiceBig;
 
         return {
             patientId,
@@ -60,19 +76,25 @@ class AmanBeWellEngine {
     }
 
     /**
-     * 3. تفعيل تعويض فوري طارئ (AMAN Payout) إثر الكشف الساتلي عن اضطراب إمداد أو كارثة طبيعية
+     * 3. تفعيل تعويض فوري طارئ (AMAN Payout)
      */
     triggerSatelliteEmergencyPayout(policyId, currentExchangeRate) {
         const policy = this.insurancePolicies.get(policyId);
         if (!policy) throw new Error("وثيقة التأمين غير مسجلة بالنظام.");
         if (policy.status !== "POLICY_ACTIVE") throw new Error("الوثيقة المحددة تم صرف تعويضاتها أو إلغاؤها.");
 
-        console.log(`🚨 [إنذار ساتلي AMAN] تم رصد إشارات الخطر الساتلية لوثيقة التأمين رقم: ${policyId}. يتم معالجة التعويض الفوري...`);
-
         const coverageBig = BigInt(policy.maxCoverageYer);
+
+        // [إضافة] التحقق من الحد الأقصى للتوزيع قبل الصرف
+        if (this.totalAmanPayouts + coverageBig > this.maxSettlementCap) {
+            throw new Error("SOVEREIGN_LIMIT_ERROR: Exceeds 30M Community Allocation cap for insurance payouts.");
+        }
         
-        // تحويل التعويض الإجمالي الفوري إلى مصفوفة مقاصة هجينة دون ضياع أي سنت أو Stroop
+        // تحويل التعويض الإجمالي الفوري إلى مصفوفة مقاصة هجينة
         const payoutMatrix = PiPaymentProcessor.processHybridInvoice(coverageBig.toString(), currentExchangeRate);
+
+        // [إضافة] تحديث الإجمالي
+        this.totalAmanPayouts += coverageBig;
 
         policy.status = "COMPENSATED_AND_CLOSED";
         policy.payoutTimestamp = Date.now();

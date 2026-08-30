@@ -1,62 +1,26 @@
-/**
- * @file CobraIntentVerificator.js
- * @package BIGISH-YER Sovereign Infrastructure
- * @notice بروتوكول التحقق السيادي المدمج داخل محفظة YER للاعتراف باستدعاءات تطبيق Cobra eSIM
- * @dev ممتثل تماماً لقيود الصفر العشري (Zero Floating-Point) لـ BIGISH-YER
- */
+# Contributing to BIGISH-YER Macroeconomic Stabilization Framework
 
-const crypto = require('crypto');
+Thank you for your interest in contributing to the BIGISH-YER ecosystem! This project bridges academic economic modeling with blockchain engineering inside a **Pi-compatible Sandbox/Testnet framework** to drive financial inclusion and cross-application clearing (AJYAL & GAV) in Yemen.
 
-class CobraIntentVerificator {
-    /**
-     * @notice التحقق الفوري من شرعية وصحة ملف التفويض والاستدعاء المرسل من تطبيق Cobra
-     * @param intentFilePayload ملف التعرف الرقمي المشفر المستقبل في المحفظة
-     * @param appSecretKey المفتاح السري المشترك المكتوم للتحقق من التوقيع (Telecom API Key المقترن)
-     */
-    static verifyIncomingCobraRequest(intentFilePayload, appSecretKey) {
-        try {
-            // 1. فحص سلامة الهيكل البرمجي لملف الاستدعاء والتأكد من هويته الرسمية
-            if (!intentFilePayload || !intentFilePayload.isVerifiedIntent || !intentFilePayload.compiledManifest) {
-                return { isValid: false, reason: "YER-Error: Corrupted intent structural layout." };
-            }
+To maintain the absolute integrity of our ledger and transaction workflows, all contributors must strictly adhere to the guidelines detailed below.
 
-            const manifest = intentFilePayload.compiledManifest;
+---
 
-            // 2. التحقق من مطابقة المعايير الصارمة لاسم المجمع الرسمي المذكور بمستودع BIGISH-YER
-            if (manifest.originAppIdentifier !== "COBRA_ESIM_PROTOCOL_WEB3" || manifest.associatedAssetPair !== "YER/Pi") {
-                return { isValid: false, reason: "YER-Error: Application origin or Asset Pair mismatch." };
-            }
+## 1. Security Compliance Standards (Mandatory)
 
-            // 3. إعادة توليد التوقيع محلياً داخل المحفظة لمقارنته بالتوقيع القادم ومكافحة التزوير
-            const reconstructedSignature = crypto
-                .createHmac('sha256', appSecretKey)
-                .update(JSON.stringify(manifest))
-                .digest('hex');
+Because this platform processes financial clearing and token distribution, code submissions that violate the following principles will be automatically rejected:
+* **Zero Trust Data Handling**: Any new endpoint or data model dealing with payment parameters must implement the AES-256-GCM authenticated encryption modules defined in `cryptoEngine.js`.
+* **Anti-Double Dipping Enforcement**: Modifications to payment pipelines must pass structural uniqueness validation hooks via the `AntiDoubleDippingEngine.js` layer.
+* **Supported Integration Status**: No external financial routing or balance adjustments are authorized without validating user identity via supported adapter/integration status (e.g., `SUPPORTED_SANDBOX`, `SUPPORTED_TESTNET`). It is strictly forbidden to claim, store, or request raw Pi KYC data.
 
-            // 4. مطابقة التوقيعين الذريين بالثانية الواحدة
-            if (reconstructedSignature !== intentFilePayload.carrierSovereignSignature) {
-                return { isValid: false, reason: "YER-Error: Cryptographic signature verification failed. Tampering detected." };
-            }
+---
 
-            // 5. التحقق من أن حجم المعاملة يتبع الأعداد الصحيحة الصارمة (Strict BigInt) لمنع الكسور
-            const amountBigInt = BigInt(manifest.immutableSubUnitsAmount);
-            if (amountBigInt <= 0n) {
-                return { isValid: false, reason: "YER-Error: Zero or negative clearing balance block." };
-            }
+## 2. Technical Contribution Workflow
 
-            // إذا نجحت جميع الفلاتر السيادية، تعترف المحفظة بالاستدعاء وتمنحه الضوء الأخضر
-            return {
-                isValid: true,
-                targetCobraTxId: manifest.associatedCobraTxId,
-                verifiedSubUnits: amountBigInt.toString(),
-                networkContext: manifest.blockchainNetworkContext
-            };
+Please follow this structured process to submit updates, features, or bug fixes to the repository:
 
-        } catch (error) {
-            return { isValid: false, reason: `YER-Error: Verification pipeline exception: ${error.message}` };
-        }
-    }
-}
-
-module.exports = CobraIntentVerificator;
-
+### Step 1: Fork & Local Environment Setup
+1. Fork the repository and clone your fork locally.
+2. Setup your private test environment environment variables using `.env.example` as a baseline template:
+   ```bash
+   cp .env.example .env

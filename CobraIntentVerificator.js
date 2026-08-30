@@ -59,3 +59,4 @@ class CobraIntentVerificator {
 }
 
 module.exports = CobraIntentVerificator;
+

@@ -1,4 +1,3 @@
-```yaml
 name: BIGISH-YER Ecosystem CI
 
 on:
@@ -24,6 +23,6 @@ jobs:
     - name: 3. Install Dependencies
       run: npm install
 
-    # تشغيل الاختبارات بشكل صارم. إذا فشلت، سيفشل السير (وهذا هو المطلوب لضمان الجودة)
+    # تشغيل الاختبارات بشكل صارم. إذا فشلت، سيفشل السير.
     - name: 4. Run Automated Tests (Strict)
       run: npm test

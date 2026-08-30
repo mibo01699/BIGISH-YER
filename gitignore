@@ -1,4 +1,113 @@
-node_modules/
+# ============================================
+# 1. الأسرار والمفاتيح (حماية قصوى - أولوية 1)
+# ============================================
 .env
-.DS_Store
+.env.*
+!.env.example
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+secrets/
+credentials/
+keys/
+*.secret
+*.token
+*.access_token
+
+# ============================================
+# 2. التبعيات والملفات الضخمة (أولوية 2)
+# ============================================
+node_modules/
+vendor/
+target/
+build/
+dist/
+out/
+coverage/
+.nyc_output/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.so
+*.dll
+*.dylib
+*.exe
+*.bin
+*.zip
+*.tar.gz
+*.tgz
+*.rar
+*.7z
+
+# ============================================
+# 3. السجلات والملفات المؤقتة (أولوية 3)
+# ============================================
 *.log
+logs/
+*.tmp
+*.temp
+*.swp
+*.swo
+*.bak
+*.orig
+*.old
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ============================================
+# 4. بيئة التطوير والأدوات (أولوية 4)
+# ============================================
+.idea/
+.vscode/
+*.code-workspace
+.project
+.classpath
+.settings/
+*.iml
+.tsbuildinfo
+.eslintcache
+.prettiercache
+
+# ============================================
+# 5. ملفات نظام التشغيل والبيئة (أولوية 5)
+# ============================================
+.DS_Store
+Thumbs.db
+Desktop.ini
+*.local
+*.pid
+*.seed
+*.pid.lock
+
+# ============================================
+# 6. ملفات Docker والبيئات (أولوية 6)
+# ============================================
+docker-compose.override.yml
+.env.local
+.env.production
+.env.development
+
+# ============================================
+# 7. ملفات Python (للنماذج والمحاكاة) (أولوية 7)
+# ============================================
+venv/
+.venv/
+env/
+ENV/
+pyvenv.cfg
+pip-log.txt
+pip-delete-this-directory.txt
+*.egg-info/
+.eggs/
+
+# ============================================
+# 8. ملفات المعاملات والاختبارات الحساسة (أولوية 8)
+# ============================================
+tests/fixtures/*.json
+tests/fixtures/*.env
+*.test.env
+*.spec.env

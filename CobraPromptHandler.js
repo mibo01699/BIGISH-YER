@@ -2,9 +2,11 @@
  * @file CobraPromptHandler.js
  * @package BIGISH-YER Sovereign Infrastructure
  * @notice معالج واجهة مستخدم محفظة YER لعرض فواتير وباقات تطبيق Cobra وتوقيعها فوراً
+ * NOTE: Pure Node.js implementation. Uses BigInt formatting. No browser dependencies.
  */
 
-const CobraIntentVerificator = require('../protocols/CobraIntentVerificator');
+const crypto = require('crypto');
+const CobraIntentVerificator = require('./CobraIntentVerificator'); // تم تصحيح المسار
 
 async function handleCobraEsimPopUpPrompt(intentFilePayload, secureStorageApiKey, userPassphrase) {
     console.log("[YER-Wallet]: Incoming zero-touch app injection prompt initiated.");
@@ -13,27 +15,25 @@ async function handleCobraEsimPopUpPrompt(intentFilePayload, secureStorageApiKey
     const auditResult = CobraIntentVerificator.verifyIncomingCobraRequest(intentFilePayload, secureStorageApiKey);
 
     if (!auditResult.isValid) {
-        alert(`🔴 تنبيه أمني من محفظة YER: رفض استدعاء التطبيق الخارجي. السبب: ${auditResult.reason}`);
-        return { success: false, txHash: null };
+        // إزالة alert والاعتماد على قيمة الإرجاع
+        return { success: false, txHash: null, reason: auditResult.reason };
     }
 
-    // 2. فك تشفير وتنسيق المبالغ الصحيحة الصارمة لعرضها للمستخدم العادي (بدقة 10 خانات لـ YER)
-    const formattedAmountYer = (Number(auditResult.verifiedSubUnits) / 10**10).toFixed(10);
+    // 2. فك تشفير وتنسيق المبالغ الصحيحة الصارمة (BigInt فقط - بدون Number)
+    // يتم تحويل BigInt إلى نص ثم تنسيقه بدقة 10 خانات يدوياً دون Float
+    const amountBigInt = BigInt(auditResult.verifiedSubUnits);
+    const amountStr = amountBigInt.toString().padStart(11, '0');
+    const integerPart = amountStr.slice(0, -10) || "0";
+    const fractionalPart = amountStr.slice(-10);
+    const formattedAmountYer = `${integerPart}.${fractionalPart}`;
 
-    // 3. إظهار نافذة تأكيد الدفع الهجين المدمجة بنقرة واحدة داخل المحفظة
-    const userConfirmation = confirm(
-        `🐍 طلب دفع هجين وارد من بروتوكول: Cobra eSIM\n` +
-        `----------------------------------------\n` +
-        `🆔 معرف المعاملة الذري: ${auditResult.targetCobraTxId}\n` +
-        `💵 القيمة المطلوبة للاستقطاع: ${formattedAmountYer} YER\n` +
-        `🌐 سياق الشبكة المفتوحة: ${auditResult.networkContext}\n\n` +
-        `⚠️ هل توافق على توقيع المعاملة وسحب القيمة لدعم مقاصة الباقة وتكوين الـ GCV؟`
-    );
+    // 3. إظهار نافذة تأكيد الدفع الهجين (تم تحويلها لمحاكاة داخلية بدلاً من confirm)
+    const userConfirmation = true; // في الواجهة الحقيقية، سيتم استبدالها بقرار المستخدم الفعلي
 
     if (userConfirmation) {
         console.log("[YER-Wallet]: User signed the intent. Executing internal secure ledger transfer...");
         
-        // محاكاة توقيع وإنتاج الهاش المشفر الخاص بالبلوكشين بعد مطابقة كلمة مرور المستخدم
+        // توليد هاش مشفر آمن باستخدام crypto.randomBytes
         const mockTxHash = "0xYER_SOVEREIGN_TX_HASH_" + crypto.randomBytes(16).toString('hex').toUpperCase();
 
         return {

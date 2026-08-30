@@ -24,3 +24,32 @@ Please follow this structured process to submit updates, features, or bug fixes 
 2. Setup your private test environment environment variables using `.env.example` as a baseline template:
    ```bash
    cp .env.example .env
+
+Step 2: Code Implementation Requirements
+
+· Test Coverage: If you are adding a new core service or route, you must supply accompanying automated assertions inside the tests/ directory using Node.js Test Runner (node --test). Do not use Mocha/Chai.
+· Economic Alignment: Algorithms affecting balance calculations or token velocity must be aligned with the canonical tokenomics defined in YERTokenomicsCanonical.js (Maximum Supply: 300M YER; Allocation: 10% / 30% / 60%).
+· Zero Floating-Point: All financial calculations must use BigInt exclusively. No floating-point arithmetic (Number, Math.floor, parseFloat) is allowed.
+
+Step 3: Local Quality Verification
+
+Before submitting a Pull Request (PR), execute the validation matrix locally to ensure your changes do not break existing modules:
+
+```bash
+# Run the complete Node.js automated test suites (using node --test)
+npm test
+```
+
+Step 4: Submitting a Pull Request
+
+1. Commit your changes with descriptive, standardized headers (e.g., feat(clearing): add batch transfer support or fix(crypto): patch IV array length verification).
+2. Push your localized development branch to your fork.
+3. Open a Pull Request pointing to the main branch of the official BIGISH-YER repository.
+4. Ensure your PR satisfies the automatic tests executing inside .github/workflows/main-ci.yml.
+
+---
+
+3. Code Review & Code of Conduct
+
+· All Pull Requests require an explicit structural sign-off from at least one core maintainer before merging.
+· We expect all contributors to maintain professional, supportive, and universal communication across issues, code comments, and discussion boards.

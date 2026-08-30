@@ -5,10 +5,10 @@ services:
     build: .
     container_name: yer_wallet_core
     ports:
-      - "3000:3000"
+      - "5000:5000"  # تم التصحيح إلى المنفذ الصحيح 5000
     environment:
       - NODE_ENV=production
-      - PI_NETWORK_ENVIRONMENT=mainnet
+      - PI_NETWORK_ENVIRONMENT=sandbox  # تم التصحيح من mainnet إلى sandbox
     depends_on:
       - yer-db
     restart: always
@@ -19,7 +19,8 @@ services:
     environment:
       - POSTGRES_DB=bigish_yer_db
       - POSTGRES_USER=yer_governor
-      - POSTGRES_PASSWORD=secure_political_passphrase_137
+      # استخدام متغير بيئة خارجي لتجنب كشف كلمة المرور في المستودع
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-please_change_me_in_env}
     volumes:
       - pgdata:/var/lib/postgresql/data
       - ./schema.sql:/docker-entrypoint-initdb.d/schema.sql

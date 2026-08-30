@@ -2,11 +2,13 @@
 echo "======================================================"
 echo "⚡ Starting Unified Deployment Engine for BIGISH-YER"
 echo "======================================================"
+echo "🌐 Environment: Pi-compatible Adapter (Sandbox/Testnet)"
 
 # 1. فحص ملف البيئة الافتراضي والتأكد من وجوده
 if [ ! -f .env ]; then
     echo "⚠️ .env file not found, creating from .env.example..."
-    cp .env.example .env 2>/dev/null || echo "PORT=3000" > .env
+    # استخدام المنفذ الافتراضي الصحيح 5000
+    cp .env.example .env 2>/dev/null || echo "PORT=5000" > .env
 fi
 
 # 2. تنصيب الحزم البرمجية النظيفة والموحدة

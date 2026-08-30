@@ -1,6 +1,6 @@
 # i18n Localization Architecture for BIGISH-YER Hybrid Sandbox
 
-Ensuring absolute semantic matching for financial, tokenomics, and aid terms inside the Pi Browser runtime layout.
+Ensuring absolute semantic matching for financial, tokenomics, and aid terms inside the **Pi-compatible Sandbox runtime layout**.
 
 ## 1. Translation Dictionaries
 
@@ -10,18 +10,19 @@ Ensuring absolute semantic matching for financial, tokenomics, and aid terms ins
   "header_title": "Economic Stabilization Core",
   "yer_balance": "YER Token Balance",
   "clearing_btn": "Execute Settlement Request",
-  "dex_pool": "Pi Network DEX Liquidity Groups",
+  "dex_pool": "Pi-compatible Sandbox DEX Liquidity Groups",
   "batch_transfer": "System Salary/Aid Batch Transfer"
 }
 ```
 
-### `client/src/locales/ar.json`
+client/src/locales/ar.json
+
 ```json
 {
   "header_title": "نظام الاستقرار الاقتصادي الكلي",
   "yer_balance": "رصيد رمز YER الرقمي",
   "clearing_btn": "تنفيذ طلب تسوية المقاصة",
-  "dex_pool": "مجموعات سيولة منصة DEX على شبكة Pi",
+  "dex_pool": "مجموعات سيولة منصة DEX (بيئة متوافقة مع Pi - Sandbox)",
   "batch_transfer": "تحويل جماعي للمرتبات والمساعدات"
 }
 ```

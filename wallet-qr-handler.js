@@ -1,4 +1,4 @@
-// wallet-qr-handler.js - موديول لقط وفك تشفير الـ QR وتنفيذ الدفع المزدوج داخل المحفظة
+// wallet-qr-handler.js - موديول لقط وفك تشفير الـ QR وتنفيذ الدفع المزدوج داخل المحفظة (Sandbox)
 
 class WalletQRProcessor {
     constructor(userPiPrivateKey, userYerPrivateKey) {
@@ -17,12 +17,20 @@ class WalletQRProcessor {
 
             const urlParams = new URLSearchParams(qrString.split('?')[1]);
             
+            const piAmt = BigInt(urlParams.get('piAmt'));
+            const yerAmt = BigInt(urlParams.get('yerAmt'));
+
+            // التحقق من أن المبالغ أكبر من صفر
+            if (piAmt <= 0n || yerAmt <= 0n) {
+                throw new Error("المبالغ يجب أن تكون أكبر من صفر.");
+            }
+
             return {
                 invoiceId: urlParams.get('id'),
                 merchantPiAddress: urlParams.get('piDest'),
                 merchantYerAddress: urlParams.get('yerDest'),
-                piAmountStroops: BigInt(urlParams.get('piAmt')),
-                yerAmountSubunits: BigInt(urlParams.get('yerAmt'))
+                piAmountStroops: piAmt,
+                yerAmountSubunits: yerAmt
             };
         } catch (error) {
             throw new Error("فشل في تحليل بيانات الرمز: " + error.message);
@@ -30,19 +38,19 @@ class WalletQRProcessor {
     }
 
     /**
-     * توقيع المعاملتين وإرسالهما إلى البلوكشين (Pi Network Layer 1 - Protocol 23)
+     * تنفيذ المعاملة (محاكاة Sandbox) - بدون ادعاءات Pi SDK رسمية
      */
-    async executeHybridPayment(paymentDetails, piSdkInstance, dexAmmInstance) {
+    async executeHybridPayment(paymentDetails, piAdapterInstance, dexAmmInstance) {
         console.log(`جاري تجهيز الدفع للفاتورة: ${paymentDetails.invoiceId}`);
 
-        // 1. تنفيذ معالجة دفع عملة Pi الأساسية عبر Pi SDK 
-        const piTx = await piSdkInstance.createTransaction({
+        // 1. محاكاة دفع Pi عبر محول متوافق (Adapter)
+        const piTx = await piAdapterInstance.createTransaction({
             amount: paymentDetails.piAmountStroops, 
             paymentData: { destination: paymentDetails.merchantPiAddress },
             privateKey: this.userPiPrivateKey
         });
 
-        // 2. تنفيذ معالجة دفع رمز YER عبر عقد السيولة الذكي أو محفظة المتجر
+        // 2. محاكاة دفع YER عبر عقد السيولة الذكي (Sandbox)
         const yerTx = await dexAmmInstance.transferTokens({
             amount: paymentDetails.yerAmountSubunits,
             destination: paymentDetails.merchantYerAddress,

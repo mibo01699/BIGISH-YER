@@ -1,16 +1,15 @@
 # 🌐 Technical System Architecture & Verification Protocol
 
-This document outlines the interconnected cryptographic identity, cloud deployment mechanics, and official Pi Network Ecosystem placement for the Yemen Macroeconomic & Social Recovery Framework (Comprising BIGISH-YER, GAV-The-Incense-Route, and AJYAL).
+This document outlines the interconnected cryptographic identity, cloud deployment mechanics, and **Pi-compatible Adapter (Sandbox/Testnet)** placement for the Yemen Macroeconomic & Social Recovery Framework (Comprising BIGISH-YER, GAV-The-Incense-Route, and AJYAL).
 
 ---
 
 ## 🛠️ Step 1: Decentralized Identity Validation & Synchronization
 To eliminate geopolitical and physical verification boundaries, the core developer architecture relies on a unified, high-integrity cryptographic alignment:
-- **Registered Pi Network Identity / Invitation Code:** `mibo01699`
-- **Verified Institutional Email Framework:** `mnee88000mias@gmail.com`
+- **Registered GitHub Developer Identity:** `mibo01699` (public profile)
 - **Integrated GitHub Production Engine:** `https://github.com`
 
-Every codebase update on GitHub is signed and cryptographically linked to the single developer identity registered and verified under the official Pi Network KYC criteria.
+Every codebase update on GitHub is signed and cryptographically linked to the developer identity. **No claim of any official Pi Network KYC verification is made.**
 
 ---
 
@@ -21,14 +20,14 @@ Due to localized infrastructure constraints in conflict zones, all programmatic 
 
 ---
 
-## 🚀 Step 3: Ecosystem Transition & Pi App Studio Production
-The finalized microservice applications are mapped and integrated into the closed loop of the Pi Network Blockchain Ecosystem:
-- **Ecosystem Domain Hub:** `https://pinet.com`
+## 🚀 Step 3: Ecosystem Transition & Pi-Compatible Adapter Deployment
+The finalized microservice applications are mapped and integrated into a **Pi-compatible Adapter / Sandbox environment**:
+- **Ecosystem Domain Hub:** Not applicable (Sandbox only)
 - **Deployment Process:** 
   1. The codebase hosted on Replit serves as the backend production server.
-  2. The application endpoint is white-listed and linked within the **Pi Developer Portal / Pi App Studio**.
-  3. Security and wallet transactions are processed via standard **Pi Network SDK / API Javascript Hooks**.
-- **Review Parameter:** Because the Pi ecosystem requires a closed-loop KYC account to access the `.pinet.com` space internally, external evaluators can verify the operational validity of the platform directly through the open-access **Replit** sandbox.
+  2. The application endpoint is configured to work with **Pi-compatible adapters** (e.g., `SUPPORTED_SANDBOX`).
+  3. Security and wallet transactions are processed via **internal adapter logic** (no official Pi SDK claims).
+- **Review Parameter:** External evaluators can verify the operational validity of the platform directly through the open-access **Replit** sandbox.
 
 ---
-*Authorized for institutional fund review. Maintained under open-source MIT digital public good guidelines.*
+*Maintained under open-source MIT digital public good guidelines. No official Pi Network affiliation, KYC access, or certification is claimed.*

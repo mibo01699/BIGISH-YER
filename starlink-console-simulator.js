@@ -1,86 +1,92 @@
 // ====================================================================
 //  Starlink Sovereign Billing & Cash Rotation Console Simulator
 //  منظومة النسر العربي (A.E.C.) - محاكي مقاصة فواتير ستارلينك الفردية
-//  متوافق 100% مع بيئة Replit المجانية وحسابات الحظر والكسور الصفرية
+//  متوافق مع Sandbox و BigInt (بدون bignumber.js)
 // ====================================================================
-
-const BigNumber = require('bignumber.js');
 
 class StarlinkConsoleSimulator {
     constructor() {
-        this.gcvPi = new BigNumber('314159.0000000'); // مرجعية GCV لـ Pi (7 خانات)
-        this.profitRate = new BigNumber('0.02');       // 2% صافي أرباح المنظومة مقابل Pi
-        this.fiatWithdrawalOverhead = new BigNumber('1.04'); // 4% لتغطية رسوم غاز السحب والدولار الورقي للمورد
+        // GCV كمرجع داخلي فقط (7 خانات: 314159.0000000)
+        this.gcvPi = 3141590000000n; // 314159 * 10^7
+        this.profitRateNumerator = 2n; // 2%
+        this.profitRateDenominator = 100n;
+        this.fiatWithdrawalOverheadNumerator = 104n; // 4% overhead
+        this.fiatWithdrawalOverheadDenominator = 100n;
+
+        // مقاييس الدقة الصارمة
+        this.PI_SCALE = 10000000n;     // 10^7 Stroops
+        this.YER_SCALE = 10000000000n; // 10^10 Sub-units
     }
 
     /**
-     * محاكاة عمل واجهة الـ API للاستعلام الحي من نظام شركة ستارلينك
+     * محاكاة الاستعلام الحي من نظام Starlink (بالسنت)
+     * @param {string} accountId - معرف الحساب
+     * @returns {Promise<bigint>} قيمة الفاتورة بالدولار (مضروبة في 100 للسنت)
      */
     async simulateLiveStarlinkQuery(accountId) {
         console.log(`📡 [نظام الاستعلام]: جاري الاتصال بخوادم Starlink API للحساب: [${accountId}]...`);
-        // محاكاة جلب الفاتورة الحية بالدولار من النظام
-        return new BigNumber('120.00'); // فرضية قيمة الفاتورة الشهرية الرسمية ($120 USD)
+        return 12000n; // $120.00 (بأصغر وحدة: السنت)
     }
 
     /**
-     * تشغيل دورة التدوير والمقاصة الفردية الكاملة بناءً على قيمة الفاتورة المستعلم عنها
+     * تشغيل دورة التدوير والمقاصة الفردية الكاملة
      */
-    async executeStarlinkRotation(accountId, paymentMethod, yerToPiRate, piToUsdtRate) {
-        // 1. الاستعلام الحي عن قيمة الفاتورة
+    async executeStarlinkRotation(accountId, paymentMethod, yerToPiRateStr, piToUsdtRateStr) {
         const invoiceUSD = await this.simulateLiveStarlinkQuery(accountId);
-        console.log(`📋 [نتائج الاستعلام]: قيمة الفاتورة الحالية المستحقة: $${invoiceUSD.toFixed(2)} USD`);
+        console.log(`📋 [نتائج الاستعلام]: قيمة الفاتورة الحالية المستحقة: $${(Number(invoiceUSD) / 100).toFixed(2)} USD`);
         console.log(`🛡️ [آلية السداد المعتمدة]: دفع فردي كامل وصارم عبر: [${paymentMethod}]`);
 
-        const X_yer_pi = new BigNumber(yerToPiRate);
-        const X_pi_usdt = new BigNumber(piToUsdtRate);
+        // تحويل المدخلات النصية إلى BigInt
+        const X_yer_pi = BigInt(yerToPiRateStr);      // سعر 1 Pi = X YER
+        const X_pi_usdt = BigInt(piToUsdtRateStr);    // سعر 1 Pi = X USDT (مضروب في 10^6)
 
-        // 2. حساب حصة الأرباح الصافية (2% مقابل Pi وفق GCV) المحتسبة صامتاً في الخلفية
-        const netProfitUSD = invoiceUSD.times(this.profitRate);
-        const requiredPiProfitStroops = netProfitUSD.div(this.gcvPi).toFixed(7);
+        // 1. حساب الأرباح الصافية (2%)
+        const netProfitUSD = (invoiceUSD * this.profitRateNumerator) / this.profitRateDenominator;
+        const requiredPiProfitStroops = (netProfitUSD * this.PI_SCALE) / this.gcvPi;
 
-        // 3. تطبيق معادلة صفر خسائر: إضافة 4% رسوم تحويل الدولار الورقي كاش فوق التكلفة
-        const grossOperationalCostUSD = invoiceUSD.times(this.fiatWithdrawalOverhead);
+        // 2. حساب التكلفة التشغيلية الإجمالية (شاملة 4% overhead)
+        const grossOperationalCostUSD = (invoiceUSD * this.fiatWithdrawalOverheadNumerator) / this.fiatWithdrawalOverheadDenominator;
 
         let finalClientBill = "";
         
-        // 4. تنفيذ المقاصة الفردية الصارمة (إما YER وإما Pi دون خلط)
+        // 3. تنفيذ المقاصة الفردية الصارمة
         if (paymentMethod === "YER") {
-            // مسار تدوير الـ YER: تحويل التكلفة الإجمالية من USD إلى USDT ثم إلى Pi ثم إلى YER عبر الـ AMM
-            const requiredPiForCapital = grossOperationalCostUSD.div(X_pi_usdt);
-            const finalCostYER = requiredPiForCapital.div(X_yer_pi).toFixed(10);
+            // تحويل USD -> USDT -> Pi -> YER
+            const requiredPiForCapital = (grossOperationalCostUSD * this.PI_SCALE) / X_pi_usdt;
+            const finalCostYER = (requiredPiForCapital * this.YER_SCALE) / X_yer_pi;
             finalClientBill = `${finalCostYER} YER`;
         } else if (paymentMethod === "PI") {
-            // مسار تدوير الـ Pi: خصم كلفة رأس المال مباشرة بعملة Pi بالوحدات الصغرى (Stroops)
-            const finalCostPi = grossOperationalCostUSD.div(X_pi_usdt).toFixed(7);
+            // خصم كلفة رأس المال مباشرة بالـ Pi (Stroops)
+            const finalCostPi = (grossOperationalCostUSD * this.PI_SCALE) / X_pi_usdt;
             finalClientBill = `${finalCostPi} Pi`;
         } else {
             console.error("❌ خطأ أمني: طريقة الدفع غير مدعومة في البروتوكول الفرعي");
             return;
         }
 
-        // --- طباعة تقرير تدوير كاش المورد عبر الـ Console ---
+        // --- طباعة تقرير حركة السيولة ---
         console.log(`\n📊 [تقرير حركة السيولة والمقاصة الهجينة في البلوكشين]:`);
-        console.log(`   - إجمالي الفاتورة المطلوبة من المستفيد (شاملة أعباء السحب): ${finalClientBill}`);
-        console.log(`   - الأرباح الصافية (2%) المحتجزة صامتاً للاحتياطي: ${requiredPiProfitStroops} Pi Stroops`);
+        console.log(`   - إجمالي الفاتورة المطلوبة من المستفيد: ${finalClientBill}`);
+        console.log(`   - الأرباح الصافية (2%) المحتجزة: ${requiredPiProfitStroops} Pi Stroops`);
         
         console.log(`\n🏦 [دورة تحويل السيولة النقدية - Off-Chain Bridge]:`);
-        console.log(`   - تم سحب عملات USDT المقابلة للتكلفة من الـ DEX: $${grossOperationalCostUSD.toFixed(2)} USDT`);
-        console.log(`   - رسوم سحب المنصة المقتطعة: $${grossOperationalCostUSD.minus(invoiceUSD).toFixed(2)} USDT (مغطاة بالكامل من المستفيد)`);
-        console.log(`   - الحوالة البنكية الحية: تم سداد الفاتورة لشركة Starlink نقداً بالكامل: $${invoiceUSD.toFixed(2)} USD (دولار ورقي كاش)`);
-        console.log(`\n✅ [حالة المعاملة]: تم السداد الفوري للحساب وصفر خسائر تشغيلية للمنظومة.`);
+        console.log(`   - تم سحب USDT من الـ DEX: $${(Number(grossOperationalCostUSD) / 100).toFixed(2)} USDT`);
+        console.log(`   - رسوم السحب: $${(Number(grossOperationalCostUSD - invoiceUSD) / 100).toFixed(2)} USDT`);
+        console.log(`   - تم سداد الفاتورة لشركة Starlink: $${(Number(invoiceUSD) / 100).toFixed(2)} USD (دولار ورقي كاش)`);
+        console.log(`\n✅ [حالة المعاملة]: تم السداد الفوري وصفر خسائر تشغيلية.`);
         console.log(`================================================================================\n`);
     }
 }
 
-// تشغيل المحاكاة أوتوماتيكياً فور الإقلاع في Replit
+// تشغيل المحاكاة
 const starlinkSim = new StarlinkConsoleSimulator();
 
 async function run() {
-    // السيناريو 1: استعلام وسداد فاتورة ستارلينك بالدفع الفردي الكامل بـ YER
-    await starlinkSim.executeStarlinkRotation("ST-8871-YEMEN", "YER", "0.000025", "1.20");
-
-    // السيناريو 2: استعلام وسداد فاتورة ستارلينك بالدفع الفردي الكامل بـ Pi
-    await starlinkSim.executeStarlinkRotation("ST-3324-YEMEN", "PI", "0.000025", "1.20");
+    // السيناريو 1: الدفع بـ YER
+    await starlinkSim.executeStarlinkRotation("ST-8871-YEMEN", "YER", "25", "1200000");
+    
+    // السيناريو 2: الدفع بـ Pi
+    await starlinkSim.executeStarlinkRotation("ST-3324-YEMEN", "PI", "25", "1200000");
 }
 
 run();

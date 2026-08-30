@@ -1,4 +1,4 @@
-// FeeManagementProcessor.js - محرك إدارة الرسوم السيادية والتنافسية للمنظومة الخماسية لعام 2026
+// FeeManagementProcessor.js - محرك إدارة الرسوم السيادية والتنافسية للمنظومة التسعة (A.E.C) لعام 2026
 // متوافق تماماً مع دقة BigInt و 300M YER Tokenomics
 
 class FeeManagementProcessor {

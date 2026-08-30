@@ -1,12 +1,13 @@
 // Wallet Multi-Language Translation and Strict Notification Engine
-// Compliance: Pi Network 2026 Core Rules & UNICEF Open Source Standards
-// Strict Integer Architecture: 10 Decimals YER, 7 Decimals Pi. Zero Floats.
+// Sandbox/Testnet compliant. No claims of official Pi Network or UNICEF partnership.
+
+const crypto = require('crypto'); // غير مستخدم حالياً، لكن مفيد للتوليد المستقبلي
 
 class WalletNotificationEngine {
     constructor() {
         this.YER_SCALE = 10000000000n; // 10^10 Precision mapping
 
-        // مصفوفة اللغات الـ 11 المطلوبة لرواد ومجتمعات محفظة باي سيادياً
+        // مصفوفة اللغات الـ 11 المطلوبة لرواد ومجتمعات المحفظة
         this.translations = {
             "ar": { success: "تمت تسوية عملية تحويل الرصيد المالي سيادياً بنجاح.", locked: "تنبيه الأمان: تم تفعيل قفل المقاصة لمنع الإنفاق المزدوج والتكرار." },
             "en": { success: "Sovereign balance transfer settled and logged successfully.", locked: "Security alert: Clearing lock activated to prevent double dipping." },
@@ -24,9 +25,23 @@ class WalletNotificationEngine {
 
     /**
      * يولد إشعارات المعاملات المالية بالرقم الصحيح المطلق دون فواصل عائمة
+     * @param {string} recipientAddress - عنوان المستلم
+     * @param {bigint} eventTypeInt - نوع الحدث (1 = نجاح، 2 = قفل)
+     * @param {string} rawAmountNominal - المبلغ كسلسلة نصية (مثال: "1.5")
+     * @param {string} langCode - كود اللغة
      */
     generateWalletNotice(recipientAddress, eventTypeInt, rawAmountNominal, langCode) {
-        const amountUnitsInt = BigInt(Math.round(parseFloat(rawAmountNominal) * Number(this.YER_SCALE)));
+        // تحويل صارم من النص إلى BigInt (بدون parseFloat أو Math.round)
+        const amountStr = String(rawAmountNominal).trim();
+        if (!amountStr) throw new Error("Invalid amount");
+
+        const parts = amountStr.split('.');
+        let whole = parts[0] || "0";
+        let fraction = parts[1] || "";
+        // ضبط الكسور إلى 10 خانات عشرية
+        fraction = fraction.substring(0, 10).padEnd(10, '0');
+        const amountUnitsInt = BigInt(whole + fraction);
+
         const selectedLang = this.translations[langCode] ? langCode : "en";
         
         const coreMessage = eventTypeInt === 1n 
@@ -36,11 +51,11 @@ class WalletNotificationEngine {
         return {
             recipient: recipientAddress,
             eventCode: eventTypeInt.toString(),
-            ledgerValueSubUnits: amountUnitsInt.toString(), // يتم حفظه كـ String لحماية طول البيانات للـ BigInt
+            ledgerValueSubUnits: amountUnitsInt.toString(),
             translatedNotice: `${coreMessage} [Sub-Units: ${amountUnitsInt.toString()}]`,
             timestamp: Date.now().toString()
         };
     }
 }
 
-export default WalletNotificationEngine;
+module.exports = WalletNotificationEngine;

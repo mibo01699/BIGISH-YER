@@ -1,90 +1,89 @@
 #!/usr/bin/env python3
 """
 Arabian Eagle Ecosystem (A.E.C) - Macroeconomic & Tokenomics Simulation Engine
-Validates the Tri-Mining Pipeline and Liquidity Stability on DEX Pi.
-100% Aligned with Pi Network 2026 Launchpad Specifications & UNICEF DPG Benchmarks.
+Validates the Distribution and Liquidity Stability on Sandbox DEX.
+NOTE: Sandbox/Testnet simulation only. No claims of Pi Network or UNICEF alignment.
 """
 
 import time
-import math
 
 class AecMacroeconomicSimulation:
     def __init__(self):
         # --- المقاييس الصارمة لخريطة التوزيع المعتمدة (Tokenomics Constants) ---
         self.MAX_GLOBAL_SUPPLY = 300_000_000
-        self.CAP_PUBLIC_MINING = 30_000_000   # 10% التعدين الجماهيري المجاني
-        self.CAP_DEX_LIQUIDITY = 100_000_000  # 30% الإدراج وحقن السيولة
-        self.CAP_SOVEREIGN_FUND = 200_000_000 # 60% رأس مال الصندوق السيادي
+        self.CAP_COMMUNITY = 30_000_000      # 10% للمنفعة المجتمعية
+        self.CAP_ECOSYSTEM = 90_000_000      # 30% للإدراج والسيولة
+        self.CAP_SOVEREIGN = 180_000_000     # 60% للصندوق السيادي
 
-        # عدادات العمليات الحية داخل السلسلة
-        self.current_total_supply = 0.0
-        self.mined_public = 0.0
-        self.mined_dex_liquidity = 0.0
-        self.mined_sovereign_fund = 0.0
+        # عدادات العمليات الحية داخل السلسلة (أعداد صحيحة)
+        self.current_total_supply = 0
+        self.community_distributed = 0
+        self.ecosystem_allocated = 0
+        self.sovereign_allocated = 0
         
-        # مقاييس مجمع السيولة المبدئية داخل DEX Pi (Pi / YER Pool)
-        self.pool_pi_reserve = 1_000_000.0  # سيولة البداية الافتراضية بـ Pi
-        self.pool_yer_reserve = 20_000_000.0 # سيولة البداية بـ YER المشفر
+        # مقاييس مجمع السيولة المبدئية داخل Sandbox DEX (Pi / YER Pool)
+        self.pool_pi_reserve = 1_000_000       # سيولة البداية بـ Pi
+        self.pool_yer_reserve = 20_000_000     # سيولة البداية بـ YER
 
     def get_dex_amm_price(self):
         """ حساب السعر الحركي العادل بناءً على خوارزمية المنتج الثابت (X * Y = K) """
         if self.pool_pi_reserve == 0:
-            return 0.0
-        return self.pool_yer_reserve / self.pool_pi_reserve
+            return 0
+        # استخدام قسمة صحيحة للحصول على سعر تقريبي (وحدة YER لكل Pi)
+        return self.pool_yer_reserve // self.pool_pi_reserve
 
     def run_phase_1_simulation(self):
-        """ المرحلة 1: إطلاق التعدين المجاني الجماهيري بالدعوات (10%) في الشبكة المغلقة """
-        print("\n🏁 [المرحلة 1] إطلاق التعدين الجماهيري المجاني (العملية الأولى 10%)...")
-        # محاكاة انضمام وتعدين 1.5 مليون مستخدم عالمياً مكافآت إحالة
-        simulated_mint = 15_250_000.0
-        if self.mined_public + simulated_mint <= self.CAP_PUBLIC_MINING:
-            self.mined_public += simulated_mint
+        """ المرحلة 1: توزيع المنفعة المجتمعية (10%) """
+        print("\n🏁 [المرحلة 1] توزيع المنفعة المجتمعية (10%)...")
+        simulated_mint = 15_250_000
+        if self.community_distributed + simulated_mint <= self.CAP_COMMUNITY:
+            self.community_distributed += simulated_mint
             self.current_total_supply += simulated_mint
             
-        print(f"✅ تم صك مكافآت الجمهور: {self.mined_public:,.2f} YER")
-        print(f"📊 السقف المتبقي للتعدين المجاني: {(self.CAP_PUBLIC_MINING - self.mined_public):,.2f} YER")
+        print(f"✅ تم توزيع مكافآت المجتمع: {self.community_distributed:,} YER")
+        print(f"📊 السقف المتبقي: {(self.CAP_COMMUNITY - self.community_distributed):,} YER")
 
     def run_phase_2_simulation(self):
-        """ المرحلة 2: تعدين الإدراج وحقن سيولة مجمع DEX Pi (30%) استعداداً للشبكة المفتوحة """
-        print("\n🚀 [المرحلة 2] تفعيل تعدين الإدراج والسيولة لمنصة الإطلاق (العملية الثانية 30%)...")
-        # صك الـ 100 مليون كاملة وتخصيصها لحزم الإدراج وحماية السعر من الانزلاق السعري
-        self.mined_dex_liquidity = self.CAP_DEX_LIQUIDITY
-        self.current_total_supply += self.mined_dex_liquidity
+        """ المرحلة 2: تخصيص السيولة البيئية (30%) """
+        print("\n🚀 [المرحلة 2] تفعيل تخصيص السيولة البيئية (30%)...")
+        self.ecosystem_allocated = self.CAP_ECOSYSTEM
+        self.current_total_supply += self.ecosystem_allocated
         
-        # حقن جزء من التعدين مباشرة لدعم عمق مجمع السيولة العالمي
-        self.pool_yer_reserve += 80_000_000.0
+        # حقن جزء من السيولة لدعم عمق مجمع السيولة
+        self.pool_yer_reserve += 80_000_000
         
-        print(f"✅ تم صك عملات منصة الإطلاق والسيولة: {self.mined_dex_liquidity:,.2f} YER")
-        print(f"📈 السعر الحركي الحالي في مجمع DEX Pi: 1 Pi = {self.get_dex_amm_price():,.4f} YER Token")
+        print(f"✅ تم تخصيص سيولة النظام البيئي: {self.ecosystem_allocated:,} YER")
+        print(f"📈 السعر الحركي الحالي في مجمع DEX: 1 Pi = {self.get_dex_amm_price():,} YER")
 
     def run_phase_3_simulation(self):
-        """ المرحلة 3: تفعيل تعدين رأس مال الصندوق السيادي المفوض (60%) مع انطلاق الشبكة المفتوحة """
-        print("\n🏛️ [المرحلة 3] تفعيل تفويض التعدين الرأسمالي للصندوق السيادي (العملية الثالثة 60%)...")
-        # محاكاة إنتاج كتل برمجية متتالية لإصدار التمويلات والقروض الدولية ومنع التضخم
-        simulated_block_mining = 45_000_000.0
-        if self.mined_sovereign_fund + simulated_block_mining <= self.CAP_SOVEREIGN_FUND:
-            self.mined_sovereign_fund += simulated_block_mining
-            self.current_total_supply += simulated_block_mining
+        """ المرحلة 3: تخصيص احتياطي الصندوق السيادي (60%) """
+        print("\n🏛️ [المرحلة 3] تفعيل تخصيص احتياطي الصندوق السيادي (60%)...")
+        simulated_block = 45_000_000
+        if self.sovereign_allocated + simulated_block <= self.CAP_SOVEREIGN:
+            self.sovereign_allocated += simulated_block
+            self.current_total_supply += simulated_block
             
-        print(f"✅ تم صك وتعدين رأس مال الصندوق تدريجياً عبر الكتل: {self.mined_sovereign_fund:,.2f} YER")
-        print(f"🔒 مخصصات القروض والرهون المتبقية للصندوق: {(self.CAP_SOVEREIGN_FUND - self.mined_sovereign_fund):,.2f} YER")
+        print(f"✅ تم تخصيص رأس مال الصندوق: {self.sovereign_allocated:,} YER")
+        print(f"🔒 المتبقي للصندوق: {(self.CAP_SOVEREIGN - self.sovereign_allocated):,} YER")
 
     def display_final_telemetry_report(self):
-        """ تصيير وإخراج التقرير القياسي الشامل لسلامة واقتصاديات منظومة النسر العربي """
+        """ تصيير وإخراج التقرير القياسي الشامل لسلامة واقتصاديات المنظومة """
         print("\n" + "="*65)
-        print("📊 التقرير الختامي لمحاكاة القياس الاقتصادي الكلي لمنظومة النسر العربي (A.E.C)")
+        print("📊 التقرير الختامي لمحاكاة القياس الاقتصادي الكلي (A.E.C)")
         print("="*65)
-        print(f"▪️ المعروض الإجمالي الحالي في السلسلة    : {self.current_total_supply:,.2f} / {self.MAX_GLOBAL_SUPPLY:,.2f} YER")
-        print(f"▪️ النسبة المئوية المكتملة من التعدين الكلي: {(self.current_total_supply / self.MAX_GLOBAL_SUPPLY * 100):.2f}%")
-        print(f"▪️ السعر النهائي العادل في مجمع DEX Pi     : 1 Pi = {self.get_dex_amm_price():,.4f} YER Token")
+        print(f"▪️ المعروض الإجمالي الحالي          : {self.current_total_supply:,} / {self.MAX_GLOBAL_SUPPLY:,} YER")
+        print(f"▪️ النسبة المئوية المكتملة           : {self.current_total_supply / self.MAX_GLOBAL_SUPPLY * 100:.2f}%")
+        print(f"▪️ السعر النهائي في مجمع DEX         : 1 Pi = {self.get_dex_amm_price():,} YER")
         
-        # مؤشر استقرار التضخم الممتثل لمعايير صندوق اليونيسف للابتكار
-        inflation_risk = "آمن ومستقر جداً (🟢 LOW RISK)" if self.current_total_supply <= self.MAX_GLOBAL_SUPPLY else "خطر تضخم (🔴 HIGH RISK)"
-        print(f"▪️ مؤشر أمان التضخم وحماية المساعدات    : {inflation_risk}")
+        # مؤشر استقرار التضخم
+        if self.current_total_supply <= self.MAX_GLOBAL_SUPPLY:
+            inflation_risk = "آمن ومستقر (🟢 LOW RISK)"
+        else:
+            inflation_risk = "خطر تضخم (🔴 HIGH RISK)"
+        print(f"▪️ مؤشر أمان التضخم وحماية المساعدات : {inflation_risk}")
         print("="*65 + "\n")
 
 if __name__ == "__main__":
-    # تشغيل محاكي الأتمتة الحركي
     simulator = AecMacroeconomicSimulation()
     simulator.run_phase_1_simulation()
     time.sleep(0.5)

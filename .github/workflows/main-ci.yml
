@@ -21,8 +21,7 @@ jobs:
         cache: 'npm'
 
     - name: 3. Install Dependencies
-      run: npm install
+      run: npm ci
 
-    # تشغيل الاختبارات بشكل صارم. إذا فشلت، سيفشل السير.
     - name: 4. Run Automated Tests (Strict)
       run: npm test

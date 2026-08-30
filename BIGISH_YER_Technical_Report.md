@@ -1,50 +1,46 @@
-# ًں“ٹ ط§ظ„طھظ‚ط±ظٹط± ط§ظ„ظپظ†ظٹ ط§ظ„ط´ط§ظ…ظ„ ظ„طھظ‚ظٹظٹظ… ظˆظ‡ظٹظƒظ„ط© ظ†ط¸ط§ظ… BIGISH-YER ط§ظ„ط¨ظٹط¦ظٹ
+# BIGISH-YER Technical Report
 
-## 1. ط§ظ„ظ…ظ‚ط¯ظ…ط© ظˆط§ظ„ظ‡ط¯ظپ ط§ظ„ط§ط³طھط±ط§طھظٹط¬ظٹ
-طھط£ط³ط³ ظ†ط¸ط§ظ… **BIGISH-YER** ظƒط¨ظ†ظٹط© طھط­طھظٹط© ط¨ط±ظ…ط¬ظٹط© ط³ظٹط§ط¯ظٹط© ظ„طھط¹ط²ظٹط² ط§ظ„ط§ط³طھظ‚ط±ط§ط± ط§ظ„ط§ظ‚طھطµط§ط¯ظٹ ظˆط§ظ„طھط­ظˆظ„ ط§ظ„ط±ظ‚ظ…ظٹ ظپظٹ ط§ظ„ظٹظ…ظ† ط¨ط§ظ„ط§ط¹طھظ…ط§ط¯ ط¹ظ„ظ‰ ط´ط¨ظƒط© Pi Network ط§ظ„ط±ظ‚ظ…ظٹط©. ظٹظ‡ط¯ظپ ظ‡ط°ط§ ط§ظ„طھظ‚ط±ظٹط± ط¥ظ„ظ‰ طھظ‚ط¯ظٹظ… ظپط­طµ ظ…ط¹ظ…ط§ط±ظٹ ط´ط§ظ…ظ„طŒ ظ…ط±ط§ط¬ط¹ط© ط¨ط±ظ…ط¬ظٹط©طŒ ظˆطھط·ط¨ظٹظ‚ ط®ط·ط· ط§ظ„ط­ظ…ط§ظٹط© ظˆطھط­ط³ظٹظ† ط¨ظ†ظٹط© ط§ظ„ظ…ط³طھظˆط¯ط¹ ظ„ط¶ظ…ط§ظ† ط§ظ„ط£ظ…ط§ظ† ظˆط§ظ„ط§ظ…طھط«ط§ظ„ ط§ظ„ط£ظƒط§ط¯ظٹظ…ظٹ ظˆط§ظ„طھظ‚ظ†ظٹ ظ„ظ…ط¹ط§ظٹظٹط± ط§ظ„ظ…ظ†ط¸ظ…ط§طھ ط§ظ„ط¯ظˆظ„ظٹط© (ظ…ط«ظ„ UNICEF ظˆMercy Corps).
+## 1. Introduction & Strategic Goal
+The BIGISH-YER system is a sovereign software infrastructure designed to enhance economic stability and digital transformation in Yemen. It operates as a **Pi-compatible adapter (Sandbox/Testnet)** and does not claim any official partnership with Pi Network, UNICEF, or Mercy Corps.
 
----
+## 2. Architecture & Strict Mathematical Constraints
+All financial operations rely on **Zero Floating-Point Arithmetic** using `BigInt`:
+- **Pi Network Scale:** 7 decimal places (1 Pi = 10^7 Stroops).
+- **YER Scale:** 10 decimal places (1 YER = 10^10 Sub-units).
 
-## 2. ط§ظ„ظ‡ظ†ط¯ط³ط© ط§ظ„ظ…ط¹ظ…ط§ط±ظٹط© ظˆط§ظ„ظ‚ظٹظˆط¯ ط§ظ„ط±ظٹط§ط¶ظٹط© ط§ظ„طµط§ط±ظ…ط©
-طھط¹طھظ…ط¯ ط³ظ„ط§ظ…ط© ط§ظ„ط¹ظ…ظ„ظٹط§طھ ط§ظ„ظ…ط§ظ„ظٹط© ط§ظ„ط±ظ‚ظ…ظٹط© ظپظٹ ط§ظ„ظ†ط¸ط§ظ… ط¹ظ„ظ‰ ط¢ظ„ظٹط© ط­ط¸ط± ط§ظ„ظƒط³ظˆط± ط§ظ„ط¹ط´ط±ظٹط© ط§ظ„ط¹ط§ط¦ظ…ط© ظˆطھط·ط¨ظٹظ‚ ط§ظ„ط­ط³ط§ط¨ط§طھ ط§ظ„طµط­ظٹط­ط© ط§ظ„طµط§ط±ظ…ط©:
-* **ظ…ظ‚ظٹط§ط³ طھظˆظƒظ† ط´ط¨ظƒط© Pi**: 7 ط®ط§ظ†ط§طھ ط¹ط´ط±ظٹط© ($1 \text{ Pi} = 10^7 \text{ Stroops}$).
-* **ظ…ظ‚ظٹط§ط³ ط§ظ„ط¹ظ…ظ„ط© ط§ظ„ظٹظ…ظ†ظٹط© ط§ظ„ظ…ط³طھظ‚ط±ط© (YER)**: 10 ط®ط§ظ†ط§طھ ط¹ط´ط±ظٹط© ($1 \text{ YER} = 10^{10} \text{ Sovereign Sub-units}$).
+### Hybrid Clearing Flow
 
-### ظ…ط®ط·ط· طھط¯ظپظ‚ ط§ظ„ط¨ظٹط§ظ†ط§طھ ظ„ظ„ظ…ظ‚ط§طµط© ط§ظ„ظ‡ط¬ظٹظ†ط© (Hybrid Clearing Flow)
-```
-[ط·ظ„ط¨ ظپط§طھظˆط±ط© ظ…ظ† ط¹ظ‚ط¯ط©] â”€â”€> [طھط­ظˆظٹظ„ ط§ظ„ظ‚ظٹظ…ط© ط¥ظ„ظ‰ 10 ط®ط§ظ†ط§طھ BigInt]
-                                       â”‚
-                                       â–¼
-                       [طھظ‚ط³ظٹظ… ط§ظ„ظ‚ظٹظ…ط© ط¨ط§ظ„طھط³ط§ظˆظٹ 50% / 50%]
-                                      â•± â•²
-                                     â•±   â•²
-                                    â–¼     â–¼
-               [50% ط³ظٹظˆظ„ط© ظ…ط­ظ„ظٹط© YER]     [50% طھظˆظƒظ† Pi ط¹ط¨ط± Stroops]
-```
+                    |
+                    v
+            [Split 50% / 50%]
+              /            \
+             /              \
+            v                v
+[50% YER Local Liquidity]  [50% Pi via Stroops]
 
----
 
-## 3. ط§ظ„طھط¯ظ‚ظٹظ‚ ط§ظ„ط£ظ…ظ†ظٹ ظˆظ…ط±ط§ط¬ط¹ط© ظ…ظ„ظپ ط§ظ„ظ€ Anti-Double Dipping
-ط§ظ„ظ…ظ„ظپ ط§ظ„ظ…ط³ط¤ظˆظ„: `AntiDoubleDippingEngine.js`
-* **ط§ظ„ظˆط¸ظٹظپط©**: ظپط±ط¶ ظ‚ظپظ„ ظ…طھط²ط§ظ…ظ† ط°ط±ظٹ (Atomic Concurrency Lock) ظ„ظ…ظ†ط¹ ط§ظ„طھظƒط±ط§ط± ط§ظ„ط¨ط±ظ…ط¬ظٹ ظˆطھط¯ط§ط®ظ„ ط§ظ„ط¹ظ…ظ„ظٹط§طھ ط£ط«ظ†ط§ط، ط¯ظپط¹ ط§ظ„ط­ظˆط§ظ„ط§طھ ط§ظ„ط¯ظپط¹ظٹط© ط§ظ„ظƒط¨ظٹط±ط©.
-* **ط§ظ„طھظ‚ظٹظٹظ…**: ط§ظ„ظƒظˆط¯ ظٹط¹ظ…ظ„ ط¨ظƒظپط§ط،ط© طھظ…ظ†ط¹ ط«ط؛ط±ط§طھ ط§ظ„ط³ط¨ط§ظ‚ (Race Conditions) ط§ظ„طھظٹ ظ‚ط¯ طھط¤ط¯ظٹ ط¥ظ„ظ‰ طھظƒط±ط§ط± ط§ظ„ط®طµظ… ط£ظˆ ط§ظ„طµط±ظپ ط§ظ„ط¥ظ†ط³ط§ظ†ظٹطŒ ظˆظ‡ظˆ ظ…طھظˆط§ظپظ‚ طھظ…ط§ظ…ط§ظ‹ ظ…ط¹ ط§ظ„ظ‚ظٹظˆط¯ ط§ظ„طµظپط±ظٹط© ظ„ظ„ظƒط³ظˆط±.
 
----
+## 3. Security Review (Anti-Double Dipping)
+**File:** `AntiDoubleDippingEngine.js`
+- **Function:** Implements an atomic concurrency lock to prevent duplicate processing and race conditions during large payments.
+- **Assessment:** The code efficiently prevents replay attacks and ensures that only one transaction per nonce is processed. It aligns with the "Zero Float" and security rules.
 
-## 4. ط®ط·ط© ظ‡ظٹظƒظ„ط© ظˆطھظ†ط¸ظٹظ… ط§ظ„ظ…ط³طھظˆط¯ط¹ (Refactoring Strategy)
-ظ„ط¶ظ…ط§ظ† ط§ظ„ظ…ظ…ط§ط±ط³ط§طھ ط§ظ„ط¨ط±ظ…ط¬ظٹط© ط§ظ„ظ…ط«ط§ظ„ظٹط© (Clean Code)طŒ طھظ… طھطµظ…ظٹظ… ط§ظ„ظ‡ظٹظƒظ„ظٹط© ط§ظ„ط¬ط¯ظٹط¯ط© ظ„طھط±ط­ظٹظ„ ط§ظ„ظ…ظ„ظپط§طھ ط§ظ„ط¹ط´ظˆط§ط¦ظٹط© ظ…ظ† ط§ظ„ط¬ط°ط± ط¥ظ„ظ‰ ظ…ط¬ظ„ط¯ط§طھ طھظ†ط¸ظٹظ…ظٹط©:
+## 4. Repository Structure & Configuration
+The repository is organized as follows:
 
-| ط§ظ„ظ…ط¬ظ„ط¯ ط§ظ„ط­ط§ظ„ظٹ | ط§ظ„ظ…ط¬ظ„ط¯ ط§ظ„ظ…ظ‚طھط±ط­ | ظ†ظˆط¹ ط§ظ„ظ…ظ„ظپط§طھ ط§ظ„ظ…ظ†ظ‚ظˆظ„ط© | ط§ظ„ظ‡ط¯ظپ |
-| :--- | :--- | :--- | :--- |
-| `/.` | `/engines` | ظ…ط­ط±ظƒط§طھ ط§ظ„ط§ط­طھط³ط§ط¨ ظˆط§ظ„ظ…ط·ط§ط¨ظ‚ط© ظˆط§ظ„ط£ظ…ظ† ط§ظ„ظ…ط§ظ„ظٹ | ط¹ط²ظ„ ظ…ظ†ط·ظ‚ ط§ظ„ط¹ظ…ظ„ظٹط§طھ |
-| `/.` | `/tests` | ظ…ظ„ظپط§طھ ط§ظ„ظپط­طµ ظˆط§ظ„ط§ط®طھط¨ط§ط± ط§ظ„طھط¬ط±ظٹط¨ظٹط© ظˆط§ظ„ط¶ط؛ط· | طھظ†ط¸ظٹظ… ط¨ظٹط¦ط© ط§ظ„ظ€ CI |
-| `/.` | `/config` | ظ…ظ„ظپط§طھ ط§ظ„ط¨ظٹط¦ط© ظˆط§ظ„ط¥ط¹ط¯ط§ط¯ط§طھ ظˆط§ظ„ظ†طµظˆطµ ط§ظ„ظ…ط±ط¬ط¹ظٹط© | ط­ظ…ط§ظٹط© ط§ظ„ظ…طھط؛ظٹط±ط§طھ |
+| Directory / File | Description |
+| :--- | :--- |
+| `/engines` | Core engines (clearing, vesting, AMM, security, etc.) |
+| `/tests` | Unit tests (using `node --test`) |
+| `/config` | Environment configuration and reference texts |
+| `/contracts` | Smart contracts (Solidity / Rust) |
+| `/public` | Frontend UI (Sandbox demo) |
 
----
-
-## 5. طھظˆطµظٹط§طھ ط§ظ„ط£ظ…ط§ظ† ظˆط§ظ„ط­ظ…ط§ظٹط©
-1. **ظ…ظ„ظپط§طھ ط§ظ„ط¨ظٹط¦ط© ط§ظ„ظ…طھط؛ظٹط±ط©**: طھظپط¹ظٹظ„ ط¥ظ‚طµط§ط، طµط§ط±ظ… ظ„ظ…ظ„ظپ `.env` ظ„ظ…ظ†ط¹ طھط³ط±ظٹط¨ ط§ظ„ظ€ API Keys ظپظٹ ط§ظ„ظ…ط³طھظˆط¯ط¹ط§طھ ط§ظ„ط¹ط§ظ…ط©.
-2. **ط§ظ„طھط­ظ‚ظ‚ ظ…ظ† ط­ط²ظ… ط§ظ„ظ€ NPM**: ط¯ظ…ط¬ ط¬ظ…ظٹط¹ ط§ظ„ط§ط¹طھظ…ط§ط¯ط§طھ ط§ظ„طھط§ط¨ط¹ط© ظ„ظ€ `bignumber.js`, `express`, ظˆ `axios` ط¨ط´ظƒظ„ طµط±ظٹط­ ظپظٹ ط­ط²ظ…ط© ط§ظ„ط¨ظ†ط§ط، ط§ظ„ط£ط³ط§ط³ظٹط©.
+## 5. Security & Protection Recommendations
+1. **Environment Variables:** Strict enforcement of `.env` to prevent API keys from leaking into public repositories.
+2. **Dependency Management:** Use only standard Node.js modules. No external libraries like `bignumber.js` are required, as we use `BigInt` natively.
+3. **CI Pipeline:** All changes must pass `npm test` (using `node --test`).
 
 ---
-This is for informational purposes only. For medical advice or diagnosis, consult a professional. AI responses may include mistakes.
+
+*This document is for informational purposes only and reflects the current project state.*

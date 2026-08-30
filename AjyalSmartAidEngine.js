@@ -1,21 +1,39 @@
 /**
  * AJYAL Smart Aid & Civil Payroll Engine
  * Optimized for humanitarian distribution with Zero Floating-Point Precision
+ * NOTE: Operates in Sandbox/Testnet mode. Does not claim official Pi Network integration.
  */
+
+const YER_TOKENOMICS = require('./YERTokenomicsCanonical'); // المصدر المركزي
 
 class AjyalSmartAidEngine {
     constructor(exchangeRateYERtoPi) {
         // السعر مخزن كرقم صحيح لضمان الحسابات الصفرية الصارمة
         this.exchangeRate = BigInt(exchangeRateYERtoPi); 
         this.activeDistributionLocks = new Map();
+        this.totalDistributed = 0n; // متغير لتتبع إجمالي الموزع (منع تجاوز السقف)
     }
 
     /**
      * معالجة صرف الرواتب أو المساعدات بأمان كامل
+     * @param {string} beneficiaryId - هوية المستفيد
+     * @param {string} amountInYER - المبلغ بالـ YER (كنص لضمان الدقة)
      */
     async processSovereignPayroll(beneficiaryId, amountInYER) {
         const amount = BigInt(amountInYER);
         
+        // [إضافة] التحقق من أن المبلغ أكبر من صفر
+        if (amount <= 0n) {
+            throw new Error("INVALID_AMOUNT: Amount must be greater than zero.");
+        }
+
+        // [إضافة] التحقق من عدم تجاوز الحد الأقصى للتوزيع (30M للمجتمع)
+        // هنا نستخدم حد المجتمع (30M) لأن هذا المحرك مخصص للمساعدات والرواتب
+        const communityCap = YER_TOKENOMICS.allocations.communityPublicUtility;
+        if (this.totalDistributed + amount > communityCap) {
+            throw new Error("SOVEREIGN_LIMIT_ERROR: Exceeds 30M Community Allocation cap.");
+        }
+
         // 1. حماية فورية ضد التكرار والصرف المزدوج للمستفيد في نفس الوقت
         if (this.activeDistributionLocks.get(beneficiaryId)) {
             throw new Error(`SECURITY ALERT: Concurrent payout blocked for beneficiary ${beneficiaryId}`);
@@ -31,6 +49,9 @@ class AjyalSmartAidEngine {
             // 1 Pi = 10,000,000 Stroops
             const piStroopsUnit = 10000000n;
             const totalPiStroopsPayload = (cryptoPiTender * piStroopsUnit) / this.exchangeRate;
+
+            // [إضافة] تحديث إجمالي الموزع
+            this.totalDistributed += amount;
 
             return {
                 status: "APPROVED",

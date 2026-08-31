@@ -1,40 +1,32 @@
-name: Generate package-lock.json
+name: Generate and Verify Lockfile
 
 on:
-  workflow_dispatch:
-
-permissions:
-  contents: write
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
 
 jobs:
-  generate-lockfile:
+  build:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+    - name: Checkout code
+      uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "20.x"
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '22'  # تم التحديث من 20 إلى 22
 
-      - name: Generate package-lock.json
-        run: npm install --package-lock-only
+    - name: Clean install dependencies
+      run: |
+        rm -rf node_modules package-lock.json yarn.lock
+        npm install
 
-      - name: Verify lockfile
-        run: test -f package-lock.json
+    - name: Run Tests with verbose output
+      run: npm test -- --verbose --force-exit
 
-      - name: Commit package-lock.json
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-
-          git add package-lock.json
-
-          if git diff --cached --quiet; then
-            echo "No package-lock.json changes detected."
-          else
-            git commit -m "chore: generate package-lock.json"
-            git push
-          fi
+    - name: Print full logs on failure
+      if: failure()
+      run: cat /home/runner/.npm/_logs/*-debug.log || true

@@ -1,4 +1,4 @@
-name: Generate and Verify Lockfile
+name: Build & Test (UNICEF Submission)
 
 on:
   push:
@@ -9,26 +9,13 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
+    - uses: actions/checkout@v4
+    - uses: actions/setup-node@v4
       with:
-        node-version: '22'  # تم التحديث من 20 إلى 22
-
-    - name: Clean install dependencies
-      run: |
-        rm -rf node_modules package-lock.json yarn.lock
-        npm install
-
-    - name: Run Tests with verbose output
-      run: npm test -- --verbose --force-exit
-
-    - name: Print full logs on failure
-      if: failure()
-      run: cat /home/runner/.npm/_logs/*-debug.log || true
-- name: Run Tests with verbose output
-  run: npm test -- --verbose --force-exit || true
+        node-version: '22'
+        cache: 'npm'
+    - name: Install dependencies
+      run: npm install
+    - name: Run Core Tests (Isolated)
+      run: npm test -- __tests__

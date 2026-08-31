@@ -3,17 +3,15 @@
  * BIGISH-YER: Clearing & Settlement API Core Security Tests
  * NOTE: Sandbox/Testnet validation only. No claims of official Pi Network integration.
  */
-
 const { test, describe, beforeEach } = require('node:test');
 const assert = require('node:assert');
 
 // استيراد الوحدات الفعلية الموجودة في المستودع
 const AntiDoubleDippingEngine = require('../AntiDoubleDippingEngine');
-const PiPaymentProcessor = require('../backend/PiPaymentProcessor');
+const PiPaymentProcessor = require('../pi-integration');  // تم التعديل هنا
 const YER_TOKENOMICS = require('../YERTokenomicsCanonical');
 
 describe('🛡️ BIGISH-YER: Clearing & Settlement API Core Security Tests', () => {
-
     beforeEach(() => {
         // لا نقوم بأي تنظيف حقيقي هنا لأن محرك الأمان يُدار كـ Singleton،
         // لكننا نتأكد من أن جميع الاختبارات تعمل بسلاسة.
@@ -25,7 +23,6 @@ describe('🛡️ BIGISH-YER: Clearing & Settlement API Core Security Tests', ()
     test('1. Should SUCCESSFULLY process hybrid payment using PiPaymentProcessor', () => {
         // استخدام المبلغ كنص (String) لضمان الدقة
         const result = PiPaymentProcessor.processHybridInvoice("1500", "2");
-        
         // التحقق من النتائج
         assert.ok(result, "Expected a result from processHybridInvoice");
         assert.strictEqual(typeof result.yerSovereignUnits, 'string');
@@ -67,11 +64,9 @@ describe('🛡️ BIGISH-YER: Clearing & Settlement API Core Security Tests', ()
         assert.strictEqual(YER_TOKENOMICS.allocations.aecSovereignReserve.toString(), "180000000");
 
         // التحقق من أن مجموع التوزيع يساوي السقف
-        const totalAllocation = 
-            YER_TOKENOMICS.allocations.communityPublicUtility +
+        const totalAllocation = YER_TOKENOMICS.allocations.communityPublicUtility +
             YER_TOKENOMICS.allocations.ecosystemLaunchLiquidity +
             YER_TOKENOMICS.allocations.aecSovereignReserve;
-        
         assert.strictEqual(totalAllocation.toString(), YER_TOKENOMICS.maximumSupply.toString());
     });
 });

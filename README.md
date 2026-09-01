@@ -67,3 +67,12 @@ Led by **Mayass Ali**, BIGISH-YER coordinates clearings across nine specialized 
 Run macroeconomic telemetry simulation:
 ```bash
 python simulation.py
+
+# BIGISH-YER
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Node.js](https://img.shields.io/badge/Node.js-18.x-green.svg)](https://nodejs.org/)
+[![Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black.svg)](https://vercel.com/)
+
+> **⚠️ Important:** This is a **sandbox/testnet-only prototype**.  
+> It does **NOT** claim official certification or funding from any organization.

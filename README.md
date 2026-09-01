@@ -67,6 +67,8 @@ Led by **Mayass Ali**, BIGISH-YER coordinates clearings across nine specialized 
 Run macroeconomic telemetry simulation:
 ```bash
 python simulation.py
+
+
 # BIGISH-YER
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -110,3 +112,64 @@ git clone https://github.com/mibo01699/BIGISH-YER.git
 cd BIGISH-YER
 npm install
 npm start
+```
+
+---
+
+🧪 الاختبارات
+
+```bash
+npm test
+```
+
+---
+
+⚠️ إخلاء المسؤولية
+
+هذا المشروع هو نموذج أولي يعمل فقط في بيئة الحماية (Sandbox/Testnet).
+لا يدعي أي شراكة رسمية أو تمويل أو اعتماد من أي جهة، بما في ذلك UNICEF، Mercy Corps، أو Pi Network Core Team.
+
+---
+
+🦅 Developed by Arabian Eagle Technology Group
+
+```
+
+---
+
+### 6. `WHITEPAPER.md` – نسخة منقحة (بدون ادعاءات UNICEF)
+
+```markdown
+# BIGISH-YER: Sovereign Tokenized Asset Infrastructure
+
+**Version:** 1.0.0 (Sandbox/Testnet)
+
+---
+
+## 🧭 نظرة عامة
+
+BIGISH-YER هي **بنية تحتية سيادية للأصول الرقمية المرمزة**، مصممة لدعم التسوية المالية، والمرافق المجتمعية، والمرونة الاقتصادية في اليمن والمنطقة العربية.
+
+> **Disclaimer:** This project is a **prototype** and operates **only** in a sandbox/testnet environment.  
+> It does **NOT** claim any official partnership, certification, or funding from UNICEF, Mercy Corps, or the Pi Network Core Team.
+
+---
+
+## 🪙 الاقتصاد الرقمي (Tokenomics)
+
+- الحد الأقصى للعرض: **300,000,000 YER**
+  - المجتمع/المنفعة العامة: **30,000,000** (10%)
+  - الإطلاق والنظام البيئي/السيولة: **90,000,000** (30%)
+  - الاحتياطي السيادي: **180,000,000** (60%)
+
+جميع العمليات الحسابية تتم باستخدام **Strict BigInt Arithmetic** لاستبعاد أخطاء الفاصلة العائمة.
+
+---
+
+## 🔗 التكامل مع Pi Network
+
+النظام يدعم التكامل مع Pi Network **في وضع الحماية (Sandbox)** لأغراض الاختبار فقط. لا يتم دعم عمليات Pi mainnet الحقيقية في هذه النسخة.
+
+---
+
+**🦅 Developed by Arabian Eagle Technology Group**

@@ -4,14 +4,14 @@
 
 ---
 
-## 🧭 Overview
+## Overview
 
 BIGISH-YER is a **digital sovereign asset infrastructure** designed to support tokenized settlements, community utilities, and economic resilience in Yemen and the broader region.
 
-> **Disclaimer:** This project is a **prototype** and operates **only** in a sandbox/testnet environment.  
+> **Disclaimer:** This project is a **prototype** and operates **only** in a sandbox/testnet environment.
 > It does **NOT** claim any official partnership, certification, or funding from UNICEF, Mercy Corps, or the Pi Network Core Team.
 
-## 🪙 Tokenomics
+## Tokenomics
 
 - Maximum Supply: **300,000,000 YER**
   - Community/Public Utility: **30,000,000** (10%)
@@ -20,7 +20,7 @@ BIGISH-YER is a **digital sovereign asset infrastructure** designed to support t
 
 All financial calculations are performed using **Strict BigInt Arithmetic** to eliminate floating-point errors.
 
-## 🔗 Integration with Pi Network
+## Integration with Pi Network
 
 The system supports Pi Network integration **in sandbox mode** for testing purposes. Real Pi mainnet operations are **not** supported in this version.
 

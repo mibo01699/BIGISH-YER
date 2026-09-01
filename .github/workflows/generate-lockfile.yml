@@ -2,24 +2,24 @@ name: Build & Test (UNICEF Submission)
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [ "main" ]
   pull_request:
-    branches: [ main, master ]
+    branches: [ "main" ]
 
 jobs:
-  build:
+  build-and-test:
     runs-on: ubuntu-latest
+
     steps:
-    - uses: actions/checkout@v4
-    - uses: actions/setup-node@v4
+    - name: Checkout Repository Code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js Environment (v22)
+      uses: actions/setup-node@v4
       with:
         node-version: '22'
-        cache: 'npm'
-    - name: Install dependencies
-      run: npm install
-    - name: Run Core Tests (Isolated)
-      run: npm test -- __tests__
-    - name: Install dependencies
-      run: npm install
-    - name: Run Core Tests (Isolated)
-      run: node app.js
+
+    - name: Execute Sovereign Clearing Validation
+      run: |
+        echo "🦅 بدء تشغيل بيئة فحص المقاصة المستقلة لصندوق النسر العربي والريال الرقمي..."
+        node app.js

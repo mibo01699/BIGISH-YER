@@ -1,59 +1,65 @@
-// tests/SovereignIntegration.test.js
-// ملف اختبار متكامل لحل مشكلة الفحص الصارم وضمان توافقية الـ BigInt بنسبة 100%
+// ArabEagleLoanCollateralGuard.js
+// بروتوكول إدارة القروض والتمويل الاجتماعي بدون فوائد عبر حجز ضمانات Pi لربط مستودع صندوق النسر العربي (A.E.C) بـ BIGISH-YER
 
-const SovereignLoanCollateralGuard = require('../SovereignVestingWallet.js') ? 
-      require('./mockLoanGuard.js') : null; 
+const ArabEagleLoanCollateralGuard = {
+    loans: new Map(),
+    piScale: 10000000n,    // 7 decimals لعملة Pi
+    yerScale: 10000000000n, // 10 decimals لعملة YER
 
-// محاكاة ذكية للبيئة لمنع الانهيار المالي أثناء الفحص الموازى
-const mockEcosystemTest = () => {
-    console.log("➡️ بدء الفحص الشامل لمنظومة الريال الرقمي اليمني الموازية...");
-    
-    const piScale = 10000000n;     // 7 decimals لعملة Pi
-    const yerScale = 10000000000n;  // 10 decimals لعملة YER
+    // 1. إنشاء طلب تمويل حسن بحجز مكافئ من الـ Pi كضمان سيادي
+    requestInterestFreeLoan: function(loanId, borrowerWallet, loanAmountInYer, piCollateralAmount) {
+        const yerAmount = BigInt(loanAmountInYer) * this.yerScale;
+        const piCollateral = BigInt(piCollateralAmount) * this.piScale;
 
-    // مصفوفة اختبارية لمحاكاة قرض حسن لمواطن يمني يمتلك سيولة معنوية من Pi
-    const testLoan = {
-        loanId: "LOAN-YEMEN-2030-01",
-        borrower: "GD3W...PI_WALLET_ADDRESS",
-        loanAmountYER: 5000n, // قروض صغيرة بقيمة 5000 ريال رقمي يمني
-        piCollateral: 15n     // حجز 15 Pi كضمان موازٍ
-    };
-
-    try {
-        console.log("🔎 خطوة 1: اختبار تفعيل التمويل من صندوق الصقر العربي (A.E.C)...");
-        // محاكاة هندسة الحجز الذكي داخل العقد بدون نسب فوائد ربوية
-        let remainingRepayment = testLoan.loanAmountYER * yerScale;
-        let collateralLocked = testLoan.piCollateral * piScale;
-        
-        if (remainingRepayment <= 0n || collateralLocked <= 0n) {
-            throw new TypeError("فشل الفحص: لا يمكن استخدام قيم صفرية أو سالبة في المنظومة السيادية");
-        }
-        console.log(`  [نجاح]: تم قفل ${testLoan.piCollateral.toString()} Pi بنجاح وإصدار الـ YER للمواطن.`);
-
-        console.log("🔎 خطوة 2: محاكاة السداد التدريجي عبر التطبيقات التسعة (المنفعة الحقيقية)...");
-        // معالجة دفع جزء من الدين باستخدام المعيار الصارم
-        const partialPayment = 2500n * yerScale; 
-        remainingRepayment -= partialPayment;
-        console.log(`  [نجاح]: تم سداد جزء من التمويل. المتبقي: ${(remainingRepayment / yerScale).toString()} YER.`);
-
-        console.log("🔎 خطوة 3: إغلاق القرض وتحرير الاحتياطي السيادي التلقائي...");
-        const finalPayment = 2500n * yerScale;
-        remainingRepayment -= finalPayment;
-
-        if (remainingRepayment === 0n) {
-            collateralLocked = 0n; // تحرير الضمان بالكامل للمواطن
-            console.log("  [نجاح]: تم تصفية الحساب برمجياً وتحرير عملات Pi للمحفظة الأصلية.");
-        } else {
-            throw new Error("فشل في آلية المقاصة الخطية لفك القفل التدريجي");
+        if (yerAmount <= 0n || piCollateral <= 0n) {
+            return { success: false, error: "INVALID_MONETARY_VALUES" };
         }
 
-        console.log("\n✅ نجاح الاختبار المتكامل: كافة الهياكل متوافقة مع شروط اليونيسف والـ Open Source!");
-        return true;
-    } catch (error) {
-        console.error("❌ فشل الاختبار بسبب عدم تطابق الأنواع المالية:", error.message);
-        return false;
+        // هيكل القرض الاجتماعي لـ "صندوق النسر العربي" (خالٍ تماماً من الفوائد الربوية)
+        const loanStructure = {
+            loanId: loanId,
+            borrower: borrowerWallet,
+            amountYER: yerAmount,
+            collateralPi: piCollateral,
+            status: "LOCKED_AND_FUNDED", 
+            repaidAmountYER: 0n,
+            createdAt: Date.now()
+        };
+
+        this.loans.set(loanId, loanStructure);
+        return { 
+            success: true, 
+            message: `تم تفعيل تمويل صندوق النسر العربي بنجاح. حجز ${piCollateralAmount} Pi وإصدار ${loanAmountInYer} YER` 
+        };
+    },
+
+    // 2. معالجة سداد القرض تدريجياً والإفراج عن ضمان الـ Pi
+    processLoanRepayment: function(loanId, paymentAmountInYer) {
+        if (!this.loans.has(loanId)) {
+            return { success: false, error: "LOAN_NOT_FOUND" };
+        }
+
+        const loan = this.loans.get(loanId);
+        const paymentYER = BigInt(paymentAmountInYer) * this.yerScale;
+
+        loan.repaidAmountYER += paymentYER;
+
+        // عند اكتمال السداد، يفرج العقد تلقائياً وبشكل لامركزي عن نسر الضمان (Pi) للمواطن
+        if (loan.repaidAmountYER >= loan.amountYER) {
+            loan.status = "COLLATERAL_RELEASED";
+            return { 
+                success: true, 
+                status: loan.status, 
+                message: "تم سداد القرض الحسن بالكامل لصندوق النسر العربي! تم تحرير عملات Pi للعميل بنجاح." 
+            };
+        }
+
+        return {
+            success: true,
+            status: loan.status,
+            remainingYER: ((loan.amountYER - loan.repaidAmountYER) / this.yerScale).toString()
+        };
     }
 };
 
-// تشغيل الفحص تلقائياً عند استدعاء الملف
-mockEcosystemTest();
+module.exports = ArabEagleLoanCollateralGuard;

@@ -1,23 +1,28 @@
 {
   "name": "bigish-yer",
-  "version": "1.0.2",
-  "description": "BIGISH-YER Hybrid Payment Ecosystem - UNICEF Innovation Fund",
+  "version": "1.0.0",
+  "description": "BIGISH-YER: Sovereign Tokenized Asset Infrastructure for Yemen (Sandbox/Testnet)",
   "main": "app.js",
   "scripts": {
     "start": "node app.js",
-    "test": "jest --testPathIgnorePatterns='tests/.*' __tests__"
+    "build": "exit 0",
+    "test": "jest --runInBand",
+    "lint": "echo 'No linter configured' && exit 0"
   },
   "dependencies": {
-    "express": "^4.19.2",
+    "axios": "^1.7.7",
     "cors": "^2.8.5",
-    "axios": "^1.7.2",
-    "dotenv": "^16.4.5"
+    "dotenv": "^16.4.5",
+    "express": "^4.21.1"
   },
   "devDependencies": {
     "jest": "^29.7.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "jest": {
+    "testMatch": ["<rootDir>/__tests__/**/*.test.js"],
+    "testPathIgnorePatterns": ["/node_modules/"]
   }
 }
-"scripts": {
-  "test": "node app.js"
-
-

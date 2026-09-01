@@ -14,7 +14,6 @@ function runSovereignTestSandbox() {
     const loanAmountYER = 5000n * yerScale;
     const collateralPi = 15n * piScale;
 
-    // التحقق من صحة القيم المالية
     if (loanAmountYER <= 0n || collateralPi <= 0n) {
       throw new Error("القيم المالية لا تطابق معايير النزاهة");
     }
@@ -32,7 +31,7 @@ function runSovereignTestSandbox() {
   }
 }
 
-// إنشاء خادم الويب المصغر المتوافق مع بيئة Vercel
+// إنشاء خادم الويب المصغر
 const server = http.createServer((req, res) => {
   const result = runSovereignTestSandbox();
 
@@ -43,12 +42,12 @@ const server = http.createServer((req, res) => {
   res.end(JSON.stringify({
     project: "منظومة الريال الرقمي اليمني - أفق 2030",
     institution: "صندوق النسر العربي السيادي (A.E.C)",
-    sandbox_compliance: "VERIFIED_SANDBOX_ONLY",    // ✅ تم تعديله: إزالة ادعاء unicef_compliance
+    sandbox_compliance: "VERIFIED_SANDBOX_ONLY",
     validation_results: result
   }, null, 2));
 });
 
-// تشغيل الخادم على المنفذ الافتراضي للبيئة
+// تشغيل الخادم
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);

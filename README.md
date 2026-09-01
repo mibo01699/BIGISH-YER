@@ -67,7 +67,6 @@ Led by **Mayass Ali**, BIGISH-YER coordinates clearings across nine specialized 
 Run macroeconomic telemetry simulation:
 ```bash
 python simulation.py
-
 # BIGISH-YER
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -76,3 +75,38 @@ python simulation.py
 
 > **⚠️ Important:** This is a **sandbox/testnet-only prototype**.  
 > It does **NOT** claim official certification or funding from any organization.
+
+---
+
+## 📖 نبذة
+
+**BIGISH-YER** هي البنية التحتية السيادية للعملات الرقمية المرمزة (Tokenized Assets) المصممة لدعم التسوية المالية والمجتمع في اليمن والمنطقة العربية.
+
+---
+
+## 🪙 الاقتصاد الرقمي (Tokenomics)
+
+- الحد الأقصى للعرض: **300,000,000 YER**
+  - المجتمع/المنفعة العامة: **30,000,000** (10%)
+  - الإطلاق والنظام البيئي/السيولة: **90,000,000** (30%)
+  - الاحتياطي السيادي: **180,000,000** (60%)
+
+جميع العمليات الحسابية تستخدم **BigInt** للحفاظ على الدقة المالية.
+
+---
+
+## 🔌 نقاط النهاية (Endpoints)
+
+| المسار | الوصف |
+|--------|-------|
+| `/` | اختبار صحة المنظومة وعرض حالة الامتثال |
+
+---
+
+## 🛠️ التثبيت والتشغيل
+
+```bash
+git clone https://github.com/mibo01699/BIGISH-YER.git
+cd BIGISH-YER
+npm install
+npm start

@@ -1,10 +1,11 @@
-// app.js - بوابة المقاصة السيادية والويب لصندوق النسر العربي والريال الرقمي
+// app.js - البوابة السيادية الموحدة لصندوق النسر العربي
+// يعمل حصريًا في بيئة Sandbox/Testnet
 
 const http = require('http');
 
 /**
  * اختبار الصندوق السيادي في بيئة الحماية (Sandbox)
- * يستخدم BigInt حصرياً للحفاظ على الدقة المالية
+ * يستخدم BigInt حصريًا للحفاظ على الدقة المالية
  */
 function runSovereignTestSandbox() {
   try {
@@ -31,7 +32,7 @@ function runSovereignTestSandbox() {
   }
 }
 
-// إنشاء خادم الويب المصغر
+// خادم الويب المتوافق مع Vercel
 const server = http.createServer((req, res) => {
   const result = runSovereignTestSandbox();
 
@@ -42,7 +43,7 @@ const server = http.createServer((req, res) => {
   res.end(JSON.stringify({
     project: "منظومة الريال الرقمي اليمني - أفق 2030",
     institution: "صندوق النسر العربي السيادي (A.E.C)",
-    sandbox_compliance: "VERIFIED_SANDBOX_ONLY",
+    sandbox_compliance: "VERIFIED_SANDBOX_ONLY",    // ✅ تم إزالة ادعاء UNICEF
     validation_results: result
   }, null, 2));
 });

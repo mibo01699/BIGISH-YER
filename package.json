@@ -20,9 +20,6 @@
   },
   "engines": {
     "node": ">=18.0.0"
-"scripts": {
-  "build": "exit 0"
-}
   },
   "jest": {
     "testMatch": ["<rootDir>/__tests__/**/*.test.js"],

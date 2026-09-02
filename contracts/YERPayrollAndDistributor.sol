@@ -11,6 +11,8 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
  * 
  * ملاحظة: هذا العقد مخصص للتوزيع فقط، ويجب أن يتوافق مع سقف الـ 300M YER.
  * الدقة المعتمدة: 10 خانات عشرية (كما في YERTokenomicsCanonical).
+ * 
+ * تم التحديث: منع توزيع حصة الجمهور (COMMUNITY) قبل تفعيل الإطلاق.
  */
 contract YERPayrollAndDistributor is AccessControl, ReentrancyGuard {
     using SafeERC20 for IERC20;
@@ -20,18 +22,20 @@ contract YERPayrollAndDistributor is AccessControl, ReentrancyGuard {
     IERC20 public immutable yerToken;
     
     // سقف المعروض الأقصى: 300M * 10^10 (للدقة)
-    uint256 public constant MAX_SUPPLY = 300_000_000 * 10**10; // 300,000,000 YER
-
-    // إجمالي ما تم توزيعه حتى الآن (لمنع تجاوز السقف)
+    uint256 public constant MAX_SUPPLY = 300_000_000 * 10**10;
     uint256 public totalDistributed;
 
-    // الحد الأقصى للتوزيع لكل فئة (حسب التوزيع الإلزامي)
-    uint256 public constant COMMUNITY_CAP = 30_000_000 * 10**10;   // 30M
-    uint256 public constant ECOSYSTEM_CAP = 90_000_000 * 10**10;   // 90M
-    uint256 public constant RESERVE_CAP = 180_000_000 * 10**10;    // 180M
+    // حدود الفئات (حسب التوزيع الإلزامي)
+    uint256 public constant COMMUNITY_CAP = 30_000_000 * 10**10;   // 10% - مؤجل
+    uint256 public constant ECOSYSTEM_CAP = 90_000_000 * 10**10;   // 30% - متاح دائماً
+    uint256 public constant RESERVE_CAP = 180_000_000 * 10**10;    // 60%
+
+    // ✅ متغير جديد: التحكم في تفعيل توزيع الجمهور
+    bool public isCommunityReleaseEnabled;
 
     event BatchDistributed(address indexed operator, uint256 totalRecipients, uint256 totalAmount);
     event EmergencyWithdrawal(address indexed admin, address indexed token, uint256 amount);
+    event LaunchpadActivated(address indexed admin);
 
     error ArrayLengthMismatch();
     error EmptyArray();
@@ -39,6 +43,7 @@ contract YERPayrollAndDistributor is AccessControl, ReentrancyGuard {
     error InvalidZeroAmount();
     error ExceedsMaxSupply();
     error ExceedsCategoryCap(string category);
+    error CommunityReleaseNotEnabled();
 
     constructor(address _yerToken, address admin) {
         if (_yerToken == address(0) || admin == address(0)) revert InvalidZeroAddress();
@@ -46,6 +51,15 @@ contract YERPayrollAndDistributor is AccessControl, ReentrancyGuard {
         yerToken = IERC20(_yerToken);
         _grantRole(DEFAULT_ADMIN_ROLE, admin);
         _grantRole(DISTRIBUTOR_ROLE, admin);
+        isCommunityReleaseEnabled = false; // يبدأ معطلاً
+    }
+
+    /**
+     * @notice تفعيل الإطلاق (يتم استدعاؤه من قبل الإدارة بعد نجاح الإطلاق)
+     */
+    function activateLaunchpad() external onlyRole(DEFAULT_ADMIN_ROLE) {
+        isCommunityReleaseEnabled = true;
+        emit LaunchpadActivated(msg.sender);
     }
 
     /**
@@ -61,49 +75,41 @@ contract YERPayrollAndDistributor is AccessControl, ReentrancyGuard {
         if (length == 0) revert EmptyArray();
         if (length != amounts.length) revert ArrayLengthMismatch();
 
-        // حساب مجموع المبالغ المطلوبة
         uint256 totalSum = 0;
         for (uint256 i = 0; i < length; ) {
             if (recipients[i] == address(0)) revert InvalidZeroAddress();
             if (amounts[i] == 0) revert InvalidZeroAmount();
             totalSum += amounts[i];
-            
-            unchecked {
-                ++i;
-            }
+            unchecked { ++i; }
         }
 
-        // التحقق من عدم تجاوز السقف الكلي (300M)
         if (totalDistributed + totalSum > MAX_SUPPLY) revert ExceedsMaxSupply();
 
-        // التحقق من عدم تجاوز سقف الفئة
-        if (keccak256(bytes(category)) == keccak256(bytes("COMMUNITY"))) {
+        // ✅ التحقق من الفئة مع مراعاة حالة الإطلاق
+        bytes32 categoryHash = keccak256(bytes(category));
+        
+        if (categoryHash == keccak256(bytes("COMMUNITY"))) {
+            // ⛔ منع توزيع الجمهور إذا لم يتم تفعيل الإطلاق
+            if (!isCommunityReleaseEnabled) revert CommunityReleaseNotEnabled();
             if (totalDistributed + totalSum > COMMUNITY_CAP) revert ExceedsCategoryCap("COMMUNITY");
-        } else if (keccak256(bytes(category)) == keccak256(bytes("ECOSYSTEM"))) {
+        } else if (categoryHash == keccak256(bytes("ECOSYSTEM"))) {
+            // ✅ حصة الإطلاق (30%) متاحة دائماً
             if (totalDistributed + totalSum > ECOSYSTEM_CAP) revert ExceedsCategoryCap("ECOSYSTEM");
-        } else if (keccak256(bytes(category)) == keccak256(bytes("RESERVE"))) {
+        } else if (categoryHash == keccak256(bytes("RESERVE"))) {
             if (totalDistributed + totalSum > RESERVE_CAP) revert ExceedsCategoryCap("RESERVE");
         } else {
             revert("Invalid category");
         }
 
-        // تنفيذ التوزيع
         for (uint256 i = 0; i < length; ) {
             yerToken.safeTransferFrom(msg.sender, recipients[i], amounts[i]);
-            unchecked {
-                ++i;
-            }
+            unchecked { ++i; }
         }
 
-        // تحديث الإجمالي الموزع
         totalDistributed += totalSum;
-
         emit BatchDistributed(msg.sender, length, totalSum);
     }
 
-    /**
-     * @notice Emergency withdraw Stuck Tokens in contract.
-     */
     function emergencyWithdrawToken(
         address token,
         address to,
@@ -111,7 +117,6 @@ contract YERPayrollAndDistributor is AccessControl, ReentrancyGuard {
     ) external onlyRole(DEFAULT_ADMIN_ROLE) nonReentrant {
         if (to == address(0) || token == address(0)) revert InvalidZeroAddress();
         if (amount == 0) revert InvalidZeroAmount();
-
         IERC20(token).safeTransfer(to, amount);
         emit EmergencyWithdrawal(msg.sender, token, amount);
     }

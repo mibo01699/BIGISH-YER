@@ -1,7 +1,6 @@
 // app.js - البوابة السيادية الموحدة لصندوق النسر العربي
 // يعمل حصريًا في بيئة Sandbox/Testnet
-
-const http = require('http');
+// متوافق مع Vercel Serverless Functions
 
 /**
  * اختبار الصندوق السيادي في بيئة الحماية (Sandbox)
@@ -32,8 +31,8 @@ function runSovereignTestSandbox() {
   }
 }
 
-// خادم الويب المتوافق مع Vercel
-const server = http.createServer((req, res) => {
+// دالة Vercel Serverless (المصدرة مباشرة)
+module.exports = (req, res) => {
   const result = runSovereignTestSandbox();
 
   res.writeHead(200, {
@@ -43,15 +42,7 @@ const server = http.createServer((req, res) => {
   res.end(JSON.stringify({
     project: "منظومة الريال الرقمي اليمني - أفق 2030",
     institution: "صندوق النسر العربي السيادي (A.E.C)",
-    sandbox_compliance: "VERIFIED_SANDBOX_ONLY",    // ✅ تم إزالة ادعاء UNICEF
+    sandbox_compliance: "VERIFIED_SANDBOX_ONLY",
     validation_results: result
   }, null, 2));
-});
-
-// تشغيل الخادم
-const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-});
-
-module.exports = server;
+};

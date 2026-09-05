@@ -42,3 +42,14 @@ const app = express();
 app.use(helmet());
 
 // باقي الكود...
+const rateLimit = require('express-rate-limit');
+
+// تحديد معدل الطلبات
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 دقيقة
+  max: 100 // حد أقصى 100 طلب لكل IP
+});
+
+app.use('/api/', limiter);
+
+// باقي الكود...

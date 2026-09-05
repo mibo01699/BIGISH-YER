@@ -1,29 +1,49 @@
 {
   "name": "bigish-yer",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "BIGISH-YER — الطبقة المالية الأساسية لمنظومة النسر العربي",
   "main": "app.js",
+  "private": true,
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mibo01699/BIGISH-YER.git"
+  },
   "scripts": {
     "start": "node app.js",
+    "dev": "node --watch app.js",
     "test": "jest --runInBand",
-    "build": "exit 0"
+    "test:coverage": "jest --runInBand --coverage",
+    "build": "node -e \"require('./app.js'); console.log('build ok')\""
   },
   "dependencies": {
-    "express": "^4.21.1",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
-    "helmet": "^7.1.0",
-    "express-rate-limit": "^7.1.5"
+    "express": "^4.21.1",
+    "express-rate-limit": "^7.5.1",
+    "express-validator": "^7.3.2",
+    "helmet": "^8.3.0",
+    "morgan": "^1.12.0"
   },
   "devDependencies": {
-    "jest": "^29.7.0"
+    "jest": "^29.7.0",
+    "supertest": "^7.2.2"
   },
   "jest": {
+    "testEnvironment": "node",
     "testMatch": [
       "**/__tests__/**/*.test.js"
+    ],
+    "collectCoverageFrom": [
+      "app.js",
+      "lib/**/*.js",
+      "middleware/**/*.js",
+      "routes/**/*.js",
+      "src/pi/**/*.js",
+      "YERTokenomicsCanonical.js"
     ]
   },
   "engines": {
-    "node": ">=18.0.0"
+    "node": ">=20.0.0"
   }
 }

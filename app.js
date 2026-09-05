@@ -33,3 +33,12 @@ app.get('/api/status', (req, res) => {
 
 // تصدير التطبيق لـ Vercel
 module.exports = app;
+const express = require('express');
+const cors = require('cors');
+const helmet = require('helmet');
+const app = express();
+
+// استخدام Helmet
+app.use(helmet());
+
+// باقي الكود...

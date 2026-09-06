@@ -4,19 +4,11 @@
     {
       "src": "app.js",
       "use": "@vercel/node",
-      "config": {
-        "runtime": "nodejs18.x"
-      }
+      "config": { "runtime": "nodejs18.x" }
     }
   ],
   "routes": [
-    {
-      "src": "/api/(.*)",
-      "dest": "/app.js"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/app.js"
-    }
+    { "src": "/api/(.*)", "dest": "/app.js" },
+    { "src": "/(.*)", "dest": "/app.js" }
   ]
 }

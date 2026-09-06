@@ -1,33 +1,18 @@
-/**
- * اختبارات YER Tokenomics
- * للتحقق من صحة التوزيعات والنسب المئوية
- */
+// tests__/unit/tokenomics.test.js
+const tokenomics = require('../../YERTokenomicsCanonical');
 
-const YERTokenomics = require('../YERTokenomicsCanonical');
-
-describe('YERTokenomics', () => {
-  let tokenomics;
-
-  beforeEach(() => {
-    tokenomics = new YERTokenomics();
+describe('YER Tokenomics', () => {
+  test('Supply is 300,000,000', () => {
+    expect(tokenomics.YER_SUPPLY).toBe(300000000);
   });
 
-  test('should return correct allocations', () => {
-    const allocations = tokenomics.getAllocations();
-
-    expect(allocations.community).toBe(30000000);   // 10%
-    expect(allocations.ecosystem).toBe(90000000);   // 30%
-    expect(allocations.reserve).toBe(180000000);    // 60%
-
-    const total = allocations.community + allocations.ecosystem + allocations.reserve;
-    expect(total).toBe(300000000); // 100%
+  test('Precision is 10', () => {
+    expect(tokenomics.PRECISION).toBe(10);
   });
 
-  test('should validate percentages correctly', () => {
-    expect(tokenomics.validatePercentages()).toBe(true);
-  });
-
-  test('should have correct maximum supply', () => {
-    expect(tokenomics.MAX_SUPPLY).toBe(300000000);
+  test('Allocations sum to 100%', () => {
+    const allocations = tokenomics.ALLOCATIONS;
+    const total = Object.values(allocations).reduce((sum, a) => sum + a.percentage, 0);
+    expect(total).toBe(100);
   });
 });

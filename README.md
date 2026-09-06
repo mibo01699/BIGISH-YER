@@ -1,175 +1,232 @@
-# BIGISH-YER: Macroeconomic Stabilization & Sovereign Tokenized Asset Infrastructure for Yemen
+# BIGISH-YER API
 
-[![Ecosystem Status](https://shields.io)](#)
-[![Compliance](https://shields.io)](#)
-[![License](https://shields.io)](LICENSE)
-[![Standards](https://shields.io)](#)
+## نظرة عامة
 
-This repository implements **Research Papers No. 11046 and No. 11129 (Published via EasyChair)**, providing a sovereign Web3 public utility to address Yemen's liquidity and hyperinflation crises by deploying the **Tokenized YER Asset** on a **Pi-Compatible Adapter (Testnet-first)**.
+BIGISH-YER هي الخدمة المالية الأساسية في منظومة Arabian Eagle A.E.C. تدير عملة YER، وتنفذ المعاملات، وتطبق قواعد منع التكرار (Idempotency)، وتحتوي على محركات داخلية للتسوية السيادية، والتبادل اللامركزي، والتعدين الديناميكي، وغيرها.
 
----
-
-## 🌐 Vision & Institutional Compliance
-
-The platform uses transparent **On-Chain Tokenized Asset Infrastructure** to ensure anti-corruption and absolute auditability for humanitarian aid and payrolls.  
-> **Note:** This project operates as a **Digital Public Good (DPG)** prototype. It does **NOT** claim any official partnership, certification, or funding from UNICEF, Mercy Corps, or the Pi Network Core Team.
-
-### 🛡️ Core Architecture Safeguards
-1. **Zero Floating-Point Constraint**: Uses fixed-point **Strict BigInt Arithmetic** (Pi Network scale: 7 decimals; YER token scale: 10 decimals).
-2. **Strict Ecosystem Demarcation**: Operates inside a **Sandbox/Testnet-only adapter** without assuming unverified Mainnet DEX availability.
+**الوضع الحالي:** الخدمة تعمل على بيئة الاختبار (Testnet). لا توجد معاملات حقيقية. بعض المحركات جاهزة ولكنها غير مربوطة بنقاط نهاية بعد (سيتم ربطها في المراحل القادمة).
 
 ---
 
-## ⚡ Ecosystem Integration Matrix (The Nine Protocols)
+## هيكل المشروع (المحركات الداخلية)
 
-Led by **Mayass Ali**, BIGISH-YER coordinates clearings across nine specialized nodes within the **Arabian Eagle Ecosystem (A.E.C.)**:
-1. **BIGISH-YER**: Core ledger, wallet management, and supply management.
-2. **COBRA-Protocol**: Emergency broadband channels and telemetry.
-3. **Be-well Platform**: Healthcare utility accounts and biomedical alerts.
-4. **suppliers-auction Node**: Industrial procurement and split-bidding.
-5. **AJYAL Framework**: Localized transactions and digital payrolls.
-6. **GAV-The-Incense-Route**: Geopolitical supply line asset routing.
-7. **AMAN-Protocol**: Decentralized smart insurance and programmatic payouts.
-8. **Telecom-Mobile-Protocol**: A decentralized, sovereign communications platform. It offers integrated solutions for real virtual numbers and unblockable encrypted messaging. The platform enables account activation and high-quality international calling.
-9. **Arab-Eagle-Sovereign-Fund-A.E.C.**: The Arab Eagle Sovereign Fund (A.E.C.) is a sovereign financial institution offering financing services, microloans, and interest-free credit management.
+الخدمة مبنية على مجموعة من المحركات المستقلة، كل محرك مسؤول عن وظيفة محددة:
 
----
+| الملف | الوظيفة |
+|-------|---------|
+| `YERTokenomicsCanonical.js` | البيانات الثابتة لعملة YER (العرض، التوزيع، الدقة). يتحقق من صحة المجموع فور تحميله. |
+| `AntiDoubleDippingEngine.js` | منع تنفيذ نفس المعاملة مرتين (Idempotency). يُستخدم في نقاط النهاية المالية. |
+| `SovereignClearingGuard.js` | محرك للتسوية السيادية، يتحقق من صحة المعاملات قبل التنفيذ. |
+| `PiYerAMMExchange.js` | محرك للتبادل اللامركزي بين Pi و YER (غير مفعّل بعد). |
+| `DynamicMiningGovernor.js` | محرك للتحكم في التعدين الديناميكي (غير مفعّل بعد). |
+| `AjyalSmartAidEngine.js` | محرك خاص ببروتوكول AJYAL (التعليم والشباب). |
+| `CobraIntentVerificator.js` | محرك خاص ببروتوكول COBRA (الاستجابة للكوارث). |
+| `GavAiSupportSystem.js` | محرك خاص ببروتوكول GAV (الحوكمة والتصويت). |
+| `AmanBeWellEngine.js` | محرك خاص ببروتوكول AMAN و Be-Well (الأمن والصحة). |
+| `HybridClearingProcessor.js` | معالج تسوية هجين يدمج بين عدة محركات. |
 
-## 🛠️ Cleansed & Optimized File Mapping
-
-* **`app.js`**: Unified entry point exposing zero floating-point clearing loops.
-* **`PiYerAMMExchange.js`**: DEX Pi constant product formula with a 3% Max Slippage Guard.
-* **`SovereignClearingGuard.js`**: Maps identity to a **Supported Integration Status (Sandbox)** – no claim of accessing Pi KYC.
-* **`AntiDoubleDippingEngine.js`**: Atomic concurrency lock for bulk aid clearing.
-* **`package.json`**: Stable dependency manifests and test commands (`npm test`).
+**ملاحظة:** المحركات المذكورة أعلاه (ما عدا الثلاثة الأولى) ليست مربوطة بنقاط نهاية حالياً، ولكنها موجودة وجاهزة للتكامل في المراحل القادمة.
 
 ---
 
-# BIGISH-YER: Macroeconomic Stabilization & Sovereign Tokenized Asset Infrastructure for Yemen
+## نقاط النهاية المتاحة حالياً
 
-## 📊 Core Tokenomics & Network Alignment
-* **Sovereign Token Asset:** Yemen Economic Recovery Token (YER)
-* **Fixed Maximum Supply:** **300,000,000 YER** (Strictly unified across all ecosystem repositories)
-* **Allocation:**
-  - 10% = 30,000,000 YER (Community & Public Utility)
-  - 30% = 90,000,000 YER (Ecosystem Launch & Liquidity)
-  - 60% = 180,000,000 YER (A.E.C Sovereign Fund Reserve)
-* **Precision Scale:** Fixed-point Strict BigInt Arithmetic (YER: 10 decimals; Pi: 7 decimals)
-* **Network Target:** Testnet-first validation environment
+جميع النقاط تبدأ بـ `/api`.
 
-## 🛡️ Architectural & Valuation Safeguards
-1. **Strict Zero-Float Constraint:** All financial clearing loops operate exclusively on precise micro-units using integer mathematics. The use of floating-point numbers or float-to-int transformations (`Math.floor`) is completely deprecated.
-2. **Global Consensus Value (GCV) Policy:** GCV (314,159) is explicitly classified as a **Community/Internal Pricing Reference only**. It is NOT an official Pi Network Core Team valuation.
-3. **Ledger Operational Model:** Operates as a **Hybrid Clearing Gateway Middleware**. On-chain settlement is routed through authorized **sandboxes**, ensuring data integrity without assuming unverified Mainnet DEX availability.
-
-## 📊 Run & Test
-
-Run macroeconomic telemetry simulation:
-```bash
-python simulation.py
-
-
-# BIGISH-YER
-
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Node.js](https://img.shields.io/badge/Node.js-18.x-green.svg)](https://nodejs.org/)
-[![Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black.svg)](https://vercel.com/)
-
-> **⚠️ Important:** This is a **sandbox/testnet-only prototype**.  
-> It does **NOT** claim official certification or funding from any organization.
+| الطريقة | المسار | الوصف |
+|---------|--------|-------|
+| GET | `/api/health` | التأكد من أن الخدمة تعمل |
+| GET | `/api/tokenomics` | عرض بيانات YER الأساسية |
+| POST | `/api/transactions` | تنفيذ تحويل YER مع منع التكرار |
+| GET | `/api/transactions/:key` | استرجاع معاملة سابقة باستخدام المفتاح |
+| GET | `/api/balance/:address` | الاستعلام عن رصيد عنوان |
 
 ---
 
-## 📖 نبذة
+## 1. فحص الصحة
 
-**BIGISH-YER** هي البنية التحتية السيادية للعملات الرقمية المرمزة (Tokenized Assets) المصممة لدعم التسوية المالية والمجتمع في اليمن والمنطقة العربية.
+**`GET /api/health`**
 
----
+يستخدمه Gateway للتحقق من أن BIGISH-YER متاحة.
 
-## 🪙 الاقتصاد الرقمي (Tokenomics)
+**الرد:**
 
-- الحد الأقصى للعرض: **300,000,000 YER**
-  - المجتمع/المنفعة العامة: **30,000,000** (10%)
-  - الإطلاق والنظام البيئي/السيولة: **90,000,000** (30%)
-  - الاحتياطي السيادي: **180,000,000** (60%)
-
-جميع العمليات الحسابية تستخدم **BigInt** للحفاظ على الدقة المالية.
-
----
-
-## 🔌 نقاط النهاية (Endpoints)
-
-| المسار | الوصف |
-|--------|-------|
-| `/` | اختبار صحة المنظومة وعرض حالة الامتثال |
-
----
-
-## 🛠️ التثبيت والتشغيل
-
-```bash
-git clone https://github.com/mibo01699/BIGISH-YER.git
-cd BIGISH-YER
-npm install
-npm start
+```json
+{
+  "status": "ok",
+  "service": "bigish-yer",
+  "version": "0.2.0",
+  "environment": "testnet"
+}
 ```
 
 ---
 
-🧪 الاختبارات
+2. بيانات YER الأساسية
+
+GET /api/tokenomics
+
+يعرض المعلومات الثابتة لعملة YER كما هي محددة في YERTokenomicsCanonical.js.
+
+الرد:
+
+```json
+{
+  "supply": 300000000,
+  "precision": 10,
+  "allocations": {
+    "community": { "percentage": 10, "amount": 30000000 },
+    "ecosystem": { "percentage": 30, "amount": 90000000 },
+    "reserve": { "percentage": 60, "amount": 180000000 }
+  },
+  "totalPercentage": 100,
+  "status": "LAUNCHPAD_PENDING"
+}
+```
+
+القيم ثابتة ولا تتغير. أي محاولة لتغييرها ستؤدي إلى فشل الاختبارات.
+
+---
+
+3. تنفيذ تحويل YER
+
+POST /api/transactions
+
+ينفذ تحويلاً بين حسابين. يستخدم AntiDoubleDippingEngine لمنع التكرار، ويمرر المعاملة عبر SovereignClearingGuard للتحقق من صحتها.
+
+الرؤوس المطلوبة:
+
+الرأس القيمة
+Idempotency-Key قيمة فريدة (مثل UUID)
+Content-Type application/json
+
+محتوى الطلب:
+
+```json
+{
+  "source": "عنوان المرسل",
+  "destination": "عنوان المستقبل",
+  "amount": 100.5,
+  "currency": "YER"
+}
+```
+
+الردود:
+
+الحالة المعنى
+201 تمت المعاملة بنجاح
+400 خطأ في البيانات (رصيد غير كافٍ، مبلغ غير صحيح، عملة غير مدعومة)
+409 مفتاح Idempotency مستخدم مسبقاً (معاملة مكررة)
+
+مثال الرد الناجح:
+
+```json
+{
+  "message": "Transaction completed successfully",
+  "transaction": {
+    "id": "550e8400-e29b-41d4-a716-446655440000",
+    "idempotencyKey": "abc-123",
+    "source": "address1",
+    "destination": "address2",
+    "amount": 100.5,
+    "currency": "YER",
+    "status": "completed",
+    "timestamp": "2025-04-06T12:00:00.000Z",
+    "clearedBy": "SovereignGuard"
+  }
+}
+```
+
+---
+
+4. استرجاع معاملة سابقة
+
+GET /api/transactions/:key
+
+يستخدم لاسترجاع تفاصيل معاملة باستخدام مفتاحها الفريد.
+
+مثال: GET /api/transactions/abc-123
+
+الردود:
+
+· 200: تعيد تفاصيل المعاملة
+· 404: المفتاح غير موجود
+
+---
+
+5. الاستعلام عن رصيد عنوان
+
+GET /api/balance/:address
+
+يعيد رصيد عنوان معين بوحدة YER.
+
+مثال: GET /api/balance/test_source
+
+الرد:
+
+```json
+{
+  "address": "test_source",
+  "balance": 9850.0,
+  "currency": "YER"
+}
+```
+
+---
+
+أمثلة باستخدام cURL
 
 ```bash
-npm test
+# فحص الصحة
+curl http://localhost:3001/api/health
+
+# عرض التوكنوميكس
+curl http://localhost:3001/api/tokenomics
+
+# تحويل 10 YER
+curl -X POST http://localhost:3001/api/transactions \
+  -H "Idempotency-Key: test-123" \
+  -H "Content-Type: application/json" \
+  -d '{"source":"test_source","destination":"dest","amount":10,"currency":"YER"}'
+
+# الاستعلام عن معاملة
+curl http://localhost:3001/api/transactions/test-123
+
+# الاستعلام عن الرصيد
+curl http://localhost:3001/api/balance/test_source
 ```
 
 ---
 
-⚠️ إخلاء المسؤولية
+القيود الفنية الحالية (يجب أن يكون الجمهور على دراية بها)
 
-هذا المشروع هو نموذج أولي يعمل فقط في بيئة الحماية (Sandbox/Testnet).
-لا يدعي أي شراكة رسمية أو تمويل أو اعتماد من أي جهة، بما في ذلك UNICEF، Mercy Corps، أو Pi Network Core Team.
-
----
-
-🦅 Developed by Arabian Eagle Technology Group
-
-```
+· التخزين المؤقت: جميع المعاملات والأرصدة تُحفظ في الذاكرة فقط. إعادة تشغيل الخدمة تفقد البيانات.
+· لا تكامل مع Pi Network: المصادقة والمدفوعات عبر Pi غير مفعلة حالياً.
+· لا قاعدة بيانات: سيتم إضافتها في المرحلة القادمة.
+· المحركات غير المربوطة: AMM، التعدين الديناميكي، ومحركات البروتوكولات التسعة موجودة في الملفات ولكنها غير مربوطة بنقاط نهاية بعد.
 
 ---
 
-### 6. `WHITEPAPER.md` – نسخة منقحة (بدون ادعاءات UNICEF)
+الخريطة المستقبلية
 
-```markdown
-# BIGISH-YER: Sovereign Tokenized Asset Infrastructure
-
-**Version:** 1.0.0 (Sandbox/Testnet)
-
----
-
-## 🧭 نظرة عامة
-
-BIGISH-YER هي **بنية تحتية سيادية للأصول الرقمية المرمزة**، مصممة لدعم التسوية المالية، والمرافق المجتمعية، والمرونة الاقتصادية في اليمن والمنطقة العربية.
-
-> **Disclaimer:** This project is a **prototype** and operates **only** in a sandbox/testnet environment.  
-> It does **NOT** claim any official partnership, certification, or funding from UNICEF, Mercy Corps, or the Pi Network Core Team.
+المرحلة الميزة
+قادم ربط PiYerAMMExchange بنقطة نهاية للتبادل بين Pi و YER
+قادم ربط DynamicMiningGovernor لتوزيع المكافآت
+قادم ربط محركات AJYAL، COBRA، GAV، AMAN، Be-Well بنقاط نهاية خاصة
+قادم استبدال الذاكرة بقاعدة بيانات دائمة (PostgreSQL)
+قادم تكامل كامل مع Pi Developer Portal (App Wallet، المدفوعات)
 
 ---
 
-## 🪙 الاقتصاد الرقمي (Tokenomics)
+أمان
 
-- الحد الأقصى للعرض: **300,000,000 YER**
-  - المجتمع/المنفعة العامة: **30,000,000** (10%)
-  - الإطلاق والنظام البيئي/السيولة: **90,000,000** (30%)
-  - الاحتياطي السيادي: **180,000,000** (60%)
-
-جميع العمليات الحسابية تتم باستخدام **Strict BigInt Arithmetic** لاستبعاد أخطاء الفاصلة العائمة.
+· جميع نقاط النهاية محمية بـ helmet و cors و rate-limit.
+· لا يتم تخزين أي مفاتيح خاصة أو حساسة.
+· جميع الطلبات يجب أن تأتي عبر HTTPS في الإنتاج.
+· Idempotency-Key يُستخدم للتدقيق ومنع التكرار.
 
 ---
 
-## 🔗 التكامل مع Pi Network
-
-النظام يدعم التكامل مع Pi Network **في وضع الحماية (Sandbox)** لأغراض الاختبار فقط. لا يتم دعم عمليات Pi mainnet الحقيقية في هذه النسخة.
-
----
-
-**🦅 Developed by Arabian Eagle Technology Group**
+آخر تحديث: أبريل 2025
+الإصدار: 0.2.0
+البيئة: Testnet (لا توجد معاملات حقيقية)

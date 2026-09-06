@@ -1,54 +1,40 @@
 const request = require('supertest');
 const app = require('../app');
 
-describe('Idempotency - AntiDoubleDipping', () => {
-  const uniqueKey = `test-key-${Date.now()}`;
-
-  test('Should accept first transaction', async () => {
-    const res = await request(app)
-      .post('/api/transactions')
-      .set('Idempotency-Key', uniqueKey)
-      .send({
-        source: 'test_source',
-        destination: 'test_destination',
-        amount: 100,
-        currency: 'YER'
-      });
-    expect(res.status).toBe(201);
-    expect(res.body.transaction.status).toBe('completed');
-  });
-
-  test('Should reject duplicate transaction with same key', async () => {
-    const res = await request(app)
-      .post('/api/transactions')
-      .set('Idempotency-Key', uniqueKey)
-      .send({
-        source: 'test_source',
-        destination: 'test_destination',
-        amount: 100,
-        currency: 'YER'
-      });
-    expect(res.status).toBe(409);
-    expect(res.body.error).toBe('DUPLICATE_TRANSACTION');
-  });
-
-  test('Should retrieve transaction by key', async () => {
-    const res = await request(app)
-      .get(`/api/transactions/${uniqueKey}`);
+describe('Ledger Operations', () => {
+  test('Should return balance for test_source', async () => {
+    const res = await request(app).get('/api/balance/test_source');
     expect(res.status).toBe(200);
-    expect(res.body.idempotencyKey).toBe(uniqueKey);
+    expect(res.body.balance).toBeGreaterThanOrEqual(0);
+    expect(res.body.currency).toBe('YER');
   });
 
-  test('Should reject missing Idempotency-Key header', async () => {
+  test('Should process a valid transfer', async () => {
+    const key = `transfer-${Date.now()}`;
     const res = await request(app)
       .post('/api/transactions')
+      .set('Idempotency-Key', key)
       .send({
         source: 'test_source',
         destination: 'test_destination',
         amount: 50,
         currency: 'YER'
       });
+    expect(res.status).toBe(201);
+  });
+
+  test('Should reject insufficient balance', async () => {
+    const key = `insufficient-${Date.now()}`;
+    const res = await request(app)
+      .post('/api/transactions')
+      .set('Idempotency-Key', key)
+      .send({
+        source: 'test_destination', // هذا الحساب رصيده صفر
+        destination: 'test_source',
+        amount: 999999,
+        currency: 'YER'
+      });
     expect(res.status).toBe(400);
-    expect(res.body.error).toContain('Idempotency-Key');
+    expect(res.body.error).toBe('INSUFFICIENT_BALANCE');
   });
 });

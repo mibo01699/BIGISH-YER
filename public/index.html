@@ -1,105 +1,72 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>بوابة المقاصة السيادية التجريبية - BIGISH-YER (Sandbox)</title>
-    
-    <!-- Vercel Speed Insights -->
-    <script>
-      window.si = window.si || function () { (window.siq = window.siq || []).push(arguments); };
-    </script>
-    <script defer src="/_vercel/speed-insights/script.js"></script>
-    <style>
-        body { font-family: sans-serif; background: #0f0f1e; color: #fff; text-align: center; padding: 20px; }
-        .card { background: #1a1a2e; border: 1px solid #333; padding: 20px; border-radius: 12px; max-width: 450px; margin: 0 auto 20px auto; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
-        input, select, button { width: 90%; padding: 12px; margin: 10px 0; border-radius: 6px; border: none; font-size: 16px; }
-        input, select { background: #252542; color: #fff; box-sizing: border-box; }
-        button { font-weight: bold; cursor: pointer; transition: 0.2s; }
-        .btn-gold { background: gold; color: #000; }
-        .btn-green { background: #28a745; color: #fff; }
-        #qr-visual-container { margin: 15px auto; background: white; padding: 10px; display: inline-block; border-radius: 8px; }
-        .badge { display: inline-block; padding: 5px 10px; background: #007bff; border-radius: 4px; font-size: 12px; margin-top: 5px; }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BIGISH-YER Wallet</title>
+  <script src="https://sdk.minepi.com/pi-sdk.js"></script>
+  <style>
+    :root { --primary: #1a4d2e; --primary-light: #2d7a4a; --gold: #d4af37; --bg: #f5f7fa; }
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+    body { background: var(--bg); direction: rtl; min-height: 100vh; }
+    .top-bar { background: var(--primary); color: white; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; }
+    .logo { font-size: 1.2rem; font-weight: bold; }
+    .network-badge { font-size: 0.85rem; background: rgba(255,255,255,0.15); padding: 4px 10px; border-radius: 12px; }
+    .container { max-width: 600px; margin: 16px auto; padding: 0 12px; }
+    .card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.08); margin-bottom: 16px; }
+    .card h1, .card h2 { color: var(--primary); margin-bottom: 12px; }
+    button { background: linear-gradient(135deg, var(--primary), var(--primary-light)); color: white; border: none; padding: 14px 24px; border-radius: 30px; font-size: 1.1rem; font-weight: bold; cursor: pointer; width: 100%; margin-top: 12px; }
+    button:disabled { opacity: 0.6; cursor: not-allowed; }
+    .error { color: #e74c3c; margin-top: 10px; padding: 8px; background: #fdecea; border-radius: 6px; display: none; }
+    .balance-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 16px 0; }
+    .balance-item { background: #f8f9fa; padding: 16px; border-radius: 10px; text-align: center; }
+    .balance-item .label { display: block; font-size: 0.85rem; color: #888; margin-bottom: 6px; }
+    .balance-item .value { display: block; font-size: 1.5rem; font-weight: bold; color: var(--primary); }
+    .status-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #eee; }
+    .badge { padding: 4px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: bold; }
+    .badge.pending { background: #fff3cd; color: #856404; }
+    .badge.online { background: #d4edda; color: #155724; }
+  </style>
 </head>
 <body>
-
-    <h2>🦅 منظومة الصقر العربي للمقاصة السيادية (وضع المحاكاة)</h2>
-    <p>نسخة تجريبية (Sandbox) - لا توجد أي علاقة رسمية مع Pi Network أو UNICEF</p>
-
-    <!-- بطاقة توليد رمز QR للاستلام -->
-    <div class="card">
-        <h3>📥 طلب استلام فوري (توليد QR)</h3>
-        <!-- تم إزالة step="any" لمنع الإدخال العشري غير الدقيق -->
-        <input type="text" id="ui-amount" placeholder="أدخل المبلغ (أرقام صحيحة فقط)" pattern="[0-9]+">
-        <select id="ui-currency">
-            <option value="YER">YER Token (محاكاة)</option>
-            <option value="Pi">Pi Coin (محاكاة)</option>
-        </select>
-        <button class="btn-gold" onclick="actionGenerate()">إنشاء رمز QR تجريبي</button>
-        
-        <div id="qr-wrapper" style="display: none;">
-            <div id="qr-visual-container"></div>
-            <div style="font-size: 11px; color: #aaa; word-break: break-all; margin-top: 5px;" id="ui-string-payload"></div>
+  <header class="top-bar">
+    <div class="logo">🦅 BIGISH-YER</div>
+    <div class="network-badge" id="network-badge">Testnet</div>
+  </header>
+  <main class="container">
+    <section id="login-section" class="card">
+      <h1>محفظة BIGISH-YER</h1>
+      <p>محفظة دفع هجينة: Pi + YER</p>
+      <button id="login-btn">🚀 تسجيل الدخول بحساب Pi</button>
+      <div id="login-error" class="error"></div>
+    </section>
+    <section id="wallet-section" style="display:none;">
+      <div class="card">
+        <h2>مرحباً، <span id="user-name"></span></h2>
+        <p>معرف Pi: <span id="user-id"></span></p>
+      </div>
+      <div class="card">
+        <h2>💰 الرصيد</h2>
+        <div class="balance-grid">
+          <div class="balance-item"><span class="label">Pi</span><span class="value" id="pi-balance">0.00</span></div>
+          <div class="balance-item"><span class="label">YER</span><span class="value" id="yer-balance">0.00</span></div>
         </div>
-    </div>
-
-    <!-- بطاقة معالجة ودفع رمز QR الممسوح -->
-    <div class="card">
-        <h3>💸 مسح ودفع الفاتورة (محاكاة)</h3>
-        <input type="text" id="ui-scan-input" placeholder="الصق نص الـ PAYLOAD المشفر هنا">
-        <button class="btn-green" onclick="actionPay()">تأكيد المعاملة (محاكاة)</button>
-        <div id="ui-status-msg" style="margin-top: 15px; font-weight: bold; font-size: 15px;"></div>
-    </div>
-
-    <!-- استدعاء المحرك الصارم (نسخة متوافقة مع المتصفح) -->
-    <script src="qr_clearing_handler_browser.js"></script>
-    <script>
-        // محاولة إنشاء الكائن من الكلاس المتاح في المتصفح
-        // إذا كان الملف يستخدم module.exports، يجب تحميله كـ script وليس module
-        const engine = new QrClearingEngine();
-        const mySovereignWallet = "G-AEC-YEMEN-SQUE-2026-ACTIVE-METADATA";
-
-        function actionGenerate() {
-            const amt = document.getElementById('ui-amount').value;
-            const cur = document.getElementById('ui-currency').value;
-            const wrapper = document.getElementById('qr-wrapper');
-            const visual = document.getElementById('qr-visual-container');
-            const strOut = document.getElementById('ui-string-payload');
-            
-            try {
-                // 1. توليد السلسلة النصية المشفرة
-                const payload = engine.generateQrPayload(mySovereignWallet, amt, cur);
-                const fullPayloadString = `PAYLOAD:${payload}`;
-                
-                // 2. تصيير ورسم الـ QR كـ SVG رسومي (يعمل بدون إنترنت)
-                visual.innerHTML = engine.generateRawSvgHtml(fullPayloadString, 200);
-                strOut.innerText = fullPayloadString;
-                
-                wrapper.style.display = "block";
-                document.getElementById('ui-status-msg').style.color = "gold";
-                document.getElementById('ui-status-msg').innerText = "✅ تم إنشاء رمز QR تجريبي بنجاح!";
-            } catch (e) {
-                alert("خطأ: " + e.message);
-            }
-        }
-
-        function actionPay() {
-            const rawText = document.getElementById('ui-scan-input').value.replace("PAYLOAD:", "").trim();
-            const msg = document.getElementById('ui-status-msg');
-            
-            const receipt = engine.parseQrPayload(rawText);
-            if (receipt.success) {
-                msg.style.color = "#28a745";
-                msg.innerHTML = `🚀 تمت المعاملة (محاكاة)!<br>
-                                 <b>المبلغ:</b> ${receipt.rawAmount} ${receipt.currency}<br>
-                                 <b>إلى المحفظة:</b> <span style='font-size:11px;color:cyan;'>${receipt.receiver}</span><br>
-                                 <b>البروتوكول:</b> <span class='badge'>${receipt.node}</span>`;
-            } else {
-                msg.style.color = "#dc3545";
-                msg.innerText = `❌ فشل: ${receipt.error}`;
-            }
-        }
-    </script>
+      </div>
+      <div class="card">
+        <h2>💳 الدفع</h2>
+        <button id="pay-pi-btn">دفع بـ Pi فقط</button>
+        <button id="pay-yer-btn" style="margin-top:8px;">دفع بـ YER فقط</button>
+        <button id="pay-hybrid-btn" style="margin-top:8px; background: linear-gradient(135deg, #d4af37, #b8960c);">دفع هجين (Pi + YER)</button>
+      </div>
+      <div class="card">
+        <h2>📊 حالة النظام</h2>
+        <div class="status-row"><span>Pi Authentication</span><span class="badge online">نشط</span></div>
+        <div class="status-row"><span>Pi Payments</span><span class="badge pending">قيد التطوير</span></div>
+        <div class="status-row"><span>YER Token</span><span class="badge pending">قيد التطوير</span></div>
+      </div>
+    </section>
+  </main>
+  <script src="js/pi-config.js"></script>
+  <script src="js/app.js"></script>
 </body>
 </html>

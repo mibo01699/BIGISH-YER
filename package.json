@@ -1,11 +1,11 @@
 {
   "name": "bigish-yer",
   "version": "1.0.0",
-  "description": "BIGISH-YER Non-Custodial Hybrid Wallet - Pi + YER",
-  "main": "server.js",
+  "description": "BIGISH-YER Hybrid Wallet",
+  "main": "index.js",
   "scripts": {
-    "start": "node server.js",
-    "dev": "nodemon server.js"
+    "start": "node index.js",
+    "dev": "nodemon index.js"
   },
   "engines": {
     "node": "20.x"

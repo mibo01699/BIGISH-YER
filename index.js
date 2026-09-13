@@ -10,9 +10,15 @@ const NODE_ENV = process.env.NODE_ENV || 'development';
 const PI_API_KEY = process.env.PI_API_KEY || '';
 
 // ============================================
-// Middleware
+// Middleware - مُصحح ليتوافق مع Pi Browser
 // ============================================
-app.use(helmet({ contentSecurityPolicy: false }));
+app.use(helmet({
+  contentSecurityPolicy: false,
+  crossOriginEmbedderPolicy: false,
+  crossOriginResourcePolicy: { policy: "cross-origin" },
+  frameguard: false
+}));
+
 app.use(cors({ origin: process.env.CORS_ORIGIN || '*' }));
 app.use(express.json({ limit: '1mb' }));
 
@@ -133,6 +139,13 @@ app.post('/api/payments/hybrid', async (req, res) => {
 app.get('/api/balance/:uid', (req, res) => {
   const balance = ledger.balances[req.params.uid] || { Pi: 0, YER: 0 };
   res.json({ uid: req.params.uid, ...balance });
+});
+
+// ============================================
+// خدمة الواجهة الأمامية (index.html)
+// ============================================
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 // 404 Handler

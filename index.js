@@ -1,6 +1,5 @@
 const express = require('express');
 const cors = require('cors');
-const helmet = require('helmet');
 const path = require('path');
 require('dotenv').config();
 
@@ -10,16 +9,9 @@ const NODE_ENV = process.env.NODE_ENV || 'development';
 const PI_API_KEY = process.env.PI_API_KEY || '';
 
 // ============================================
-// Middleware - مُصحح ليتوافق مع Pi Browser
+// Middleware - مبسط ليتوافق مع Pi Browser
 // ============================================
-app.use(helmet({
-  contentSecurityPolicy: false,
-  crossOriginEmbedderPolicy: false,
-  crossOriginResourcePolicy: { policy: "cross-origin" },
-  frameguard: false
-}));
-
-app.use(cors({ origin: process.env.CORS_ORIGIN || '*' }));
+app.use(cors({ origin: '*' }));
 app.use(express.json({ limit: '1mb' }));
 
 // خدمة الملفات الثابتة من مجلد public

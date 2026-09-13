@@ -1,1 +1,3 @@
+_vercel
+
 vc-domain-verify=bigish.arabian-eagle.abrdns.com,9d67321aea0c1a071d1d

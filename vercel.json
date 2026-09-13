@@ -12,18 +12,6 @@
       "dest": "/index.js"
     },
     {
-      "src": "/privacy-policy.html",
-      "dest": "/public/privacy-policy.html"
-    },
-    {
-      "src": "/terms-of-service.html",
-      "dest": "/public/terms-of-service.html"
-    },
-    {
-      "src": "/validation-key.txt",
-      "dest": "/public/validation-key.txt"
-    },
-    {
       "src": "/(.*)",
       "dest": "/index.js"
     }

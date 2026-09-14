@@ -5,6 +5,8 @@
 async function refreshHistory() {
     if (!currentUser) return;
     const listDiv = document.getElementById('history-list');
+    if (!listDiv) return;
+
     listDiv.innerHTML = '<p class="empty-state">جارٍ التحميل...</p>';
 
     try {
@@ -28,7 +30,6 @@ async function refreshHistory() {
                 <div class="tx-info">
                     <div class="tx-type">${getTxIcon(tx.type)} ${tx.type || 'معاملة'}</div>
                     <div class="tx-date">${formatDate(tx.timestamp)}</div>
-                    <div class="tx-date" style="font-family: monospace; font-size:0.7rem;">${(tx.id || '').slice(0, 20)}</div>
                 </div>
                 <div class="tx-amount" style="color: ${isOutgoing ? '#e74c3c' : '#2ecc71'};">
                     ${isOutgoing ? '-' : '+'}${tx.amount} ${tx.currency || 'Pi'}

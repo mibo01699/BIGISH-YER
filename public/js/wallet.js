@@ -16,9 +16,6 @@ async function loadBalance() {
     }
 }
 
-// ============================================
-// الدفع الفردي (Pi فقط)
-// ============================================
 async function payWithPi() {
     if (!currentUser) return alert('يجب تسجيل الدخول أولاً');
     const amount = parseFloat(prompt('أدخل المبلغ بـ Pi:', '1.0'));
@@ -32,16 +29,12 @@ async function payWithPi() {
         }, {
             onReadyForServerApproval: async (paymentId) => {
                 try {
-                    const r = await fetch('/api/payments/approve', {
+                    await fetch('/api/payments/approve', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ paymentId })
                     });
-                    const d = await r.json();
-                    if (!d.success) console.error('Approve failed:', d);
-                } catch (e) {
-                    console.error('Approve error:', e);
-                }
+                } catch (e) { console.error('Approve error:', e); }
             },
             onReadyForServerCompletion: async (paymentId, txid) => {
                 try {
@@ -52,10 +45,8 @@ async function payWithPi() {
                     });
                     alert('✅ تم الدفع بنجاح!');
                     await loadBalance();
-                    await refreshHistory();
-                } catch (e) {
-                    console.error('Complete error:', e);
-                }
+                    if (typeof refreshHistory === 'function') await refreshHistory();
+                } catch (e) { console.error('Complete error:', e); }
             },
             onCancel: (paymentId) => {
                 console.log('Payment cancelled:', paymentId);
@@ -71,9 +62,6 @@ async function payWithPi() {
     }
 }
 
-// ============================================
-// الدفع الفردي (YER فقط)
-// ============================================
 async function payWithYER() {
     if (!currentUser) return alert('يجب تسجيل الدخول أولاً');
     const amount = parseFloat(prompt('أدخل المبلغ بـ YER:', '100'));
@@ -94,7 +82,7 @@ async function payWithYER() {
         if (data.success) {
             alert('✅ تم خصم ' + amount + ' YER بنجاح');
             await loadBalance();
-            await refreshHistory();
+            if (typeof refreshHistory === 'function') await refreshHistory();
         } else {
             alert('فشل: ' + (data.error || 'خطأ غير معروف'));
         }
@@ -103,9 +91,6 @@ async function payWithYER() {
     }
 }
 
-// ============================================
-// الدفع الهجين (Pi + YER)
-// ============================================
 async function payHybrid() {
     if (!currentUser) return alert('يجب تسجيل الدخول أولاً');
     const piAmount = parseFloat(prompt('أدخل المبلغ بـ Pi:', '0.5'));
@@ -114,7 +99,6 @@ async function payHybrid() {
     if (!yerAmount || yerAmount <= 0) return;
 
     try {
-        // 1. خصم YER
         const hybRes = await fetch('/api/payments/hybrid', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -128,7 +112,6 @@ async function payHybrid() {
         const hybData = await hybRes.json();
         if (!hybData.success) throw new Error(hybData.error);
 
-        // 2. دفع Pi
         await Pi.createPayment({
             amount: piAmount,
             memo: `دفع هجين: ${piAmount} Pi + ${yerAmount} YER`,
@@ -154,7 +137,7 @@ async function payHybrid() {
                 });
                 alert('✅ تم الدفع الهجين بنجاح!');
                 await loadBalance();
-                await refreshHistory();
+                if (typeof refreshHistory === 'function') await refreshHistory();
             },
             onCancel: (paymentId) => console.log('Cancelled:', paymentId),
             onError: (error) => alert('خطأ: ' + (error.message || 'غير معروف'))

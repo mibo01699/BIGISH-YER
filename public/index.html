@@ -1,72 +1,314 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>BIGISH-YER Wallet</title>
-  <script src="https://sdk.minepi.com/pi-sdk.js"></script>
-  <style>
-    :root { --primary: #1a4d2e; --primary-light: #2d7a4a; --gold: #d4af37; --bg: #f5f7fa; }
-    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
-    body { background: var(--bg); direction: rtl; min-height: 100vh; }
-    .top-bar { background: var(--primary); color: white; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; }
-    .logo { font-size: 1.2rem; font-weight: bold; }
-    .network-badge { font-size: 0.85rem; background: rgba(255,255,255,0.15); padding: 4px 10px; border-radius: 12px; }
-    .container { max-width: 600px; margin: 16px auto; padding: 0 12px; }
-    .card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.08); margin-bottom: 16px; }
-    .card h1, .card h2 { color: var(--primary); margin-bottom: 12px; }
-    button { background: linear-gradient(135deg, var(--primary), var(--primary-light)); color: white; border: none; padding: 14px 24px; border-radius: 30px; font-size: 1.1rem; font-weight: bold; cursor: pointer; width: 100%; margin-top: 12px; }
-    button:disabled { opacity: 0.6; cursor: not-allowed; }
-    .error { color: #e74c3c; margin-top: 10px; padding: 8px; background: #fdecea; border-radius: 6px; display: none; }
-    .balance-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 16px 0; }
-    .balance-item { background: #f8f9fa; padding: 16px; border-radius: 10px; text-align: center; }
-    .balance-item .label { display: block; font-size: 0.85rem; color: #888; margin-bottom: 6px; }
-    .balance-item .value { display: block; font-size: 1.5rem; font-weight: bold; color: var(--primary); }
-    .status-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #eee; }
-    .badge { padding: 4px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: bold; }
-    .badge.pending { background: #fff3cd; color: #856404; }
-    .badge.online { background: #d4edda; color: #155724; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BIGISH-YER Wallet</title>
+    <script src="https://sdk.minepi.com/pi-sdk.js"></script>
+    <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-  <header class="top-bar">
+
+<!-- ============================================ -->
+<!-- الشريط العلوي -->
+<!-- ============================================ -->
+<header class="top-bar">
     <div class="logo">🦅 BIGISH-YER</div>
-    <div class="network-badge" id="network-badge">Testnet</div>
-  </header>
-  <main class="container">
-    <section id="login-section" class="card">
-      <h1>محفظة BIGISH-YER</h1>
-      <p>محفظة دفع هجينة: Pi + YER</p>
-      <button id="login-btn">🚀 تسجيل الدخول بحساب Pi</button>
-      <div id="login-error" class="error"></div>
-    </section>
-    <section id="wallet-section" style="display:none;">
-      <div class="card">
-        <h2>مرحباً، <span id="user-name"></span></h2>
-        <p>معرف Pi: <span id="user-id"></span></p>
-      </div>
-      <div class="card">
-        <h2>💰 الرصيد</h2>
-        <div class="balance-grid">
-          <div class="balance-item"><span class="label">Pi</span><span class="value" id="pi-balance">0.00</span></div>
-          <div class="balance-item"><span class="label">YER</span><span class="value" id="yer-balance">0.00</span></div>
+    <div class="network-badge">
+        <span class="dot testnet"></span> Testnet
+    </div>
+    <div id="user-info">
+        <span id="username">زائر</span>
+        <button id="logout-btn" style="display:none;" onclick="logout()">خروج</button>
+    </div>
+</header>
+
+<!-- ============================================ -->
+<!-- القائمة السفلية للتنقل -->
+<!-- ============================================ -->
+<nav class="bottom-nav" id="bottom-nav" style="display:none;">
+    <button class="nav-btn active" data-page="home" onclick="showPage('home')">
+        <span class="nav-icon">🏠</span>
+        <span class="nav-label">الرئيسية</span>
+    </button>
+    <button class="nav-btn" data-page="mining" onclick="showPage('mining')">
+        <span class="nav-icon">⛏️</span>
+        <span class="nav-label">التوزيع</span>
+    </button>
+    <button class="nav-btn" data-page="history" onclick="showPage('history')">
+        <span class="nav-icon">📜</span>
+        <span class="nav-label">السجل</span>
+    </button>
+    <button class="nav-btn" data-page="qr" onclick="showPage('qr')">
+        <span class="nav-icon">📱</span>
+        <span class="nav-label">QR</span>
+    </button>
+    <button class="nav-btn" data-page="settings" onclick="showPage('settings')">
+        <span class="nav-icon">⚙️</span>
+        <span class="nav-label">الإعدادات</span>
+    </button>
+</nav>
+
+<!-- ============================================ -->
+<!-- المحتوى الرئيسي -->
+<!-- ============================================ -->
+<main class="container">
+
+    <!-- ========== شاشة تسجيل الدخول ========== -->
+    <section id="page-login" class="page active">
+        <div class="card">
+            <h1>محفظة BIGISH-YER</h1>
+            <p class="subtitle">محفظة دفع هجينة: Pi + YER</p>
+            <button id="login-btn" class="btn-primary" onclick="loginWithPi()">
+                🚀 تسجيل الدخول بحساب Pi
+            </button>
+            <div id="login-error" class="error" style="display:none;"></div>
+            <div class="status-note">
+                <small>⚠️ التطبيق في مرحلة التطوير — Testnet فقط</small>
+            </div>
         </div>
-      </div>
-      <div class="card">
-        <h2>💳 الدفع</h2>
-        <button id="pay-pi-btn">دفع بـ Pi فقط</button>
-        <button id="pay-yer-btn" style="margin-top:8px;">دفع بـ YER فقط</button>
-        <button id="pay-hybrid-btn" style="margin-top:8px; background: linear-gradient(135deg, #d4af37, #b8960c);">دفع هجين (Pi + YER)</button>
-      </div>
-      <div class="card">
-        <h2>📊 حالة النظام</h2>
-        <div class="status-row"><span>Pi Authentication</span><span class="badge online">نشط</span></div>
-        <div class="status-row"><span>Pi Payments</span><span class="badge pending">قيد التطوير</span></div>
-        <div class="status-row"><span>YER Token</span><span class="badge pending">قيد التطوير</span></div>
-      </div>
     </section>
-  </main>
-  <script src="js/pi-config.js"></script>
-  <script src="js/app.js"></script>
+
+    <!-- ========== الصفحة الرئيسية (المحفظة) ========== -->
+    <section id="page-home" class="page">
+        <div class="card user-card">
+            <h2>مرحباً، <span id="user-name"></span></h2>
+            <p class="user-id">معرف Pi: <span id="user-id"></span></p>
+        </div>
+
+        <div class="card balance-card">
+            <h3>💰 الرصيد</h3>
+            <div class="balance-grid">
+                <div class="balance-item">
+                    <span class="label">Pi</span>
+                    <span class="value" id="pi-balance">0.00</span>
+                </div>
+                <div class="balance-item">
+                    <span class="label">YER</span>
+                    <span class="value" id="yer-balance">0.00</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>💳 الدفع</h3>
+            <button class="btn-primary" onclick="payWithPi()">دفع بـ Pi فقط</button>
+            <button class="btn-primary" onclick="payWithYER()" style="margin-top:8px;">دفع بـ YER فقط</button>
+            <button class="btn-gold" onclick="payHybrid()" style="margin-top:8px;">دفع هجين (Pi + YER)</button>
+        </div>
+
+        <div class="card">
+            <h3>📊 حالة النظام</h3>
+            <div class="status-row">
+                <span>Pi Authentication</span>
+                <span class="badge online">نشط</span>
+            </div>
+            <div class="status-row">
+                <span>Pi Payments</span>
+                <span class="badge online" id="payments-status">نشط</span>
+            </div>
+            <div class="status-row">
+                <span>YER Token</span>
+                <span class="badge pending">قيد التطوير</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- ========== صفحة التوزيع (Mining) ========== -->
+    <section id="page-mining" class="page">
+        <div class="card">
+            <h3>⛏️ توزيع YER المجتمعي</h3>
+            <p class="subtitle">10% من العرض الأقصى مخصص للمجتمع</p>
+
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <span class="stat-label">السقف السنوي</span>
+                    <span class="stat-value">30,000,000 YER</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">المعدل الحالي</span>
+                    <span class="stat-value" id="mining-rate">0.10 YER/ساعة</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">رصيدك غير المطالب</span>
+                    <span class="stat-value" id="unclaimed-balance">0.00 YER</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">حالة الجلسة</span>
+                    <span class="stat-value" id="session-status">غير نشطة</span>
+                </div>
+            </div>
+
+            <button class="btn-primary" id="start-mining-btn" onclick="startMining()" style="margin-top:16px;">
+                ▶️ بدء جلسة توزيع (24 ساعة)
+            </button>
+            <button class="btn-secondary" id="claim-mining-btn" onclick="claimMining()" style="margin-top:8px; display:none;">
+                💰 المطالبة بالرصيد
+            </button>
+        </div>
+
+        <div class="card">
+            <h3>📋 قواعد التوزيع</h3>
+            <ul class="rules-list">
+                <li>يُوزّع YER على نشاط المستخدمين اليومي.</li>
+                <li>المعدل يتراوح بين 0.01 و 0.5 YER/ساعة.</li>
+                <li>يتأثر المعدل بحجم السيولة ونشاط المجتمع.</li>
+                <li>الجلسة الواحدة مدتها 24 ساعة.</li>
+                <li>لا يمكن المطالبة قبل انتهاء الجلسة.</li>
+            </ul>
+        </div>
+    </section>
+
+    <!-- ========== صفحة السجل ========== -->
+    <section id="page-history" class="page">
+        <div class="card">
+            <h3>📜 سجل المعاملات</h3>
+            <div id="history-list">
+                <p class="empty-state">لا توجد معاملات بعد.</p>
+            </div>
+            <button class="btn-secondary" onclick="refreshHistory()" style="margin-top:12px;">
+                🔄 تحديث
+            </button>
+        </div>
+    </section>
+
+    <!-- ========== صفحة QR ========== -->
+    <section id="page-qr" class="page">
+        <div class="card">
+            <h3>📱 QR للدفع</h3>
+            <p class="subtitle">امسح الرمز أو شارك عنوانك للدفع</p>
+            <div id="qr-container" class="qr-container">
+                <canvas id="qr-canvas"></canvas>
+            </div>
+            <div class="address-box">
+                <label>عنوان محفظتك:</label>
+                <div class="address-value" id="my-address">—</div>
+                <button class="btn-small" onclick="copyAddress()">📋 نسخ</button>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>📷 مسح QR</h3>
+            <p class="subtitle">لتلقي دفع من محفظة أخرى</p>
+            <button class="btn-primary" onclick="scanQR()">فتح الماسح الضوئي</button>
+        </div>
+    </section>
+
+    <!-- ========== صفحة معلومات YER ========== -->
+    <section id="page-token" class="page">
+        <div class="card">
+            <h3>💎 معلومات رمز YER</h3>
+            <div class="token-info">
+                <div class="info-row">
+                    <span>الرمز</span>
+                    <strong>YER</strong>
+                </div>
+                <div class="info-row">
+                    <span>الاسم</span>
+                    <strong>YER Ecosystem Token</strong>
+                </div>
+                <div class="info-row">
+                    <span>العرض الأقصى</span>
+                    <strong>300,000,000 YER</strong>
+                </div>
+                <div class="info-row">
+                    <span>الدقة</span>
+                    <strong>10 خانات عشرية</strong>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>📊 التوزيع</h3>
+            <div class="distribution">
+                <div class="dist-item">
+                    <div class="dist-bar" style="width: 10%; background: #4CAF50;"></div>
+                    <span class="dist-label">المجتمع (10%)</span>
+                    <span class="dist-value">30,000,000 YER</span>
+                </div>
+                <div class="dist-item">
+                    <div class="dist-bar" style="width: 30%; background: #FFC107;"></div>
+                    <span class="dist-label">الإطلاق والسيولة (30%)</span>
+                    <span class="dist-value">90,000,000 YER</span>
+                </div>
+                <div class="dist-item">
+                    <div class="dist-bar" style="width: 60%; background: #d4af37;"></div>
+                    <span class="dist-label">الصندوق السيادي (60%)</span>
+                    <span class="dist-value">180,000,000 YER</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>📈 حالة الرمز</h3>
+            <div class="status-row">
+                <span>الشبكة</span>
+                <span class="badge pending">Testnet</span>
+            </div>
+            <div class="status-row">
+                <span>الإطلاق الرسمي</span>
+                <span class="badge pending">قيد التطوير</span>
+            </div>
+            <div class="status-row">
+                <span>Pi Launchpad</span>
+                <span class="badge pending">قيد التحضير</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- ========== صفحة الإعدادات ========== -->
+    <section id="page-settings" class="page">
+        <div class="card">
+            <h3>⚙️ الإعدادات</h3>
+
+            <div class="settings-group">
+                <h4>اللغة</h4>
+                <select id="language-select" onchange="changeLanguage()">
+                    <option value="ar">العربية</option>
+                    <option value="en">English</option>
+                </select>
+            </div>
+
+            <div class="settings-group">
+                <h4>الشبكة</h4>
+                <div class="info-row">
+                    <span>الشبكة الحالية</span>
+                    <strong>Testnet</strong>
+                </div>
+            </div>
+
+            <div class="settings-group">
+                <h4>المحفظة</h4>
+                <button class="btn-secondary" onclick="showPage('token')">💎 معلومات YER</button>
+                <button class="btn-secondary" onclick="showPage('qr')" style="margin-top:8px;">📱 QR الدفع</button>
+            </div>
+
+            <div class="settings-group">
+                <h4>الأمان</h4>
+                <button class="btn-danger" onclick="logout()">🚪 تسجيل الخروج</button>
+            </div>
+
+            <div class="settings-group">
+                <h4>الدعم</h4>
+                <button class="btn-secondary" onclick="alert('قناة الدعم قيد الإنشاء')">📧 تواصل معنا</button>
+                <button class="btn-secondary" onclick="alert('سياسة الخصوصية')" style="margin-top:8px;">📄 سياسة الخصوصية</button>
+            </div>
+        </div>
+    </section>
+
+</main>
+
+<!-- ============================================ -->
+<!-- مكتبات JavaScript -->
+<!-- ============================================ -->
+<script src="js/pi-config.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/wallet.js"></script>
+<script src="js/mining.js"></script>
+<script src="js/history.js"></script>
+<script src="js/qr.js"></script>
+<script src="js/token-info.js"></script>
+<script src="js/settings.js"></script>
+
 </body>
 </html>

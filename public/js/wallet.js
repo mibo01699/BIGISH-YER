@@ -1,6 +1,5 @@
 // ============================================
-// BIGISH-YER Wallet — Balance & Payments (v7)
-// Architecture: Pi deposit + Internal transfers
+// BIGISH-YER Wallet — Balance & Payments (v8)
 // ============================================
 
 async function loadBalance() {
@@ -16,22 +15,21 @@ async function loadBalance() {
 }
 
 // ============================================
-// ① إيداع Pi (من محفظة Pi الرسمية → محفظة BIGISH-YER)
+// ① إيداع Pi
 // ============================================
 async function payWithPi() {
     if (!currentUser) return alert('يجب تسجيل الدخول أولاً');
-    const amount = parseFloat(prompt('أدخل المبلغ بـ Pi للإيداع في محفظة YER:', '1.0'));
+    const amount = parseFloat(prompt('أدخل المبلغ بـ Pi للإيداع:', '1.0'));
     if (!amount || amount <= 0) return;
 
     try {
         await Pi.createPayment({
             amount: amount,
-            memo: `إيداع Pi في محفظة BIGISH-YER`,
+            memo: `إيداع Pi في BIGISH-YER`,
             metadata: {
                 type: "pi_deposit",
                 orderId: "DEP-" + Date.now(),
-                userId: currentUser.uid,
-                piAmount: amount
+                userId: currentUser.uid
             }
         }, {
             onReadyForServerApproval: async (paymentId) => {
@@ -55,9 +53,8 @@ async function payWithPi() {
                             piAmount: amount
                         })
                     });
-                    const d = await r.json();
-                    if (r.ok || (d.error && d.error.includes('already_completed'))) {
-                        alert(`✅ تم إيداع ${amount} Pi في محفظتك بنجاح!`);
+                    if (r.ok) {
+                        alert(`✅ تم إيداع ${amount} Pi في محفظتك!`);
                     }
                 } catch (e) { console.error('Complete error:', e); }
                 await loadBalance();
@@ -76,7 +73,7 @@ async function payWithYER() {
     if (!currentUser) return alert('يجب تسجيل الدخول أولاً');
     const amount = parseFloat(prompt('أدخل المبلغ بـ YER:', '50'));
     if (!amount || amount <= 0) return;
-    const recipient = prompt('معرف المستلم (recipientId) - اتركه فارغاً للمتجر:', '');
+    const recipient = prompt('معرف المستلم (أو اتركه فارغاً):', '');
 
     try {
         const res = await fetch('/api/payments/internal', {
@@ -91,6 +88,12 @@ async function payWithYER() {
                 memo: "تحويل YER"
             })
         });
+
+        if (res.status === 404) {
+            alert('⚠️ الخادم لا يدعم هذه العملية بعد. الرجاء إبلاغ المطور.');
+            return;
+        }
+
         const data = await res.json();
         if (data.success) {
             alert(`✅ تم تحويل ${amount} YER بنجاح (بدون رسوم)`);
@@ -103,8 +106,7 @@ async function payWithYER() {
 }
 
 // ============================================
-// ②③ دفع هجين داخلي (Pi + YER من محفظة YER)
-// لا يستدعي Pi SDK — كل شيء داخلي
+// ②③ دفع هجين داخلي
 // ============================================
 async function payHybrid() {
     if (!currentUser) return alert('يجب تسجيل الدخول أولاً');
@@ -113,7 +115,7 @@ async function payHybrid() {
     const yerAmount = parseFloat(prompt('أدخل حصة YER:', '50'));
     if (!yerAmount || yerAmount < 0) return;
     if (piAmount === 0 && yerAmount === 0) return alert('يجب تحديد مبلغ واحد على الأقل');
-    const recipient = prompt('معرف المستلم (تاجر/خدمة):', 'merchant_demo');
+    const recipient = prompt('معرف المستلم:', 'merchant_demo');
 
     try {
         const res = await fetch('/api/payments/internal', {
@@ -128,9 +130,15 @@ async function payHybrid() {
                 memo: `دفع هجين: ${piAmount} Pi + ${yerAmount} YER`
             })
         });
+
+        if (res.status === 404) {
+            alert('⚠️ الخادم لا يدعم هذه العملية بعد. الرجاء إبلاغ المطور.');
+            return;
+        }
+
         const data = await res.json();
         if (data.success) {
-            alert(`✅ تم الدفع الهجين بنجاح!\n${piAmount} Pi + ${yerAmount} YER`);
+            alert(`✅ تم الدفع الهجين!\n${piAmount} Pi + ${yerAmount} YER`);
             await loadBalance();
             if (typeof refreshHistory === 'function') await refreshHistory();
         } else {

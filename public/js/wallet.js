@@ -1,5 +1,5 @@
 // ============================================
-// BIGISH-YER Wallet — Balance & Payments (v4)
+// BIGISH-YER Wallet — Balance & Payments (v5)
 // ============================================
 
 async function loadBalance() {
@@ -11,6 +11,40 @@ async function loadBalance() {
         document.getElementById('yer-balance').textContent = parseFloat(data.YER || 0).toFixed(2);
     } catch (err) {
         console.error("Balance load error:", err);
+    }
+}
+
+// ============================================
+// معالج الدفع الكامل (يتجاهل already_completed)
+// ============================================
+async function handleCompletePayment(paymentId, txid) {
+    try {
+        const r = await fetch('/api/payments/complete', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                paymentId,
+                txid,
+                userId: currentUser ? currentUser.uid : null
+            })
+        });
+        const d = await r.json();
+
+        // ✅ إذا كان الدفع مكتملاً بالفعل، اعتبره نجاحاً
+        if (!r.ok && d.error && d.error.includes('already_completed')) {
+            console.log('✅ Payment already completed (success)');
+            return { success: true, alreadyCompleted: true };
+        }
+
+        if (!r.ok) {
+            console.error('❌ Complete failed:', d);
+            throw new Error('Complete failed: ' + (d.error || 'Unknown'));
+        }
+
+        return { success: true };
+    } catch (e) {
+        console.error('❌ Complete error:', e);
+        throw e;
     }
 }
 
@@ -29,59 +63,47 @@ async function payWithPi() {
             metadata: { type: "pi_only", orderId: "ORDER-" + Date.now() }
         }, {
             onReadyForServerApproval: async (paymentId) => {
-                console.log('🔄 onReadyForServerApproval:', paymentId);
+                console.log('🔄 Approve:', paymentId);
                 try {
                     const r = await fetch('/api/payments/approve', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ paymentId })
                     });
-                    const d = await r.json();
-                    console.log('✅ Approve response:', d);
                     if (!r.ok) {
-                        throw new Error('Approve failed: ' + (d.error || 'Unknown'));
+                        const d = await r.json();
+                        console.error('❌ Approve failed:', d);
                     }
                 } catch (e) {
                     console.error('❌ Approve error:', e);
-                    alert('فشل في الموافقة على الدفع: ' + e.message);
                 }
             },
             onReadyForServerCompletion: async (paymentId, txid) => {
-                console.log('🔄 onReadyForServerCompletion:', paymentId, txid);
+                console.log('🔄 Complete:', paymentId, txid);
                 try {
-                    const r = await fetch('/api/payments/complete', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            paymentId,
-                            txid,
-                            userId: currentUser ? currentUser.uid : null
-                        })
-                    });
-                    const d = await r.json();
-                    console.log('✅ Complete response:', d);
-                    if (!r.ok) {
-                        throw new Error('Complete failed: ' + (d.error || 'Unknown'));
+                    const result = await handleCompletePayment(paymentId, txid);
+                    if (result.success) {
+                        alert('✅ تم الدفع بنجاح!');
+                        await loadBalance();
+                        if (typeof refreshHistory === 'function') await refreshHistory();
                     }
-                    alert('✅ تم الدفع بنجاح!');
+                } catch (e) {
+                    // حتى مع خطأ، حدّث السجل
                     await loadBalance();
                     if (typeof refreshHistory === 'function') await refreshHistory();
-                } catch (e) {
-                    console.error('❌ Complete error:', e);
-                    alert('فشل في إكمال الدفع: ' + e.message);
                 }
             },
             onCancel: (paymentId) => {
-                console.log('⚠️ Payment cancelled:', paymentId);
+                console.log('⚠️ Cancelled:', paymentId);
                 alert('تم إلغاء الدفع');
             },
             onError: (error) => {
-                console.error('❌ Payment error:', error);
+                console.error('❌ Error:', error);
                 alert('خطأ في الدفع: ' + (error.message || 'خطأ غير معروف'));
             }
         });
     } catch (e) {
-        console.error('Payment catch:', e);
+        console.error('Catch:', e);
         alert('خطأ: ' + e.message);
     }
 }
@@ -129,7 +151,7 @@ async function payHybrid() {
     if (!yerAmount || yerAmount <= 0) return;
 
     try {
-        // 1. خصم YER من الخادم
+        // 1. خصم YER
         const hybRes = await fetch('/api/payments/hybrid', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -143,7 +165,7 @@ async function payHybrid() {
         const hybData = await hybRes.json();
         if (!hybData.success) throw new Error(hybData.error);
 
-        // 2. دفع Pi عبر SDK
+        // 2. دفع Pi
         await Pi.createPayment({
             amount: piAmount,
             memo: `دفع هجين: ${piAmount} Pi + ${yerAmount} YER`,
@@ -155,39 +177,31 @@ async function payHybrid() {
             }
         }, {
             onReadyForServerApproval: async (paymentId) => {
-                console.log('🔄 Hybrid approve:', paymentId);
                 try {
-                    const r = await fetch('/api/payments/approve', {
+                    await fetch('/api/payments/approve', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ paymentId })
                     });
-                    if (!r.ok) throw new Error('Approve failed');
                 } catch (e) {
                     console.error('❌ Hybrid approve error:', e);
                 }
             },
             onReadyForServerCompletion: async (paymentId, txid) => {
-                console.log('🔄 Hybrid complete:', paymentId, txid);
                 try {
-                    await fetch('/api/payments/complete', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            paymentId,
-                            txid,
-                            userId: currentUser ? currentUser.uid : null
-                        })
-                    });
-                    alert('✅ تم الدفع الهجين بنجاح!');
+                    const result = await handleCompletePayment(paymentId, txid);
+                    if (result.success) {
+                        alert('✅ تم الدفع الهجين بنجاح!');
+                    }
                     await loadBalance();
                     if (typeof refreshHistory === 'function') await refreshHistory();
                 } catch (e) {
-                    console.error('❌ Hybrid complete error:', e);
+                    await loadBalance();
+                    if (typeof refreshHistory === 'function') await refreshHistory();
                 }
             },
             onCancel: (paymentId) => {
-                console.log('⚠️ Hybrid cancelled:', paymentId);
+                console.log('⚠️ Cancelled:', paymentId);
                 alert('تم إلغاء الدفع');
             },
             onError: (error) => {

@@ -16,9 +16,8 @@ app.use(express.static(path.join(__dirname, 'public')));
 // In-Memory Database
 // ============================================
 const db = {
-    balances: {},
+    balances: {},        // { uid: { Pi: 0, YER: 100 } }
     transactions: {},
-    idempotencyMap: {},
     miningSessions: {},
     miningHistory: []
 };
@@ -97,7 +96,7 @@ app.get('/api/balance/:uid', (req, res) => {
 });
 
 // ============================================
-// API: Payments — Approve
+// API: Approve Payment
 // ============================================
 app.post('/api/payments/approve', async (req, res) => {
     const { paymentId } = req.body;
@@ -129,10 +128,13 @@ app.post('/api/payments/approve', async (req, res) => {
 });
 
 // ============================================
-// API: Payments — Complete (مصحح وذكي)
+// API: Complete Payment (Pi Deposit)
+// ============================================
+// هذا الإجراء يمثل إيداع Pi في محفظة BIGISH-YER
+// يتم زيادة رصيد Pi للمستخدم فقط بعد التحقق من نجاح الدفع
 // ============================================
 app.post('/api/payments/complete', async (req, res) => {
-    const { paymentId, txid, userId, orderId, hybridTxId } = req.body;
+    const { paymentId, txid, userId, piAmount } = req.body;
     if (!paymentId || !txid) return res.status(400).json({ error: 'paymentId and txid are required' });
     if (!PI_API_KEY) return res.status(500).json({ error: 'PI_API_KEY not configured' });
 
@@ -149,10 +151,11 @@ app.post('/api/payments/complete', async (req, res) => {
             }
         );
 
-        // ✅ معالجة already_completed كنجاح
+        let alreadyCompleted = false;
         if (!response.ok) {
             const errorText = await response.text();
             if (errorText.includes('already_completed')) {
+                alreadyCompleted = true;
                 console.log('✅ Payment already completed (success)');
             } else {
                 console.error('Complete error:', errorText);
@@ -160,33 +163,37 @@ app.post('/api/payments/complete', async (req, res) => {
             }
         }
 
-        // ✅ إذا كانت دفعة هجينة، حدّث المعاملة الأصلية
-        if (hybridTxId && db.transactions[hybridTxId]) {
-            const hybTx = db.transactions[hybridTxId];
-            hybTx.status = 'COMPLETED';
-            hybTx.piTxid = txid;
-            hybTx.piPaymentId = paymentId;
-            hybTx.completedAt = new Date().toISOString();
-            hybTx.type = 'Hybrid Payment';
-            console.log('✅ Hybrid transaction updated:', hybridTxId);
-        } else {
-            // دفعة Pi عادية
-            const txId = `pi_${paymentId}`;
-            db.transactions[txId] = {
-                id: txId,
-                paymentId: paymentId,
-                txid: txid,
-                userId: userId || null,
-                from: userId || null,
-                type: 'Pi Payment',
-                currency: 'Pi',
-                amount: '1.0',
-                status: 'COMPLETED',
-                timestamp: new Date().toISOString()
-            };
+        // ✅ إيداع Pi في محفظة BIGISH-YER
+        if (userId && piAmount) {
+            ensureUserExists(userId);
+
+            // تحقق من عدم تسجيل الإيداع مرتين
+            const existingTx = Object.values(db.transactions).find(
+                tx => tx.paymentId === paymentId && tx.type === 'Pi Deposit'
+            );
+
+            if (!existingTx) {
+                const depositAmount = parseFloat(piAmount);
+                db.balances[userId].Pi = (db.balances[userId].Pi || 0) + depositAmount;
+
+                const txId = `deposit_${paymentId}`;
+                db.transactions[txId] = {
+                    id: txId,
+                    paymentId: paymentId,
+                    txid: txid,
+                    userId: userId,
+                    from: 'Pi Wallet',
+                    type: 'Pi Deposit',
+                    currency: 'Pi',
+                    amount: depositAmount.toFixed(4),
+                    status: 'COMPLETED',
+                    timestamp: new Date().toISOString()
+                };
+                console.log(`✅ Pi Deposit: +${depositAmount} Pi to ${userId}`);
+            }
         }
 
-        res.json({ success: true, paymentId, txid });
+        res.json({ success: true, paymentId, txid, alreadyCompleted });
     } catch (error) {
         console.error('Complete exception:', error);
         res.status(500).json({ error: 'Server error during completion' });
@@ -194,65 +201,96 @@ app.post('/api/payments/complete', async (req, res) => {
 });
 
 // ============================================
-// API: Payments — Hybrid (Pi + YER)
+// API: Internal Transfer (YER / Hybrid Internal)
 // ============================================
-app.post('/api/payments/hybrid', async (req, res) => {
-    const { accessToken, piAmount, yerAmount, orderId } = req.body;
-    if (!accessToken || piAmount === undefined || !yerAmount || !orderId) {
+// ⚠️ هذه العملية تحدث بالكامل داخل BIGISH-YER
+// لا توجد أي استدعاءات لـ Pi SDK
+// ============================================
+app.post('/api/payments/internal', async (req, res) => {
+    const { accessToken, piAmount, yerAmount, recipientId, orderId, memo } = req.body;
+
+    if (!accessToken || !orderId) {
         return res.status(400).json({ error: 'Missing required fields' });
     }
 
+    const pi = parseFloat(piAmount) || 0;
+    const yer = parseFloat(yerAmount) || 0;
+    if (pi < 0 || yer < 0 || (pi === 0 && yer === 0)) {
+        return res.status(400).json({ error: 'Invalid amount' });
+    }
+
     try {
+        // 1. التحقق من هوية المرسل
         const userResponse = await fetch('https://api.minepi.com/v2/me', {
             headers: { 'Authorization': `Bearer ${accessToken}` }
         });
         if (!userResponse.ok) return res.status(401).json({ error: 'Invalid token' });
 
         const user = await userResponse.json();
-        const balance = ensureUserExists(user.uid);
+        const sender = ensureUserExists(user.uid);
 
-        if (balance.YER < yerAmount) {
+        // 2. التحقق من كفاية الرصيد
+        if ((sender.Pi || 0) < pi) {
+            return res.status(400).json({
+                error: 'رصيد Pi غير كافٍ',
+                current: sender.Pi || 0,
+                required: pi
+            });
+        }
+        if ((sender.YER || 0) < yer) {
             return res.status(400).json({
                 error: 'رصيد YER غير كافٍ',
-                current: balance.YER,
-                required: yerAmount
+                current: sender.YER || 0,
+                required: yer
             });
         }
 
-        // خصم YER
-        db.balances[user.uid].YER = balance.YER - yerAmount;
+        // 3. خصم من المرسل
+        db.balances[user.uid].Pi = (sender.Pi || 0) - pi;
+        db.balances[user.uid].YER = (sender.YER || 0) - yer;
 
-        // إنشاء معاملة موحدة
-        const transactionId = `hyb_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
-        const type = piAmount > 0 ? 'Hybrid Payment' : 'YER Payment';
-        const status = piAmount > 0 ? 'PENDING_PI' : 'COMPLETED';
+        // 4. إضافة للمستلم (إن وُجد)
+        if (recipientId) {
+            ensureUserExists(recipientId);
+            db.balances[recipientId].Pi = (db.balances[recipientId].Pi || 0) + pi;
+            db.balances[recipientId].YER = (db.balances[recipientId].YER || 0) + yer;
+        }
 
-        db.transactions[transactionId] = {
-            id: transactionId,
+        // 5. تسجيل المعاملة
+        const txId = `int_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+        const type = pi > 0 && yer > 0 ? 'Hybrid Payment'
+                    : pi > 0 ? 'Pi Transfer'
+                    : 'YER Transfer';
+
+        db.transactions[txId] = {
+            id: txId,
             userId: user.uid,
             from: user.uid,
+            to: recipientId || null,
             type: type,
-            currency: piAmount > 0 ? 'Pi + YER' : 'YER',
-            yerAmount: yerAmount,
-            piAmount: piAmount,
-            amount: yerAmount.toString(),
+            currency: pi > 0 && yer > 0 ? 'Pi + YER' : pi > 0 ? 'Pi' : 'YER',
+            piAmount: pi,
+            yerAmount: yer,
+            amount: yer > 0 ? yer.toString() : pi.toString(),
             orderId: orderId,
-            status: status,
+            memo: memo || '',
+            fee: 0,
+            status: 'COMPLETED',
             timestamp: new Date().toISOString()
         };
 
         res.json({
             success: true,
-            transactionId,
-            piAmount,
-            yerAmount,
-            orderId,
-            type,
+            transactionId: txId,
+            type: type,
+            piAmount: pi,
+            yerAmount: yer,
+            newPiBalance: db.balances[user.uid].Pi,
             newYerBalance: db.balances[user.uid].YER
         });
     } catch (error) {
-        console.error('Hybrid error:', error);
-        res.status(500).json({ error: 'Server error during hybrid payment' });
+        console.error('Internal transfer error:', error);
+        res.status(500).json({ error: 'Server error during internal transfer' });
     }
 });
 
@@ -262,7 +300,7 @@ app.post('/api/payments/hybrid', async (req, res) => {
 app.get('/api/transactions/user/:uid', (req, res) => {
     const { uid } = req.params;
     const userTxs = Object.values(db.transactions).filter(tx =>
-        tx.userId === uid || tx.from === uid || tx.to === uid || tx.uid === uid
+        tx.userId === uid || tx.from === uid || tx.to === uid
     );
     userTxs.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
     res.json({ success: true, transactions: userTxs.slice(0, 50) });
@@ -273,83 +311,51 @@ app.get('/api/transactions/user/:uid', (req, res) => {
 // ============================================
 app.get('/api/yer/distribution/status', (req, res) => {
     const uid = req.headers['x-user-id'];
-    if (!uid) return res.status(400).json({ error: 'x-user-id header required' });
-
+    if (!uid) return res.status(400).json({ error: 'x-user-id required' });
     ensureUserExists(uid);
     const session = db.miningSessions[uid];
-
     if (!session || !session.active) {
-        return res.json({
-            success: true, isDistributionActive: false,
-            currentRatePerHour: '0.10', hoursRemaining: 0, unclaimedBalance: '0.00'
-        });
+        return res.json({ success: true, isDistributionActive: false, currentRatePerHour: '0.10', hoursRemaining: 0, unclaimedBalance: '0.00' });
     }
-
-    const elapsedMs = Date.now() - session.startTime;
-    const elapsedHours = elapsedMs / (1000 * 60 * 60);
-    const totalHours = 24;
-
-    if (elapsedHours >= totalHours) {
-        session.active = false;
-        session.completed = true;
-    }
-
-    const hoursRemaining = Math.max(0, totalHours - elapsedHours);
-    const unclaimed = (elapsedHours * session.rate).toFixed(4);
-
+    const elapsedHours = (Date.now() - session.startTime) / 3600000;
+    if (elapsedHours >= 24) { session.active = false; session.completed = true; }
     res.json({
         success: true,
         isDistributionActive: session.active,
         currentRatePerHour: session.rate.toFixed(2),
-        hoursRemaining: parseFloat(hoursRemaining.toFixed(2)),
-        unclaimedBalance: unclaimed
+        hoursRemaining: parseFloat(Math.max(0, 24 - elapsedHours).toFixed(2)),
+        unclaimedBalance: (elapsedHours * session.rate).toFixed(4)
     });
 });
 
 app.post('/api/yer/distribution/start', (req, res) => {
     const uid = req.headers['x-user-id'];
-    if (!uid) return res.status(400).json({ error: 'x-user-id header required' });
-
+    if (!uid) return res.status(400).json({ error: 'x-user-id required' });
     ensureUserExists(uid);
     const existing = db.miningSessions[uid];
-    if (existing && existing.active) {
-        return res.status(400).json({ error: 'يوجد جلسة توزيع نشطة بالفعل' });
-    }
-
-    db.miningSessions[uid] = {
-        startTime: Date.now(), rate: 0.10, active: true, completed: false
-    };
-
-    res.json({
-        success: true, message: 'بدأت جلسة التوزيع',
-        session: { startTime: db.miningSessions[uid].startTime, rate: 0.10, duration: 24 }
-    });
+    if (existing && existing.active) return res.status(400).json({ error: 'جلسة نشطة موجودة' });
+    db.miningSessions[uid] = { startTime: Date.now(), rate: 0.10, active: true, completed: false };
+    res.json({ success: true, message: 'بدأت الجلسة' });
 });
 
 app.post('/api/yer/distribution/claim', (req, res) => {
     const uid = req.headers['x-user-id'];
-    if (!uid) return res.status(400).json({ error: 'x-user-id header required' });
-
+    if (!uid) return res.status(400).json({ error: 'x-user-id required' });
     const session = db.miningSessions[uid];
-    if (!session) return res.status(400).json({ error: 'لا توجد جلسة توزيع' });
+    if (!session) return res.status(400).json({ error: 'لا توجد جلسة' });
 
-    const elapsedMs = Date.now() - session.startTime;
-    const elapsedHours = elapsedMs / (1000 * 60 * 60);
+    const elapsedHours = (Date.now() - session.startTime) / 3600000;
     const claimable = elapsedHours * session.rate;
-
-    if (claimable <= 0) return res.status(400).json({ error: 'لا يوجد رصيد للمطالبة' });
+    if (claimable <= 0) return res.status(400).json({ error: 'لا يوجد رصيد' });
 
     const totalClaimed = db.miningHistory.reduce((sum, h) => sum + h.amount, 0);
-    const COMMUNITY_CAP = 30000000;
-    if (totalClaimed + claimable > COMMUNITY_CAP) {
-        return res.status(400).json({ error: 'تم الوصول إلى سقف التوزيع المجتمعي' });
-    }
+    if (totalClaimed + claimable > 30000000) return res.status(400).json({ error: 'سقف التوزيع' });
 
     ensureUserExists(uid);
     db.balances[uid].YER += claimable;
     db.miningHistory.push({ uid, amount: claimable, timestamp: new Date().toISOString() });
 
-    const txId = `mine_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+    const txId = `mine_${Date.now()}`;
     db.transactions[txId] = {
         id: txId, userId: uid, from: uid,
         type: 'YER Distribution', currency: 'YER',
@@ -359,25 +365,24 @@ app.post('/api/yer/distribution/claim', (req, res) => {
 
     session.active = false;
     session.completed = true;
-
-    res.json({
-        success: true, claimed: claimable.toFixed(4),
-        newBalance: db.balances[uid].YER.toFixed(4)
-    });
+    res.json({ success: true, claimed: claimable.toFixed(4), newBalance: db.balances[uid].YER.toFixed(4) });
 });
 
 // ============================================
-// API Root
+// API Root + Serving
 // ============================================
 app.get('/api', (req, res) => {
     res.json({
         message: '🚀 BIGISH-YER API',
-        version: '1.0.0',
+        version: '2.0.0',
+        architecture: 'Pi deposit + internal YER/Pi transfers',
         endpoints: [
             '/api/health', '/api/tokenomics', '/api/auth', '/api/balance/:uid',
-            '/api/payments/approve', '/api/payments/complete', '/api/payments/hybrid',
-            '/api/transactions/user/:uid', '/api/yer/distribution/status',
-            '/api/yer/distribution/start', '/api/yer/distribution/claim'
+            '/api/payments/approve', '/api/payments/complete',
+            '/api/payments/internal',
+            '/api/transactions/user/:uid',
+            '/api/yer/distribution/status', '/api/yer/distribution/start',
+            '/api/yer/distribution/claim'
         ]
     });
 });
@@ -390,7 +395,7 @@ app.use((req, res) => res.status(404).json({ error: 'Not Found' }));
 
 if (require.main === module) {
     app.listen(PORT, () => {
-        console.log(`✅ BIGISH-YER Wallet running on port ${PORT} (${NODE_ENV})`);
+        console.log(`✅ BIGISH-YER Wallet v2 running on port ${PORT} (${NODE_ENV})`);
     });
 }
 

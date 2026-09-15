@@ -1,5 +1,6 @@
 // ============================================
-// BIGISH-YER Wallet — Balance & Payments (v6)
+// BIGISH-YER Wallet — Balance & Payments (v7)
+// Architecture: Pi deposit + Internal transfers
 // ============================================
 
 async function loadBalance() {
@@ -15,50 +16,23 @@ async function loadBalance() {
 }
 
 // ============================================
-// معالج إكمال الدفع (يتجاهل already_completed)
-// ============================================
-async function handleCompletePayment(paymentId, txid, extra = {}) {
-    try {
-        const body = {
-            paymentId,
-            txid,
-            userId: currentUser ? currentUser.uid : null,
-            ...extra
-        };
-        const r = await fetch('/api/payments/complete', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(body)
-        });
-        const d = await r.json();
-
-        if (!r.ok) {
-            if (d.error && d.error.includes('already_completed')) {
-                console.log('✅ Payment already completed (success)');
-                return { success: true, alreadyCompleted: true };
-            }
-            throw new Error('Complete failed: ' + (d.error || 'Unknown'));
-        }
-        return { success: true };
-    } catch (e) {
-        console.error('❌ Complete error:', e);
-        throw e;
-    }
-}
-
-// ============================================
-// الدفع الفردي (Pi فقط)
+// ① إيداع Pi (من محفظة Pi الرسمية → محفظة BIGISH-YER)
 // ============================================
 async function payWithPi() {
     if (!currentUser) return alert('يجب تسجيل الدخول أولاً');
-    const amount = parseFloat(prompt('أدخل المبلغ بـ Pi:', '1.0'));
+    const amount = parseFloat(prompt('أدخل المبلغ بـ Pi للإيداع في محفظة YER:', '1.0'));
     if (!amount || amount <= 0) return;
 
     try {
         await Pi.createPayment({
             amount: amount,
-            memo: "دفع تجريبي بـ Pi",
-            metadata: { type: "pi_only", orderId: "ORDER-" + Date.now() }
+            memo: `إيداع Pi في محفظة BIGISH-YER`,
+            metadata: {
+                type: "pi_deposit",
+                orderId: "DEP-" + Date.now(),
+                userId: currentUser.uid,
+                piAmount: amount
+            }
         }, {
             onReadyForServerApproval: async (paymentId) => {
                 try {
@@ -71,110 +45,96 @@ async function payWithPi() {
             },
             onReadyForServerCompletion: async (paymentId, txid) => {
                 try {
-                    await handleCompletePayment(paymentId, txid);
-                    alert('✅ تم الدفع بنجاح!');
-                } catch (e) { /* silent */ }
+                    const r = await fetch('/api/payments/complete', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            paymentId,
+                            txid,
+                            userId: currentUser.uid,
+                            piAmount: amount
+                        })
+                    });
+                    const d = await r.json();
+                    if (r.ok || (d.error && d.error.includes('already_completed'))) {
+                        alert(`✅ تم إيداع ${amount} Pi في محفظتك بنجاح!`);
+                    }
+                } catch (e) { console.error('Complete error:', e); }
                 await loadBalance();
                 if (typeof refreshHistory === 'function') await refreshHistory();
             },
-            onCancel: (paymentId) => alert('تم إلغاء الدفع'),
+            onCancel: () => alert('تم إلغاء الإيداع'),
             onError: (error) => alert('خطأ: ' + (error.message || 'غير معروف'))
         });
     } catch (e) { alert('خطأ: ' + e.message); }
 }
 
 // ============================================
-// الدفع الفردي (YER فقط)
+// ④ تحويل YER داخلي (مجاني)
 // ============================================
 async function payWithYER() {
     if (!currentUser) return alert('يجب تسجيل الدخول أولاً');
     const amount = parseFloat(prompt('أدخل المبلغ بـ YER:', '50'));
     if (!amount || amount <= 0) return;
+    const recipient = prompt('معرف المستلم (recipientId) - اتركه فارغاً للمتجر:', '');
 
     try {
-        const res = await fetch('/api/payments/hybrid', {
+        const res = await fetch('/api/payments/internal', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 accessToken: currentUser.accessToken,
                 piAmount: 0,
                 yerAmount: amount,
-                orderId: "YER-" + Date.now()
+                recipientId: recipient || null,
+                orderId: "YER-" + Date.now(),
+                memo: "تحويل YER"
             })
         });
         const data = await res.json();
         if (data.success) {
-            alert('✅ تم خصم ' + amount + ' YER بنجاح');
+            alert(`✅ تم تحويل ${amount} YER بنجاح (بدون رسوم)`);
             await loadBalance();
             if (typeof refreshHistory === 'function') await refreshHistory();
         } else {
-            alert('فشل: ' + (data.error || 'خطأ غير معروف'));
+            alert('فشل: ' + (data.error || 'خطأ'));
         }
     } catch (e) { alert('خطأ: ' + e.message); }
 }
 
 // ============================================
-// الدفع الهجين (Pi + YER) — مع ربط المعاملة
+// ②③ دفع هجين داخلي (Pi + YER من محفظة YER)
+// لا يستدعي Pi SDK — كل شيء داخلي
 // ============================================
 async function payHybrid() {
     if (!currentUser) return alert('يجب تسجيل الدخول أولاً');
-    const piAmount = parseFloat(prompt('أدخل المبلغ بـ Pi:', '0.5'));
-    if (!piAmount || piAmount <= 0) return;
-    const yerAmount = parseFloat(prompt('أدخل المبلغ بـ YER:', '50'));
-    if (!yerAmount || yerAmount <= 0) return;
+    const piAmount = parseFloat(prompt('أدخل حصة Pi:', '0.5'));
+    if (!piAmount || piAmount < 0) return;
+    const yerAmount = parseFloat(prompt('أدخل حصة YER:', '50'));
+    if (!yerAmount || yerAmount < 0) return;
+    if (piAmount === 0 && yerAmount === 0) return alert('يجب تحديد مبلغ واحد على الأقل');
+    const recipient = prompt('معرف المستلم (تاجر/خدمة):', 'merchant_demo');
 
     try {
-        // 1. خصم YER وإنشاء معاملة هجينة
-        const hybRes = await fetch('/api/payments/hybrid', {
+        const res = await fetch('/api/payments/internal', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 accessToken: currentUser.accessToken,
                 piAmount: piAmount,
                 yerAmount: yerAmount,
-                orderId: "HYB-" + Date.now()
+                recipientId: recipient,
+                orderId: "HYB-" + Date.now(),
+                memo: `دفع هجين: ${piAmount} Pi + ${yerAmount} YER`
             })
         });
-        const hybData = await hybRes.json();
-        if (!hybData.success) throw new Error(hybData.error);
-
-        // ✅ تحديث السجل مباشرة بعد خصم YER
-        await loadBalance();
-        if (typeof refreshHistory === 'function') await refreshHistory();
-
-        // 2. دفع Pi مع ربط المعاملة الهجينة
-        await Pi.createPayment({
-            amount: piAmount,
-            memo: `دفع هجين: ${piAmount} Pi + ${yerAmount} YER`,
-            metadata: {
-                type: "hybrid",
-                hybridTxId: hybData.transactionId,
-                orderId: hybData.orderId,
-                yerAmount: yerAmount
-            }
-        }, {
-            onReadyForServerApproval: async (paymentId) => {
-                try {
-                    await fetch('/api/payments/approve', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ paymentId })
-                    });
-                } catch (e) { console.error('Hybrid approve error:', e); }
-            },
-            onReadyForServerCompletion: async (paymentId, txid) => {
-                try {
-                    await handleCompletePayment(paymentId, txid, {
-                        orderId: hybData.orderId,
-                        hybridTxId: hybData.transactionId
-                    });
-                    alert('✅ تم الدفع الهجين بنجاح!');
-                } catch (e) { /* silent */ }
-                await loadBalance();
-                if (typeof refreshHistory === 'function') await refreshHistory();
-            },
-            onCancel: (paymentId) => alert('تم إلغاء الدفع'),
-            onError: (error) => alert('خطأ: ' + (error.message || 'غير معروف'))
-        });
-    } catch (e) { alert('خطأ في الدفع الهجين: ' + e.message); }
+        const data = await res.json();
+        if (data.success) {
+            alert(`✅ تم الدفع الهجين بنجاح!\n${piAmount} Pi + ${yerAmount} YER`);
+            await loadBalance();
+            if (typeof refreshHistory === 'function') await refreshHistory();
+        } else {
+            alert('فشل: ' + (data.error || 'خطأ'));
+        }
+    } catch (e) { alert('خطأ: ' + e.message); }
 }

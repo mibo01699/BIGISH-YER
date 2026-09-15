@@ -1,5 +1,5 @@
 // ============================================
-// BIGISH-YER Wallet — Balance & Payments (v3)
+// BIGISH-YER Wallet — Balance & Payments (v4)
 // ============================================
 
 async function loadBalance() {
@@ -15,7 +15,7 @@ async function loadBalance() {
 }
 
 // ============================================
-// الدفع الفردي (Pi فقط) — مع معالجة أخطاء كاملة
+// الدفع الفردي (Pi فقط)
 // ============================================
 async function payWithPi() {
     if (!currentUser) return alert('يجب تسجيل الدخول أولاً');
@@ -29,7 +29,7 @@ async function payWithPi() {
             metadata: { type: "pi_only", orderId: "ORDER-" + Date.now() }
         }, {
             onReadyForServerApproval: async (paymentId) => {
-                console.log('🔄 onReadyForServerApproval called:', paymentId);
+                console.log('🔄 onReadyForServerApproval:', paymentId);
                 try {
                     const r = await fetch('/api/payments/approve', {
                         method: 'POST',
@@ -52,7 +52,11 @@ async function payWithPi() {
                     const r = await fetch('/api/payments/complete', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ paymentId, txid })
+                        body: JSON.stringify({
+                            paymentId,
+                            txid,
+                            userId: currentUser ? currentUser.uid : null
+                        })
                     });
                     const d = await r.json();
                     console.log('✅ Complete response:', d);
@@ -125,7 +129,7 @@ async function payHybrid() {
     if (!yerAmount || yerAmount <= 0) return;
 
     try {
-        // 1. خصم YER
+        // 1. خصم YER من الخادم
         const hybRes = await fetch('/api/payments/hybrid', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -139,7 +143,7 @@ async function payHybrid() {
         const hybData = await hybRes.json();
         if (!hybData.success) throw new Error(hybData.error);
 
-        // 2. دفع Pi
+        // 2. دفع Pi عبر SDK
         await Pi.createPayment({
             amount: piAmount,
             memo: `دفع هجين: ${piAmount} Pi + ${yerAmount} YER`,
@@ -169,7 +173,11 @@ async function payHybrid() {
                     await fetch('/api/payments/complete', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ paymentId, txid })
+                        body: JSON.stringify({
+                            paymentId,
+                            txid,
+                            userId: currentUser ? currentUser.uid : null
+                        })
                     });
                     alert('✅ تم الدفع الهجين بنجاح!');
                     await loadBalance();

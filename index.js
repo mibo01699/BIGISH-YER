@@ -19,17 +19,16 @@ app.use(express.static(path.join(__dirname, 'public')));
 // In-Memory Database (للاختبار فقط)
 // ============================================
 const db = {
-    balances: {},        // { uid: { Pi: 0, YER: 0 } }
-    transactions: {},    // { txId: {...} }
-    idempotencyMap: {},  // { key: txId }
-    miningSessions: {},  // { uid: { startTime, rate, active } }
-    miningHistory: []    // [{ uid, amount, timestamp }]
+    balances: {},
+    transactions: {},
+    idempotencyMap: {},
+    miningSessions: {},
+    miningHistory: []
 };
 
-// توزيع YER لمستخدم جديد (رصيد ابتدائي للاختبار)
 function ensureUserExists(uid) {
     if (!db.balances[uid]) {
-        db.balances[uid] = { Pi: 0, YER: 100 }; // 100 YER كهدية تسجيل
+        db.balances[uid] = { Pi: 0, YER: 100 };
     }
     return db.balances[uid];
 }
@@ -74,10 +73,7 @@ app.get('/api/health', (req, res) => {
 // API: Tokenomics
 // ============================================
 app.get('/api/tokenomics', (req, res) => {
-    res.json({
-        success: true,
-        data: YER_TOKENOMICS
-    });
+    res.json({ success: true, data: YER_TOKENOMICS });
 });
 
 // ============================================
@@ -102,16 +98,11 @@ app.post('/api/auth', async (req, res) => {
         }
 
         const user = await response.json();
-
-        // تأكد من وجود المستخدم في قاعدة البيانات
         ensureUserExists(user.uid);
 
         res.json({
             success: true,
-            user: {
-                uid: user.uid,
-                username: user.username
-            }
+            user: { uid: user.uid, username: user.username }
         });
     } catch (error) {
         console.error('Auth error:', error);
@@ -163,16 +154,16 @@ app.post('/api/payments/approve', async (req, res) => {
 
         res.json({ success: true, paymentId });
     } catch (error) {
-        console.error('Approve error:', error);
+        console.error('Approve exception:', error);
         res.status(500).json({ error: 'Server error during approval' });
     }
 });
 
 // ============================================
-// API: Payments — Complete
+// API: Payments — Complete (مصحح)
 // ============================================
 app.post('/api/payments/complete', async (req, res) => {
-    const { paymentId, txid } = req.body;
+    const { paymentId, txid, userId } = req.body;
     if (!paymentId || !txid) {
         return res.status(400).json({ error: 'paymentId and txid are required' });
     }
@@ -199,19 +190,22 @@ app.post('/api/payments/complete', async (req, res) => {
             return res.status(response.status).json({ error: errorText });
         }
 
-        // تسجيل المعاملة
+        // تسجيل المعاملة (مع ربطها بالمستخدم)
         db.transactions[paymentId] = {
             id: paymentId,
             txid: txid,
+            userId: userId || null,
+            from: userId || null,
             type: 'Pi Payment',
             currency: 'Pi',
+            amount: '1.0',
             status: 'COMPLETED',
             timestamp: new Date().toISOString()
         };
 
         res.json({ success: true, paymentId, txid });
     } catch (error) {
-        console.error('Complete error:', error);
+        console.error('Complete exception:', error);
         res.status(500).json({ error: 'Server error during completion' });
     }
 });
@@ -227,7 +221,6 @@ app.post('/api/payments/hybrid', async (req, res) => {
     }
 
     try {
-        // التحقق من التوكن
         const userResponse = await fetch('https://api.minepi.com/v2/me', {
             headers: { 'Authorization': `Bearer ${accessToken}` }
         });
@@ -239,7 +232,6 @@ app.post('/api/payments/hybrid', async (req, res) => {
         const user = await userResponse.json();
         const balance = ensureUserExists(user.uid);
 
-        // التحقق من رصيد YER
         if (balance.YER < yerAmount) {
             return res.status(400).json({
                 error: 'رصيد YER غير كافٍ',
@@ -256,9 +248,10 @@ app.post('/api/payments/hybrid', async (req, res) => {
         db.transactions[transactionId] = {
             id: transactionId,
             userId: user.uid,
-            type: 'Hybrid Payment',
+            from: user.uid,
+            type: piAmount > 0 ? 'Hybrid Payment' : 'YER Payment',
             currency: 'YER',
-            amount: yerAmount,
+            amount: yerAmount.toString(),
             piAmount: piAmount,
             orderId: orderId,
             status: piAmount > 0 ? 'PENDING_PI' : 'COMPLETED',
@@ -292,14 +285,11 @@ app.get('/api/transactions/user/:uid', (req, res) => {
         tx.uid === uid
     );
 
-    // ترتيب حسب التاريخ (الأحدث أولاً)
-    userTxs.sort((a, b) =>
-        new Date(b.timestamp) - new Date(a.timestamp)
-    );
+    userTxs.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
 
     res.json({
         success: true,
-        transactions: userTxs.slice(0, 50) // آخر 50 معاملة
+        transactions: userTxs.slice(0, 50)
     });
 });
 
@@ -307,7 +297,6 @@ app.get('/api/transactions/user/:uid', (req, res) => {
 // API: YER Distribution (Mining)
 // ============================================
 
-// حالة التوزيع
 app.get('/api/yer/distribution/status', (req, res) => {
     const uid = req.headers['x-user-id'];
     if (!uid) {
@@ -327,13 +316,11 @@ app.get('/api/yer/distribution/status', (req, res) => {
         });
     }
 
-    // حساب المدة المنقضية
     const elapsedMs = Date.now() - session.startTime;
     const elapsedHours = elapsedMs / (1000 * 60 * 60);
     const totalHours = 24;
 
     if (elapsedHours >= totalHours) {
-        // الجلسة انتهت
         session.active = false;
         session.completed = true;
     }
@@ -350,7 +337,6 @@ app.get('/api/yer/distribution/status', (req, res) => {
     });
 });
 
-// بدء التوزيع
 app.post('/api/yer/distribution/start', (req, res) => {
     const uid = req.headers['x-user-id'];
     if (!uid) {
@@ -359,18 +345,14 @@ app.post('/api/yer/distribution/start', (req, res) => {
 
     ensureUserExists(uid);
 
-    // التحقق من وجود جلسة نشطة
     const existing = db.miningSessions[uid];
     if (existing && existing.active) {
-        return res.status(400).json({
-            error: 'يوجد جلسة توزيع نشطة بالفعل'
-        });
+        return res.status(400).json({ error: 'يوجد جلسة توزيع نشطة بالفعل' });
     }
 
-    // إنشاء جلسة جديدة
     db.miningSessions[uid] = {
         startTime: Date.now(),
-        rate: 0.10, // معدل ابتدائي
+        rate: 0.10,
         active: true,
         completed: false
     };
@@ -386,7 +368,6 @@ app.post('/api/yer/distribution/start', (req, res) => {
     });
 });
 
-// المطالبة بالرصيد
 app.post('/api/yer/distribution/claim', (req, res) => {
     const uid = req.headers['x-user-id'];
     if (!uid) {
@@ -398,7 +379,6 @@ app.post('/api/yer/distribution/claim', (req, res) => {
         return res.status(400).json({ error: 'لا توجد جلسة توزيع' });
     }
 
-    // حساب المبلغ المتراكم
     const elapsedMs = Date.now() - session.startTime;
     const elapsedHours = elapsedMs / (1000 * 60 * 60);
     const claimable = elapsedHours * session.rate;
@@ -407,32 +387,27 @@ app.post('/api/yer/distribution/claim', (req, res) => {
         return res.status(400).json({ error: 'لا يوجد رصيد للمطالبة' });
     }
 
-    // التحقق من عدم تجاوز سقف المجتمع (10% من 300M)
     const totalClaimed = db.miningHistory.reduce((sum, h) => sum + h.amount, 0);
     const COMMUNITY_CAP = 30000000;
 
     if (totalClaimed + claimable > COMMUNITY_CAP) {
-        return res.status(400).json({
-            error: 'تم الوصول إلى سقف التوزيع المجتمعي'
-        });
+        return res.status(400).json({ error: 'تم الوصول إلى سقف التوزيع المجتمعي' });
     }
 
-    // إضافة الرصيد
     ensureUserExists(uid);
     db.balances[uid].YER += claimable;
 
-    // تسجيل العملية
     db.miningHistory.push({
         uid,
         amount: claimable,
         timestamp: new Date().toISOString()
     });
 
-    // تسجيل معاملة
     const txId = `mine_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
     db.transactions[txId] = {
         id: txId,
         userId: uid,
+        from: uid,
         type: 'YER Distribution',
         currency: 'YER',
         amount: claimable.toFixed(4),
@@ -440,7 +415,6 @@ app.post('/api/yer/distribution/claim', (req, res) => {
         timestamp: new Date().toISOString()
     };
 
-    // إنهاء الجلسة
     session.active = false;
     session.completed = true;
 
@@ -452,7 +426,7 @@ app.post('/api/yer/distribution/claim', (req, res) => {
 });
 
 // ============================================
-// API: Root (للاختبار)
+// API: Root
 // ============================================
 app.get('/api', (req, res) => {
     res.json({

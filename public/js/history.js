@@ -1,11 +1,12 @@
 // ============================================
-// BIGISH-YER Wallet — Transaction History (v4)
+// BIGISH-YER Wallet — Transaction History (v5)
 // ============================================
 
 async function refreshHistory() {
     if (!currentUser) return;
     const listDiv = document.getElementById('history-list');
     if (!listDiv) return;
+
     listDiv.innerHTML = '<p class="empty-state">جارٍ التحميل...</p>';
 
     try {
@@ -42,25 +43,47 @@ async function refreshHistory() {
     }
 }
 
+// ============================================
+// تنسيق المبلغ (مصحح بالكامل)
+// ============================================
 function formatAmount(tx, isOutgoing) {
     const sign = isOutgoing ? '-' : '+';
 
+    // إيداع Pi
     if (tx.type === 'Pi Deposit') {
-        return `${sign}${tx.amount} Pi`;
+        return `<div style="font-weight:700;">${sign}${tx.amount} Pi</div>`;
     }
+
+    // دفع هجين (Pi + YER)
     if (tx.type === 'Hybrid Payment') {
-        return `<div style="font-weight:700;">${sign}${tx.piAmount} Pi</div>
-                <div style="font-size:0.75rem; color:#888;">+ ${sign}${tx.yerAmount} YER</div>`;
+        return `
+            <div style="font-weight:700;">${sign}${tx.piAmount} Pi</div>
+            <div style="font-weight:700; font-size:0.9rem;">${sign}${tx.yerAmount} YER</div>
+        `;
     }
-    if (tx.type === 'Pi Transfer') {
-        return `${sign}${tx.piAmount} Pi`;
+
+    // تحويل Pi
+    if (tx.type === 'Pi Transfer' || tx.type === 'Pi Payment') {
+        return `<div style="font-weight:700;">${sign}${tx.piAmount || tx.amount} Pi</div>`;
     }
-    if (tx.type === 'YER Transfer') {
-        return `${sign}${tx.yerAmount} YER`;
+
+    // تحويل YER
+    if (tx.type === 'YER Transfer' || tx.type === 'YER Payment') {
+        return `<div style="font-weight:700;">${sign}${tx.yerAmount || tx.amount} YER</div>`;
     }
-    return `${sign}${tx.amount} ${tx.currency || 'YER'}`;
+
+    // توزيع YER
+    if (tx.type === 'YER Distribution') {
+        return `<div style="font-weight:700;">${sign}${tx.amount} YER</div>`;
+    }
+
+    // افتراضي
+    return `<div style="font-weight:700;">${sign}${tx.amount} ${tx.currency || 'YER'}</div>`;
 }
 
+// ============================================
+// أيقونات المعاملات
+// ============================================
 function getTxIcon(type) {
     const icons = {
         'Pi Deposit': '⬇️',
@@ -74,13 +97,19 @@ function getTxIcon(type) {
     return icons[type] || '💳';
 }
 
+// ============================================
+// شارة الرسوم
+// ============================================
 function getTxFeeBadge(tx) {
-    if (tx.fee === 0) {
+    if (tx.fee === 0 && tx.type !== 'Pi Deposit') {
         return '<span style="font-size:0.65rem; color:#27ae60;">✓ بدون رسوم</span>';
     }
     return '';
 }
 
+// ============================================
+// تفاصيل المعاملة
+// ============================================
 function showTransactionDetails(tx) {
     let d = `📋 تفاصيل المعاملة\n\n`;
     d += `المعرف: ${tx.id || '—'}\n`;
@@ -88,21 +117,34 @@ function showTransactionDetails(tx) {
     d += `الحالة: ${tx.status || '—'}\n`;
 
     if (tx.type === 'Pi Deposit') {
-        d += `\n⬇️ إيداع:\n   • المبلغ: ${tx.amount} Pi\n   • من: محفظة Pi الرسمية\n`;
+        d += `\n⬇️ إيداع:\n`;
+        d += `   • المبلغ: ${tx.amount} Pi\n`;
+        d += `   • من: محفظة Pi الرسمية\n`;
     } else if (tx.type === 'Hybrid Payment') {
-        d += `\n🔀 دفع هجين:\n   • Pi: ${tx.piAmount}\n   • YER: ${tx.yerAmount}\n`;
+        d += `\n🔀 دفع هجين:\n`;
+        d += `   • Pi: ${tx.piAmount}\n`;
+        d += `   • YER: ${tx.yerAmount}\n`;
+        d += `   • الرسوم: 0 (مجاني)\n`;
+    } else if (tx.type === 'YER Transfer') {
+        d += `\n🟡 تحويل YER:\n`;
+        d += `   • المبلغ: ${tx.yerAmount || tx.amount}\n`;
+        d += `   • الرسوم: 0 (مجاني)\n`;
     } else {
         d += `العملة: ${tx.currency || '—'}\n`;
         d += `المبلغ: ${tx.amount}\n`;
     }
 
-    if (tx.to) d += `إلى: ${tx.to}\n`;
+    if (tx.to) d += `\nإلى: ${tx.to}\n`;
+    if (tx.memo) d += `ملاحظة: ${tx.memo}\n`;
     if (tx.txid) d += `\nTXID: ${tx.txid.slice(0, 30)}...\n`;
     d += `\nالتاريخ: ${formatDate(tx.timestamp)}`;
 
     alert(d);
 }
 
+// ============================================
+// تنسيق التاريخ
+// ============================================
 function formatDate(timestamp) {
     if (!timestamp) return '—';
     const date = new Date(timestamp);

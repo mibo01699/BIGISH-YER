@@ -1,5 +1,5 @@
 // ============================================
-// BIGISH-YER Wallet — Balance & Payments (v5)
+// BIGISH-YER Wallet — Balance & Payments (v6)
 // ============================================
 
 async function loadBalance() {
@@ -15,32 +15,30 @@ async function loadBalance() {
 }
 
 // ============================================
-// معالج الدفع الكامل (يتجاهل already_completed)
+// معالج إكمال الدفع (يتجاهل already_completed)
 // ============================================
-async function handleCompletePayment(paymentId, txid) {
+async function handleCompletePayment(paymentId, txid, extra = {}) {
     try {
+        const body = {
+            paymentId,
+            txid,
+            userId: currentUser ? currentUser.uid : null,
+            ...extra
+        };
         const r = await fetch('/api/payments/complete', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                paymentId,
-                txid,
-                userId: currentUser ? currentUser.uid : null
-            })
+            body: JSON.stringify(body)
         });
         const d = await r.json();
 
-        // ✅ إذا كان الدفع مكتملاً بالفعل، اعتبره نجاحاً
-        if (!r.ok && d.error && d.error.includes('already_completed')) {
-            console.log('✅ Payment already completed (success)');
-            return { success: true, alreadyCompleted: true };
-        }
-
         if (!r.ok) {
-            console.error('❌ Complete failed:', d);
+            if (d.error && d.error.includes('already_completed')) {
+                console.log('✅ Payment already completed (success)');
+                return { success: true, alreadyCompleted: true };
+            }
             throw new Error('Complete failed: ' + (d.error || 'Unknown'));
         }
-
         return { success: true };
     } catch (e) {
         console.error('❌ Complete error:', e);
@@ -63,49 +61,26 @@ async function payWithPi() {
             metadata: { type: "pi_only", orderId: "ORDER-" + Date.now() }
         }, {
             onReadyForServerApproval: async (paymentId) => {
-                console.log('🔄 Approve:', paymentId);
                 try {
-                    const r = await fetch('/api/payments/approve', {
+                    await fetch('/api/payments/approve', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ paymentId })
                     });
-                    if (!r.ok) {
-                        const d = await r.json();
-                        console.error('❌ Approve failed:', d);
-                    }
-                } catch (e) {
-                    console.error('❌ Approve error:', e);
-                }
+                } catch (e) { console.error('Approve error:', e); }
             },
             onReadyForServerCompletion: async (paymentId, txid) => {
-                console.log('🔄 Complete:', paymentId, txid);
                 try {
-                    const result = await handleCompletePayment(paymentId, txid);
-                    if (result.success) {
-                        alert('✅ تم الدفع بنجاح!');
-                        await loadBalance();
-                        if (typeof refreshHistory === 'function') await refreshHistory();
-                    }
-                } catch (e) {
-                    // حتى مع خطأ، حدّث السجل
-                    await loadBalance();
-                    if (typeof refreshHistory === 'function') await refreshHistory();
-                }
+                    await handleCompletePayment(paymentId, txid);
+                    alert('✅ تم الدفع بنجاح!');
+                } catch (e) { /* silent */ }
+                await loadBalance();
+                if (typeof refreshHistory === 'function') await refreshHistory();
             },
-            onCancel: (paymentId) => {
-                console.log('⚠️ Cancelled:', paymentId);
-                alert('تم إلغاء الدفع');
-            },
-            onError: (error) => {
-                console.error('❌ Error:', error);
-                alert('خطأ في الدفع: ' + (error.message || 'خطأ غير معروف'));
-            }
+            onCancel: (paymentId) => alert('تم إلغاء الدفع'),
+            onError: (error) => alert('خطأ: ' + (error.message || 'غير معروف'))
         });
-    } catch (e) {
-        console.error('Catch:', e);
-        alert('خطأ: ' + e.message);
-    }
+    } catch (e) { alert('خطأ: ' + e.message); }
 }
 
 // ============================================
@@ -135,13 +110,11 @@ async function payWithYER() {
         } else {
             alert('فشل: ' + (data.error || 'خطأ غير معروف'));
         }
-    } catch (e) {
-        alert('خطأ: ' + e.message);
-    }
+    } catch (e) { alert('خطأ: ' + e.message); }
 }
 
 // ============================================
-// الدفع الهجين (Pi + YER)
+// الدفع الهجين (Pi + YER) — مع ربط المعاملة
 // ============================================
 async function payHybrid() {
     if (!currentUser) return alert('يجب تسجيل الدخول أولاً');
@@ -151,7 +124,7 @@ async function payHybrid() {
     if (!yerAmount || yerAmount <= 0) return;
 
     try {
-        // 1. خصم YER
+        // 1. خصم YER وإنشاء معاملة هجينة
         const hybRes = await fetch('/api/payments/hybrid', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -165,15 +138,19 @@ async function payHybrid() {
         const hybData = await hybRes.json();
         if (!hybData.success) throw new Error(hybData.error);
 
-        // 2. دفع Pi
+        // ✅ تحديث السجل مباشرة بعد خصم YER
+        await loadBalance();
+        if (typeof refreshHistory === 'function') await refreshHistory();
+
+        // 2. دفع Pi مع ربط المعاملة الهجينة
         await Pi.createPayment({
             amount: piAmount,
             memo: `دفع هجين: ${piAmount} Pi + ${yerAmount} YER`,
             metadata: {
                 type: "hybrid",
-                transactionId: hybData.transactionId,
-                yerAmount: yerAmount,
-                orderId: hybData.orderId
+                hybridTxId: hybData.transactionId,
+                orderId: hybData.orderId,
+                yerAmount: yerAmount
             }
         }, {
             onReadyForServerApproval: async (paymentId) => {
@@ -183,33 +160,21 @@ async function payHybrid() {
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ paymentId })
                     });
-                } catch (e) {
-                    console.error('❌ Hybrid approve error:', e);
-                }
+                } catch (e) { console.error('Hybrid approve error:', e); }
             },
             onReadyForServerCompletion: async (paymentId, txid) => {
                 try {
-                    const result = await handleCompletePayment(paymentId, txid);
-                    if (result.success) {
-                        alert('✅ تم الدفع الهجين بنجاح!');
-                    }
-                    await loadBalance();
-                    if (typeof refreshHistory === 'function') await refreshHistory();
-                } catch (e) {
-                    await loadBalance();
-                    if (typeof refreshHistory === 'function') await refreshHistory();
-                }
+                    await handleCompletePayment(paymentId, txid, {
+                        orderId: hybData.orderId,
+                        hybridTxId: hybData.transactionId
+                    });
+                    alert('✅ تم الدفع الهجين بنجاح!');
+                } catch (e) { /* silent */ }
+                await loadBalance();
+                if (typeof refreshHistory === 'function') await refreshHistory();
             },
-            onCancel: (paymentId) => {
-                console.log('⚠️ Cancelled:', paymentId);
-                alert('تم إلغاء الدفع');
-            },
-            onError: (error) => {
-                console.error('❌ Hybrid error:', error);
-                alert('خطأ: ' + (error.message || 'غير معروف'));
-            }
+            onCancel: (paymentId) => alert('تم إلغاء الدفع'),
+            onError: (error) => alert('خطأ: ' + (error.message || 'غير معروف'))
         });
-    } catch (e) {
-        alert('خطأ في الدفع الهجين: ' + e.message);
-    }
+    } catch (e) { alert('خطأ في الدفع الهجين: ' + e.message); }
 }

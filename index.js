@@ -8,15 +8,12 @@ const PORT = process.env.PORT || 3000;
 const NODE_ENV = process.env.NODE_ENV || 'development';
 const PI_API_KEY = process.env.PI_API_KEY || '';
 
-// ============================================
-// Middleware
-// ============================================
 app.use(cors({ origin: '*' }));
 app.use(express.json({ limit: '1mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
 
 // ============================================
-// In-Memory Database (للاختبار فقط)
+// In-Memory Database
 // ============================================
 const db = {
     balances: {},
@@ -61,49 +58,30 @@ app.get('/api/health', (req, res) => {
             authentication: PI_API_KEY ? 'CONFIGURED' : 'NOT_CONFIGURED',
             payments: PI_API_KEY ? 'CONFIGURED' : 'NOT_CONFIGURED'
         },
-        token: {
-            symbol: 'YER',
-            status: 'NOT_DEPLOYED',
-            maxSupply: '300000000'
-        }
+        token: { symbol: 'YER', status: 'NOT_DEPLOYED', maxSupply: '300000000' }
     });
 });
 
-// ============================================
-// API: Tokenomics
-// ============================================
 app.get('/api/tokenomics', (req, res) => {
     res.json({ success: true, data: YER_TOKENOMICS });
 });
 
 // ============================================
-// API: Authentication
+// API: Auth
 // ============================================
 app.post('/api/auth', async (req, res) => {
     const { accessToken } = req.body;
-    if (!accessToken) {
-        return res.status(400).json({ error: 'accessToken is required' });
-    }
+    if (!accessToken) return res.status(400).json({ error: 'accessToken is required' });
 
     try {
         const response = await fetch('https://api.minepi.com/v2/me', {
-            headers: {
-                'Authorization': `Bearer ${accessToken}`,
-                'Accept': 'application/json'
-            }
+            headers: { 'Authorization': `Bearer ${accessToken}`, 'Accept': 'application/json' }
         });
-
-        if (!response.ok) {
-            return res.status(401).json({ error: 'Invalid or expired token' });
-        }
+        if (!response.ok) return res.status(401).json({ error: 'Invalid or expired token' });
 
         const user = await response.json();
         ensureUserExists(user.uid);
-
-        res.json({
-            success: true,
-            user: { uid: user.uid, username: user.username }
-        });
+        res.json({ success: true, user: { uid: user.uid, username: user.username } });
     } catch (error) {
         console.error('Auth error:', error);
         res.status(500).json({ error: 'Server error during authentication' });
@@ -115,11 +93,7 @@ app.post('/api/auth', async (req, res) => {
 // ============================================
 app.get('/api/balance/:uid', (req, res) => {
     const balance = ensureUserExists(req.params.uid);
-    res.json({
-        uid: req.params.uid,
-        Pi: balance.Pi || 0,
-        YER: balance.YER || 0
-    });
+    res.json({ uid: req.params.uid, Pi: balance.Pi || 0, YER: balance.YER || 0 });
 });
 
 // ============================================
@@ -127,12 +101,8 @@ app.get('/api/balance/:uid', (req, res) => {
 // ============================================
 app.post('/api/payments/approve', async (req, res) => {
     const { paymentId } = req.body;
-    if (!paymentId) {
-        return res.status(400).json({ error: 'paymentId is required' });
-    }
-    if (!PI_API_KEY) {
-        return res.status(500).json({ error: 'PI_API_KEY not configured' });
-    }
+    if (!paymentId) return res.status(400).json({ error: 'paymentId is required' });
+    if (!PI_API_KEY) return res.status(500).json({ error: 'PI_API_KEY not configured' });
 
     try {
         const response = await fetch(
@@ -151,7 +121,6 @@ app.post('/api/payments/approve', async (req, res) => {
             console.error('Approve error:', errorText);
             return res.status(response.status).json({ error: errorText });
         }
-
         res.json({ success: true, paymentId });
     } catch (error) {
         console.error('Approve exception:', error);
@@ -160,16 +129,12 @@ app.post('/api/payments/approve', async (req, res) => {
 });
 
 // ============================================
-// API: Payments — Complete (مصحح)
+// API: Payments — Complete (مصحح وذكي)
 // ============================================
 app.post('/api/payments/complete', async (req, res) => {
-    const { paymentId, txid, userId } = req.body;
-    if (!paymentId || !txid) {
-        return res.status(400).json({ error: 'paymentId and txid are required' });
-    }
-    if (!PI_API_KEY) {
-        return res.status(500).json({ error: 'PI_API_KEY not configured' });
-    }
+    const { paymentId, txid, userId, orderId, hybridTxId } = req.body;
+    if (!paymentId || !txid) return res.status(400).json({ error: 'paymentId and txid are required' });
+    if (!PI_API_KEY) return res.status(500).json({ error: 'PI_API_KEY not configured' });
 
     try {
         const response = await fetch(
@@ -184,24 +149,42 @@ app.post('/api/payments/complete', async (req, res) => {
             }
         );
 
+        // ✅ معالجة already_completed كنجاح
         if (!response.ok) {
             const errorText = await response.text();
-            console.error('Complete error:', errorText);
-            return res.status(response.status).json({ error: errorText });
+            if (errorText.includes('already_completed')) {
+                console.log('✅ Payment already completed (success)');
+            } else {
+                console.error('Complete error:', errorText);
+                return res.status(response.status).json({ error: errorText });
+            }
         }
 
-        // تسجيل المعاملة (مع ربطها بالمستخدم)
-        db.transactions[paymentId] = {
-            id: paymentId,
-            txid: txid,
-            userId: userId || null,
-            from: userId || null,
-            type: 'Pi Payment',
-            currency: 'Pi',
-            amount: '1.0',
-            status: 'COMPLETED',
-            timestamp: new Date().toISOString()
-        };
+        // ✅ إذا كانت دفعة هجينة، حدّث المعاملة الأصلية
+        if (hybridTxId && db.transactions[hybridTxId]) {
+            const hybTx = db.transactions[hybridTxId];
+            hybTx.status = 'COMPLETED';
+            hybTx.piTxid = txid;
+            hybTx.piPaymentId = paymentId;
+            hybTx.completedAt = new Date().toISOString();
+            hybTx.type = 'Hybrid Payment';
+            console.log('✅ Hybrid transaction updated:', hybridTxId);
+        } else {
+            // دفعة Pi عادية
+            const txId = `pi_${paymentId}`;
+            db.transactions[txId] = {
+                id: txId,
+                paymentId: paymentId,
+                txid: txid,
+                userId: userId || null,
+                from: userId || null,
+                type: 'Pi Payment',
+                currency: 'Pi',
+                amount: '1.0',
+                status: 'COMPLETED',
+                timestamp: new Date().toISOString()
+            };
+        }
 
         res.json({ success: true, paymentId, txid });
     } catch (error) {
@@ -215,7 +198,6 @@ app.post('/api/payments/complete', async (req, res) => {
 // ============================================
 app.post('/api/payments/hybrid', async (req, res) => {
     const { accessToken, piAmount, yerAmount, orderId } = req.body;
-
     if (!accessToken || piAmount === undefined || !yerAmount || !orderId) {
         return res.status(400).json({ error: 'Missing required fields' });
     }
@@ -224,10 +206,7 @@ app.post('/api/payments/hybrid', async (req, res) => {
         const userResponse = await fetch('https://api.minepi.com/v2/me', {
             headers: { 'Authorization': `Bearer ${accessToken}` }
         });
-
-        if (!userResponse.ok) {
-            return res.status(401).json({ error: 'Invalid token' });
-        }
+        if (!userResponse.ok) return res.status(401).json({ error: 'Invalid token' });
 
         const user = await userResponse.json();
         const balance = ensureUserExists(user.uid);
@@ -243,18 +222,22 @@ app.post('/api/payments/hybrid', async (req, res) => {
         // خصم YER
         db.balances[user.uid].YER = balance.YER - yerAmount;
 
-        // تسجيل المعاملة
+        // إنشاء معاملة موحدة
         const transactionId = `hyb_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+        const type = piAmount > 0 ? 'Hybrid Payment' : 'YER Payment';
+        const status = piAmount > 0 ? 'PENDING_PI' : 'COMPLETED';
+
         db.transactions[transactionId] = {
             id: transactionId,
             userId: user.uid,
             from: user.uid,
-            type: piAmount > 0 ? 'Hybrid Payment' : 'YER Payment',
-            currency: 'YER',
-            amount: yerAmount.toString(),
+            type: type,
+            currency: piAmount > 0 ? 'Pi + YER' : 'YER',
+            yerAmount: yerAmount,
             piAmount: piAmount,
+            amount: yerAmount.toString(),
             orderId: orderId,
-            status: piAmount > 0 ? 'PENDING_PI' : 'COMPLETED',
+            status: status,
             timestamp: new Date().toISOString()
         };
 
@@ -264,6 +247,7 @@ app.post('/api/payments/hybrid', async (req, res) => {
             piAmount,
             yerAmount,
             orderId,
+            type,
             newYerBalance: db.balances[user.uid].YER
         });
     } catch (error) {
@@ -277,42 +261,27 @@ app.post('/api/payments/hybrid', async (req, res) => {
 // ============================================
 app.get('/api/transactions/user/:uid', (req, res) => {
     const { uid } = req.params;
-
     const userTxs = Object.values(db.transactions).filter(tx =>
-        tx.userId === uid ||
-        tx.from === uid ||
-        tx.to === uid ||
-        tx.uid === uid
+        tx.userId === uid || tx.from === uid || tx.to === uid || tx.uid === uid
     );
-
     userTxs.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-
-    res.json({
-        success: true,
-        transactions: userTxs.slice(0, 50)
-    });
+    res.json({ success: true, transactions: userTxs.slice(0, 50) });
 });
 
 // ============================================
-// API: YER Distribution (Mining)
+// API: YER Distribution
 // ============================================
-
 app.get('/api/yer/distribution/status', (req, res) => {
     const uid = req.headers['x-user-id'];
-    if (!uid) {
-        return res.status(400).json({ error: 'x-user-id header required' });
-    }
+    if (!uid) return res.status(400).json({ error: 'x-user-id header required' });
 
     ensureUserExists(uid);
     const session = db.miningSessions[uid];
 
     if (!session || !session.active) {
         return res.json({
-            success: true,
-            isDistributionActive: false,
-            currentRatePerHour: '0.10',
-            hoursRemaining: 0,
-            unclaimedBalance: '0.00'
+            success: true, isDistributionActive: false,
+            currentRatePerHour: '0.10', hoursRemaining: 0, unclaimedBalance: '0.00'
         });
     }
 
@@ -339,79 +308,52 @@ app.get('/api/yer/distribution/status', (req, res) => {
 
 app.post('/api/yer/distribution/start', (req, res) => {
     const uid = req.headers['x-user-id'];
-    if (!uid) {
-        return res.status(400).json({ error: 'x-user-id header required' });
-    }
+    if (!uid) return res.status(400).json({ error: 'x-user-id header required' });
 
     ensureUserExists(uid);
-
     const existing = db.miningSessions[uid];
     if (existing && existing.active) {
         return res.status(400).json({ error: 'يوجد جلسة توزيع نشطة بالفعل' });
     }
 
     db.miningSessions[uid] = {
-        startTime: Date.now(),
-        rate: 0.10,
-        active: true,
-        completed: false
+        startTime: Date.now(), rate: 0.10, active: true, completed: false
     };
 
     res.json({
-        success: true,
-        message: 'بدأت جلسة التوزيع',
-        session: {
-            startTime: db.miningSessions[uid].startTime,
-            rate: 0.10,
-            duration: 24
-        }
+        success: true, message: 'بدأت جلسة التوزيع',
+        session: { startTime: db.miningSessions[uid].startTime, rate: 0.10, duration: 24 }
     });
 });
 
 app.post('/api/yer/distribution/claim', (req, res) => {
     const uid = req.headers['x-user-id'];
-    if (!uid) {
-        return res.status(400).json({ error: 'x-user-id header required' });
-    }
+    if (!uid) return res.status(400).json({ error: 'x-user-id header required' });
 
     const session = db.miningSessions[uid];
-    if (!session) {
-        return res.status(400).json({ error: 'لا توجد جلسة توزيع' });
-    }
+    if (!session) return res.status(400).json({ error: 'لا توجد جلسة توزيع' });
 
     const elapsedMs = Date.now() - session.startTime;
     const elapsedHours = elapsedMs / (1000 * 60 * 60);
     const claimable = elapsedHours * session.rate;
 
-    if (claimable <= 0) {
-        return res.status(400).json({ error: 'لا يوجد رصيد للمطالبة' });
-    }
+    if (claimable <= 0) return res.status(400).json({ error: 'لا يوجد رصيد للمطالبة' });
 
     const totalClaimed = db.miningHistory.reduce((sum, h) => sum + h.amount, 0);
     const COMMUNITY_CAP = 30000000;
-
     if (totalClaimed + claimable > COMMUNITY_CAP) {
         return res.status(400).json({ error: 'تم الوصول إلى سقف التوزيع المجتمعي' });
     }
 
     ensureUserExists(uid);
     db.balances[uid].YER += claimable;
-
-    db.miningHistory.push({
-        uid,
-        amount: claimable,
-        timestamp: new Date().toISOString()
-    });
+    db.miningHistory.push({ uid, amount: claimable, timestamp: new Date().toISOString() });
 
     const txId = `mine_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
     db.transactions[txId] = {
-        id: txId,
-        userId: uid,
-        from: uid,
-        type: 'YER Distribution',
-        currency: 'YER',
-        amount: claimable.toFixed(4),
-        status: 'COMPLETED',
+        id: txId, userId: uid, from: uid,
+        type: 'YER Distribution', currency: 'YER',
+        amount: claimable.toFixed(4), status: 'COMPLETED',
         timestamp: new Date().toISOString()
     };
 
@@ -419,52 +361,33 @@ app.post('/api/yer/distribution/claim', (req, res) => {
     session.completed = true;
 
     res.json({
-        success: true,
-        claimed: claimable.toFixed(4),
+        success: true, claimed: claimable.toFixed(4),
         newBalance: db.balances[uid].YER.toFixed(4)
     });
 });
 
 // ============================================
-// API: Root
+// API Root
 // ============================================
 app.get('/api', (req, res) => {
     res.json({
-        message: '🚀 BIGISH-YER API is running',
+        message: '🚀 BIGISH-YER API',
         version: '1.0.0',
         endpoints: [
-            '/api/health',
-            '/api/tokenomics',
-            '/api/auth',
-            '/api/balance/:uid',
-            '/api/payments/approve',
-            '/api/payments/complete',
-            '/api/payments/hybrid',
-            '/api/transactions/user/:uid',
-            '/api/yer/distribution/status',
-            '/api/yer/distribution/start',
-            '/api/yer/distribution/claim'
+            '/api/health', '/api/tokenomics', '/api/auth', '/api/balance/:uid',
+            '/api/payments/approve', '/api/payments/complete', '/api/payments/hybrid',
+            '/api/transactions/user/:uid', '/api/yer/distribution/status',
+            '/api/yer/distribution/start', '/api/yer/distribution/claim'
         ]
     });
 });
 
-// ============================================
-// Static File Serving
-// ============================================
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// ============================================
-// 404 Handler
-// ============================================
-app.use((req, res) => {
-    res.status(404).json({ error: 'Not Found' });
-});
+app.use((req, res) => res.status(404).json({ error: 'Not Found' }));
 
-// ============================================
-// Start Server
-// ============================================
 if (require.main === module) {
     app.listen(PORT, () => {
         console.log(`✅ BIGISH-YER Wallet running on port ${PORT} (${NODE_ENV})`);

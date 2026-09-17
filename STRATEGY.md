@@ -46,3 +46,65 @@ Building a comprehensive digital economy of 9 integrated applications on Pi Netw
 8. Arab Eagle Sovereign Fund (Finance & Lending)
 
 ## 🔄 Integration Flow
+
+```
+
+Partner App (e.g., GAV)
+↓
+User selects product/service
+↓
+App calls BIGISH-YER Integration API
+↓
+BIGISH-YER:
+• Verifies user (Pi Sign-In)
+• Checks balance (Pi + YER)
+• Executes payment
+• Records transaction
+• Returns confirmation
+↓
+App receives confirmation
+↓
+Service/Product delivered
+
+```
+
+## 💰 Pricing Model
+
+| Context | Pricing Source |
+|:---|:---|
+| **BIGISH-YER direct payments** | Fixed amounts (user enters) |
+| **Partner App payments** | Merchant-defined price |
+| **Reference price (display)** | Pi DEX AMM (Pi/YER pool) |
+| **Currency conversion** | Live from DEX (when available) |
+
+## 🛡️ Security Principles
+
+- No storage of private keys or passphrases.
+- API authentication via shared secret per partner app.
+- All transactions recorded with full audit trail.
+- Rate limiting on all endpoints.
+- CORS restricted to registered domains.
+
+## 📅 Development Phases
+
+### Phase 1: Foundation (current)
+- BIGISH-YER core (done)
+- Integration API (in progress)
+- Strategy documentation (this file)
+
+### Phase 2: First Partner App — GAV
+- Build GAV UI and features
+- Integrate with BIGISH-YER API
+- Register on Pi Developer Portal
+- Complete App Checklist
+
+### Phase 3: Remaining 7 Apps
+- Build each using standardized template
+- Register and submit each separately
+
+### Phase 4: Token & Ecosystem
+- Prepare PiRC1 compliance document
+- Submit YER listing request to Pi Core Team
+- Launch on DEX (after approval)
+
+## © 2026 Arabian Eagle A.E.C

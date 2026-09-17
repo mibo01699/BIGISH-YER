@@ -9,9 +9,6 @@
 </head>
 <body>
 
-<!-- ============================================ -->
-<!-- الشريط العلوي -->
-<!-- ============================================ -->
 <header class="top-bar">
     <div class="logo">🦅 BIGISH-YER</div>
     <div class="network-badge">
@@ -23,9 +20,6 @@
     </div>
 </header>
 
-<!-- ============================================ -->
-<!-- القائمة السفلية للتنقل -->
-<!-- ============================================ -->
 <nav class="bottom-nav" id="bottom-nav" style="display:none;">
     <button class="nav-btn active" data-page="home" onclick="showPage('home')">
         <span class="nav-icon">🏠</span>
@@ -49,12 +43,8 @@
     </button>
 </nav>
 
-<!-- ============================================ -->
-<!-- المحتوى الرئيسي -->
-<!-- ============================================ -->
 <main class="container">
 
-    <!-- ========== شاشة تسجيل الدخول ========== -->
     <section id="page-login" class="page active">
         <div class="card">
             <h1>محفظة BIGISH-YER</h1>
@@ -69,13 +59,11 @@
         </div>
     </section>
 
-    <!-- ========== الصفحة الرئيسية (المحفظة) ========== -->
     <section id="page-home" class="page">
         <div class="card user-card">
             <h2>مرحباً، <span id="user-name"></span></h2>
             <p class="user-id">معرف Pi: <span id="user-id"></span></p>
         </div>
-
         <div class="card balance-card">
             <h3>💰 الرصيد</h3>
             <div class="balance-grid">
@@ -89,14 +77,12 @@
                 </div>
             </div>
         </div>
-
         <div class="card">
             <h3>💳 الدفع</h3>
             <button class="btn-primary" onclick="payWithPi()">دفع بـ Pi فقط</button>
             <button class="btn-primary" onclick="payWithYER()" style="margin-top:8px;">دفع بـ YER فقط</button>
             <button class="btn-gold" onclick="payHybrid()" style="margin-top:8px;">دفع هجين (Pi + YER)</button>
         </div>
-
         <div class="card">
             <h3>📊 حالة النظام</h3>
             <div class="status-row">
@@ -114,12 +100,10 @@
         </div>
     </section>
 
-    <!-- ========== صفحة التوزيع (Mining) ========== -->
     <section id="page-mining" class="page">
         <div class="card">
             <h3>⛏️ توزيع YER المجتمعي</h3>
             <p class="subtitle">10% من العرض الأقصى مخصص للمجتمع</p>
-
             <div class="stats-grid">
                 <div class="stat-item">
                     <span class="stat-label">السقف السنوي</span>
@@ -138,7 +122,6 @@
                     <span class="stat-value" id="session-status">غير نشطة</span>
                 </div>
             </div>
-
             <button class="btn-primary" id="start-mining-btn" onclick="startMining()" style="margin-top:16px;">
                 ▶️ بدء جلسة توزيع (24 ساعة)
             </button>
@@ -146,7 +129,6 @@
                 💰 المطالبة بالرصيد
             </button>
         </div>
-
         <div class="card">
             <h3>📋 قواعد التوزيع</h3>
             <ul class="rules-list">
@@ -159,7 +141,6 @@
         </div>
     </section>
 
-    <!-- ========== صفحة السجل ========== -->
     <section id="page-history" class="page">
         <div class="card">
             <h3>📜 سجل المعاملات</h3>
@@ -172,7 +153,6 @@
         </div>
     </section>
 
-    <!-- ========== صفحة QR ========== -->
     <section id="page-qr" class="page">
         <div class="card">
             <h3>📱 QR للدفع</h3>
@@ -186,7 +166,6 @@
                 <button class="btn-small" onclick="copyAddress()">📋 نسخ</button>
             </div>
         </div>
-
         <div class="card">
             <h3>📷 مسح QR</h3>
             <p class="subtitle">لتلقي دفع من محفظة أخرى</p>
@@ -194,30 +173,16 @@
         </div>
     </section>
 
-    <!-- ========== صفحة معلومات YER ========== -->
     <section id="page-token" class="page">
         <div class="card">
             <h3>💎 معلومات رمز YER</h3>
             <div class="token-info">
-                <div class="info-row">
-                    <span>الرمز</span>
-                    <strong>YER</strong>
-                </div>
-                <div class="info-row">
-                    <span>الاسم</span>
-                    <strong>YER Ecosystem Token</strong>
-                </div>
-                <div class="info-row">
-                    <span>العرض الأقصى</span>
-                    <strong>300,000,000 YER</strong>
-                </div>
-                <div class="info-row">
-                    <span>الدقة</span>
-                    <strong>10 خانات عشرية</strong>
-                </div>
+                <div class="info-row"><span>الرمز</span><strong>YER</strong></div>
+                <div class="info-row"><span>الاسم</span><strong>YER Ecosystem Token</strong></div>
+                <div class="info-row"><span>العرض الأقصى</span><strong>300,000,000 YER</strong></div>
+                <div class="info-row"><span>الدقة</span><strong>10 خانات عشرية</strong></div>
             </div>
         </div>
-
         <div class="card">
             <h3>📊 التوزيع</h3>
             <div class="distribution">
@@ -238,25 +203,14 @@
                 </div>
             </div>
         </div>
-
         <div class="card">
             <h3>📈 حالة الرمز</h3>
-            <div class="status-row">
-                <span>الشبكة</span>
-                <span class="badge pending">Testnet</span>
-            </div>
-            <div class="status-row">
-                <span>الإطلاق الرسمي</span>
-                <span class="badge pending">قيد التطوير</span>
-            </div>
-            <div class="status-row">
-                <span>Pi Launchpad</span>
-                <span class="badge pending">قيد التحضير</span>
-            </div>
+            <div class="status-row"><span>الشبكة</span><span class="badge pending">Testnet</span></div>
+            <div class="status-row"><span>الإطلاق الرسمي</span><span class="badge pending">قيد التطوير</span></div>
+            <div class="status-row"><span>Pi Launchpad</span><span class="badge pending">قيد التحضير</span></div>
         </div>
     </section>
 
-    <!-- ========== صفحة الإعدادات ========== -->
     <section id="page-settings" class="page">
         <div class="card">
             <h3>⚙️ الإعدادات</h3>
@@ -271,10 +225,7 @@
 
             <div class="settings-group">
                 <h4>الشبكة</h4>
-                <div class="info-row">
-                    <span>الشبكة الحالية</span>
-                    <strong>Testnet</strong>
-                </div>
+                <div class="info-row"><span>الشبكة الحالية</span><strong>Testnet</strong></div>
             </div>
 
             <div class="settings-group">
@@ -292,15 +243,13 @@
                 <h4>الدعم</h4>
                 <button class="btn-secondary" onclick="alert('قناة الدعم قيد الإنشاء')">📧 تواصل معنا</button>
                 <button class="btn-secondary" onclick="alert('سياسة الخصوصية')" style="margin-top:8px;">📄 سياسة الخصوصية</button>
+                <button class="btn-secondary" onclick="testIntegrationAPI()" style="margin-top:8px;">🧪 اختبار Integration API</button>
             </div>
         </div>
     </section>
 
 </main>
 
-<!-- ============================================ -->
-<!-- مكتبات JavaScript -->
-<!-- ============================================ -->
 <script src="js/pi-config.js"></script>
 <script src="js/auth.js"></script>
 <script src="js/wallet.js"></script>

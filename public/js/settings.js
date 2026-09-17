@@ -1,5 +1,5 @@
 // ============================================
-// BIGISH-YER Wallet — Settings
+// BIGISH-YER Wallet — Settings (v2)
 // ============================================
 
 /**
@@ -13,7 +13,6 @@ function changeLanguage() {
             document.documentElement.lang = 'en';
             document.documentElement.dir = 'ltr';
             localStorage.setItem('lang', 'en');
-            // يمكن إضافة ترجمة كاملة لاحقاً
             alert('English translation coming soon. Interface remains in Arabic.');
             localStorage.setItem('lang', 'ar');
         }
@@ -21,6 +20,31 @@ function changeLanguage() {
         localStorage.setItem('lang', 'ar');
         document.documentElement.lang = 'ar';
         document.documentElement.dir = 'rtl';
+    }
+}
+
+/**
+ * اختبار Integration API
+ */
+async function testIntegrationAPI() {
+    try {
+        const res = await fetch('/api/integration/apps', {
+            headers: { 'x-admin-key': 'ae-admin-2026' }
+        });
+        const data = await res.json();
+
+        if (data.success) {
+            let msg = '✅ التطبيقات المسجلة:\n\n';
+            data.apps.forEach(app => {
+                msg += `• ${app.name} (${app.id})\n`;
+                msg += `  الحالة: ${app.active ? 'نشط ✅' : 'متوقف ❌'}\n\n`;
+            });
+            alert(msg);
+        } else {
+            alert('❌ خطأ: ' + (data.error || 'غير معروف'));
+        }
+    } catch (e) {
+        alert('❌ خطأ في الاتصال: ' + e.message);
     }
 }
 

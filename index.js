@@ -26,7 +26,7 @@ const db = {
         'gav': {
             id: 'gav',
             name: 'GAV Incense Route',
-            apiKey: 'gav-secret-' + Math.random().toString(36).slice(2, 15),
+            apiKey: 'gav-fixed-key-2026-ae-0001',
             active: true,
             walletAddress: 'GAV_WALLET_PLACEHOLDER',
             registeredAt: new Date().toISOString()
@@ -34,7 +34,7 @@ const db = {
         'cobra': {
             id: 'cobra',
             name: 'COBRA Protocol',
-            apiKey: 'cobra-secret-' + Math.random().toString(36).slice(2, 15),
+            apiKey: 'cobra-fixed-key-2026-ae-0002',
             active: true,
             walletAddress: 'COBRA_WALLET_PLACEHOLDER',
             registeredAt: new Date().toISOString()
@@ -42,7 +42,7 @@ const db = {
         'telcom': {
             id: 'telcom',
             name: 'Telcom Mobile Protocol',
-            apiKey: 'telcom-secret-' + Math.random().toString(36).slice(2, 15),
+            apiKey: 'telcom-fixed-key-2026-ae-0003',
             active: true,
             walletAddress: 'TELCOM_WALLET_PLACEHOLDER',
             registeredAt: new Date().toISOString()
